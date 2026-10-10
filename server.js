@@ -36,6 +36,8 @@ function obtenerOCrearSala(idSala) {
       id: sId,
       jugadoresPorToken: {},
       enPartida: false,
+      modoLoco: false,
+      indicesCartaRevelada: { 0: null, 1: null, 2: null, 3: null },
       mazo: [],
       descartes: [],
       manos: { 0: [], 1: [], 2: [], 3: [] },
@@ -290,10 +292,13 @@ function iniciarMano(sala) {
   limpiarTimerDecision(sala);
   sala.mazo = crearMazo();
   sala.descartes = [];
+  
   for (let i = 0; i < 4; i++) {
     sala.manos[i] = [];
     for (let c = 0; c < 4; c++) sala.manos[i].push(robarCarta(sala));
+    sala.indicesCartaRevelada[i] = sala.modoLoco ? Math.floor(Math.random() * 4) : null;
   }
+
   sala.fase = 'mus';
   sala.turno = sala.asientoMano;
   sala.ordenMusVotos = {};
@@ -306,7 +311,8 @@ function iniciarMano(sala) {
     juego: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, esAlPunto: false }
   };
   const jMano = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.asientoMano);
-  notificarEstado(sala, `Nueva mano. Es Mano: ${jMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.`);
+  const msgModo = sala.modoLoco ? " ¡MODO LOCO ACTIVO: 1 carta destapada por jugador!" : "";
+  notificarEstado(sala, `Nueva mano repartida. Abre la mano: ${jMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.${msgModo}`);
   comprobarTurnoBot(sala);
 }
 
@@ -323,6 +329,16 @@ function notificarEstado(sala, msg, forzarRevelado = false) {
     mapaJugadores[j.asiento] = { asiento: j.asiento, nombre: j.nombre, pareja: j.pareja, esBot: j.esBot };
   });
 
+  let cartasReveladasModoLoco = {};
+  if (sala.modoLoco) {
+    for (let a = 0; a < 4; a++) {
+      let idx = sala.indicesCartaRevelada[a];
+      if (idx !== null && sala.manos[a] && sala.manos[a][idx]) {
+        cartasReveladasModoLoco[a] = { indice: idx, carta: sala.manos[a][idx] };
+      }
+    }
+  }
+
   io.to(sala.id).emit('estadoJuego', {
     fase: sala.fase,
     turno: sala.turno,
@@ -330,6 +346,8 @@ function notificarEstado(sala, msg, forzarRevelado = false) {
     puntos: sala.puntos,
     chicosGanados: sala.chicosGanados,
     vacasGanadas: sala.vacasGanadas,
+    modoLoco: sala.modoLoco,
+    cartasReveladasModoLoco: cartasReveladasModoLoco,
     apuestaActual: sala.apuestaActual,
     apuestasLances: sala.apuestasLances,
     decisionPareja: {
@@ -854,7 +872,6 @@ function comprobarFinDescartes(sala) {
     sala.fase = 'mus';
     sala.turno = sala.asientoMano;
 
-    // Disparar animación de reparto desde la baraja a todos los clientes
     io.to(sala.id).emit('eventoRepartoMazoAnim');
 
     setTimeout(() => {
@@ -1117,10 +1134,6 @@ function ejecutarResetAdmin(sala) {
   io.to(sala.id).emit('resetCompleto');
 }
 
-/* ========================================================
-   SOCKET.IO EVENTOS
-======================================================== */
-
 io.on('connection', (socket) => {
   let miSalaId = "principal";
   let miToken = null;
@@ -1269,6 +1282,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('toggleModoLoco', ({ password }) => {
+    const sala = obtenerOCrearSala(miSalaId);
+    if (password === ADMIN_PASSWORD) {
+      sala.modoLoco = !sala.modoLoco;
+      if (sala.enPartida) {
+        for (let i = 0; i < 4; i++) {
+          sala.indicesCartaRevelada[i] = sala.modoLoco ? Math.floor(Math.random() * 4) : null;
+        }
+      }
+      notificarEstado(sala, `Modo Loco ${sala.modoLoco ? 'ACTIVADO: ¡1 carta pública por persona!' : 'DESACTIVADO'}.`);
+    } else {
+      socket.emit('errorAdminPassword', "Contraseña de administrador incorrecta.");
+    }
+  });
+
   socket.on('votoMus', ({ quiereMus }) => {
     const sala = obtenerOCrearSala(miSalaId);
     if (!miToken || !sala.jugadoresPorToken[miToken]) return;
@@ -1281,7 +1309,7 @@ io.on('connection', (socket) => {
       io.to(sala.id).emit('mensajeChat', { asiento: j.asiento, jugador: j.nombre, texto: "¡Mus!" });
       siguienteTurnoMus(sala);
     } else {
-      io.to(sala.id).emit('mensajeChat', { asiento: j.asiento, jugador: j.nombre, texto: "¡Corto! No hay mus" });
+      io.to(sala.id).emit('mensajeChat', { asiento: j.asiento, jugador: j.nombre, texto: "¡No hay Mus!" });
       iniciarLance(sala, 'grande');
     }
   });
