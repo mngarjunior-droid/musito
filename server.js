@@ -323,6 +323,7 @@ function iniciarMano(sala) {
   sala.ordenMusVotos = {};
   sala.declaraciones = { pares: {}, juego: {} };
   sala.enPartida = true;
+  sala.apuestaActual = { total: 0, ultimoAumento: 0, ultimoApostador: null, ordago: false, enPaso: true };
   sala.apuestasLances = {
     grande: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
     chica: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
@@ -728,8 +729,8 @@ function finalizarDecisionPareja(sala, porTiempo) {
     sala.apuestasLances[sala.fase].ultimoAumento = sala.apuestaActual.ultimoAumento;
     sala.apuestasLances[sala.fase].enPaso = false;
 
-    const nombreLance = (sala.fase === 'pares' || sala.fase === 'juego')
-      ? `${sala.fase.toUpperCase()} (ENVITE)`
+    const nombreLance = (sala.fase === 'juego' && sala.apuestasLances.juego.esAlPunto)
+      ? 'AL PUNTO'
       : sala.fase.toUpperCase();
 
     // Registrar inmediatamente en el Registro de Lances para que aparezca en tiempo real
@@ -737,7 +738,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
       lance: nombreLance,
       asientoGanador: ganadora === 0 ? 0 : 1,
       parejaGanadora: ganadora,
-      desglose: `Envite de ${sala.fase.toUpperCase()} no querido: +${ptsGanados} pt(s) para ${nomGanadora}.`,
+      desglose: `Envite de ${nombreLance} no querido: +${ptsGanados} pt(s) para ${nomGanadora}.`,
       desgloseItems: [{ desc: descCobro, pts: ptsGanados, jugador: nomGanadora }],
       puntosActualizados: sala.puntos,
       esOrdagoDirecto: false
@@ -996,12 +997,7 @@ function ejecutarRecuentoFinalMano(sala) {
       ordagoResuelto = resolverLanceEnRecuento(sala, 'chica');
       if (ordagoResuelto || comprobarVictoriaChico(sala)) return;
 
-      setTimeout(() => {
-        if (sala.apuestasLances.pares.hayPares) {
-          ordagoResuelto = resolverLanceEnRecuento(sala, 'pares');
-          if (ordagoResuelto || comprobarVictoriaChico(sala)) return;
-        }
-
+      const continuarConJuego = () => {
         setTimeout(() => {
           ordagoResuelto = resolverLanceEnRecuento(sala, 'juego');
           if (ordagoResuelto || comprobarVictoriaChico(sala)) return;
@@ -1010,12 +1006,20 @@ function ejecutarRecuentoFinalMano(sala) {
             sala.asientoMano = (sala.asientoMano + 1) % 4;
             const nuevoMano = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.asientoMano);
             notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.`);
-            setTimeout(() => iniciarMano(sala), 3200);
-          }, 3500);
-        }, 3500);
-      }, 3500);
-    }, 3500);
-  }, 2200);
+            setTimeout(() => iniciarMano(sala), 2000);
+          }, 2000);
+        }, sala.apuestasLances.pares.hayPares ? 2200 : 700);
+      };
+
+      setTimeout(() => {
+        if (sala.apuestasLances.pares.hayPares) {
+          ordagoResuelto = resolverLanceEnRecuento(sala, 'pares');
+          if (ordagoResuelto || comprobarVictoriaChico(sala)) return;
+        }
+        continuarConJuego();
+      }, 2200);
+    }, 2200);
+  }, 1800);
 }
 
 function resolverLanceEnRecuento(sala, lance) {
@@ -1053,65 +1057,83 @@ function resolverLanceEnRecuento(sala, lance) {
 
   // CASO 2: PARES
   if (lance === 'pares') {
-    const resultado = evaluarGanadorLanceDetalle(sala, lance);
-    const ganador = resultado.parejaGanadora;
-    const nomGanador = obtenerNombrePareja(sala, ganador);
-    const asientoGanador = resultado.asientoGanador;
-
-    const a1 = ganador === 0 ? 0 : 1;
-    const a2 = ganador === 0 ? 2 : 3;
-    const p1 = evaluarDetallePares(sala.manos[a1]);
-    const p2 = evaluarDetallePares(sala.manos[a2]);
-    const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
-    const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
-
+    let ganador;
+    let nomGanador;
+    let asientoGanador;
     let itemsCobro = [];
+    let ptsPropios = 0;
+    let desgloseTexto = "";
+
     if (info.resueltoEnFalso) {
+      // Lance ganado en falso: el que no quiso renuncia al lance (el rival NO cobra nada)
+      ganador = info.ganadorEnFalso !== undefined ? info.ganadorEnFalso : 0;
+      nomGanador = obtenerNombrePareja(sala, ganador);
       const ptsFalso = info.puntosEnFalso || 1;
-      const ganadoraFalso = info.ganadorEnFalso !== undefined ? info.ganadorEnFalso : 0;
-      const nomGanadoraFalso = obtenerNombrePareja(sala, ganadoraFalso);
       const descFalso = info.descEnFalso || `Envite no querido (+${ptsFalso} pts)`;
 
-      if (ganadoraFalso !== ganador) {
-        io.to(sala.id).emit('eventoLanceGanado', {
-          lance: "PARES (ENVITE)",
-          asientoGanador: ganadoraFalso === 0 ? 0 : 1,
-          parejaGanadora: ganadoraFalso,
-          desglose: `Envite en falso de PARES: +${ptsFalso} pts para ${nomGanadoraFalso} (${descFalso}).`,
-          desgloseItems: [{ desc: descFalso, pts: ptsFalso, jugador: nomGanadoraFalso }],
-          puntosActualizados: sala.puntos,
-          esOrdagoDirecto: false
-        });
-      } else {
-        itemsCobro.push({ desc: descFalso, pts: ptsFalso, jugador: nomGanadoraFalso });
+      const a1 = ganador === 0 ? 0 : 1;
+      const a2 = ganador === 0 ? 2 : 3;
+      const p1 = evaluarDetallePares(sala.manos[a1]);
+      const p2 = evaluarDetallePares(sala.manos[a2]);
+      const cmp = compararManosPares(p1, p2);
+      asientoGanador = (cmp > 0 || (cmp === 0 && distanciaMano(a1, sala.asientoMano) <= distanciaMano(a2, sala.asientoMano))) ? a1 : a2;
+
+      const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
+      const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
+
+      itemsCobro.push({ desc: descFalso, pts: ptsFalso, jugador: nomGanador });
+      if (p1.cobro > 0) {
+        itemsCobro.push({ desc: p1.nombre, pts: p1.cobro, jugador: nom1 });
+        ptsPropios += p1.cobro;
       }
-    } else if (ptsEnvite > 0) {
-      if (info.querido || ptsEnvite > 1) {
-        itemsCobro.push({ desc: `Envite ganado`, pts: ptsEnvite, jugador: nomGanador });
-      } else {
-        itemsCobro.push({ desc: `Paso ganado`, pts: 1, jugador: nomGanador });
-        ptsEnvite = 1;
+      if (p2.cobro > 0) {
+        itemsCobro.push({ desc: p2.nombre, pts: p2.cobro, jugador: nom2 });
+        ptsPropios += p2.cobro;
       }
+
+      // ptsFalso ya fue sumado al no querer; aquí solo se suman los pares propios ganados
+      sala.puntos[ganador] += ptsPropios;
+
+      desgloseTexto = `PARES: Cobrado en el lance por ${nomGanador} (+${ptsFalso} pts). Cobro de cartas propias: +${ptsPropios} pts para ${nomGanador}.`;
+    } else {
+      // Lance jugado de paso o con envite querido
+      const resultado = evaluarGanadorLanceDetalle(sala, lance);
+      ganador = resultado.parejaGanadora;
+      nomGanador = obtenerNombrePareja(sala, ganador);
+      asientoGanador = resultado.asientoGanador;
+
+      const a1 = ganador === 0 ? 0 : 1;
+      const a2 = ganador === 0 ? 2 : 3;
+      const p1 = evaluarDetallePares(sala.manos[a1]);
+      const p2 = evaluarDetallePares(sala.manos[a2]);
+      const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
+      const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
+
+      let ptsEnviteSumar = 0;
+      if (info.querido) {
+        ptsEnviteSumar = info.puntos || 2;
+        itemsCobro.push({ desc: `Envite querido`, pts: ptsEnviteSumar, jugador: nomGanador });
+      }
+
+      if (p1.cobro > 0) {
+        itemsCobro.push({ desc: p1.nombre, pts: p1.cobro, jugador: nom1 });
+        ptsPropios += p1.cobro;
+      }
+      if (p2.cobro > 0) {
+        itemsCobro.push({ desc: p2.nombre, pts: p2.cobro, jugador: nom2 });
+        ptsPropios += p2.cobro;
+      }
+
+      sala.puntos[ganador] += ptsPropios + ptsEnviteSumar;
+      desgloseTexto = `${resultado.motivo}. +${ptsPropios + ptsEnviteSumar} pts para ${nomGanador} (${info.querido ? 'envite + pares' : 'pares'}).`;
     }
 
-    let itemsCartas = [];
-    if (p1.cobro > 0) itemsCartas.push({ desc: `${p1.nombre}`, pts: p1.cobro, jugador: nom1 });
-    if (p2.cobro > 0) itemsCartas.push({ desc: `${p2.nombre}`, pts: p2.cobro, jugador: nom2 });
-
-    const ptsPropios = p1.cobro + p2.cobro;
-    itemsCobro.push(...itemsCartas);
-
-    const ptsEnviteSumar = info.resueltoEnFalso ? 0 : ptsEnvite;
-    sala.puntos[ganador] += ptsPropios + ptsEnviteSumar;
-
-    const desgloseTexto = `${resultado.motivo}. ${info.resueltoEnFalso ? `(Envite en falso: +${info.puntosEnFalso || 1} pts). ` : ''}Cobro de pares: +${ptsPropios} pts para ${nomGanador}.`;
-
     io.to(sala.id).emit('eventoLanceGanado', {
-      lance: info.resueltoEnFalso && info.ganadorEnFalso !== ganador ? "PARES (CARTAS)" : "PARES",
+      lance: "PARES",
       asientoGanador: asientoGanador,
       parejaGanadora: ganador,
       desglose: desgloseTexto,
-      desgloseItems: info.resueltoEnFalso && info.ganadorEnFalso !== ganador ? itemsCartas : itemsCobro,
+      desgloseItems: itemsCobro,
       puntosActualizados: sala.puntos,
       esOrdagoDirecto: false
     });
@@ -1122,70 +1144,101 @@ function resolverLanceEnRecuento(sala, lance) {
 
   // CASO 3: JUEGO
   if (lance === 'juego') {
-    const resultado = evaluarGanadorLanceDetalle(sala, lance);
-    const ganador = resultado.parejaGanadora;
-    const nomGanador = obtenerNombrePareja(sala, ganador);
-    const asientoGanador = resultado.asientoGanador;
-
+    let ganador;
+    let nomGanador;
+    let asientoGanador;
     let itemsCobro = [];
+    let ptsPropios = 0;
+    let desgloseTexto = "";
+
+    const esAlPunto = !!info.esAlPunto;
+    const nombreLanceTexto = esAlPunto ? "AL PUNTO" : "JUEGO";
+
     if (info.resueltoEnFalso) {
+      // Lance ganado en falso: el rival que no quiso renuncia a todo (0 pts para el rival aunque tenga 31)
+      ganador = info.ganadorEnFalso !== undefined ? info.ganadorEnFalso : 0;
+      nomGanador = obtenerNombrePareja(sala, ganador);
       const ptsFalso = info.puntosEnFalso || 1;
-      const ganadoraFalso = info.ganadorEnFalso !== undefined ? info.ganadorEnFalso : 0;
-      const nomGanadoraFalso = obtenerNombrePareja(sala, ganadoraFalso);
       const descFalso = info.descEnFalso || `Envite no querido (+${ptsFalso} pts)`;
 
-      if (ganadoraFalso !== ganador) {
-        io.to(sala.id).emit('eventoLanceGanado', {
-          lance: "JUEGO (ENVITE)",
-          asientoGanador: ganadoraFalso === 0 ? 0 : 1,
-          parejaGanadora: ganadoraFalso,
-          desglose: `Envite en falso de JUEGO: +${ptsFalso} pts para ${nomGanadoraFalso} (${descFalso}).`,
-          desgloseItems: [{ desc: descFalso, pts: ptsFalso, jugador: nomGanadoraFalso }],
-          puntosActualizados: sala.puntos,
-          esOrdagoDirecto: false
-        });
-      } else {
-        itemsCobro.push({ desc: descFalso, pts: ptsFalso, jugador: nomGanadoraFalso });
-      }
-    } else if (ptsEnvite > 0) {
-      if (info.querido || ptsEnvite > 1) {
-        itemsCobro.push({ desc: info.esAlPunto ? `Envite al punto` : `Envite de juego`, pts: ptsEnvite, jugador: nomGanador });
-      } else {
-        itemsCobro.push({ desc: info.esAlPunto ? `Punto ganado` : `Juego en paso`, pts: 1, jugador: nomGanador });
-        ptsEnvite = 1;
-      }
-    }
-
-    let itemsCartas = [];
-    let ptsPropios = 0;
-    if (info.esAlPunto) {
-      itemsCartas.push({ desc: `Tanto de punto`, pts: 1, jugador: resultado.nombreGanador });
-      ptsPropios = 1;
-    } else {
       const a1 = ganador === 0 ? 0 : 1;
       const a2 = ganador === 0 ? 2 : 3;
       const j1 = evaluarDetalleJuego(sala.manos[a1]);
       const j2 = evaluarDetalleJuego(sala.manos[a2]);
+      const cmp = compararManosJuego(j1, j2);
+      asientoGanador = (cmp > 0 || (cmp === 0 && distanciaMano(a1, sala.asientoMano) <= distanciaMano(a2, sala.asientoMano))) ? a1 : a2;
+
       const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
       const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
 
-      if (j1.tiene) itemsCartas.push({ desc: `${j1.desc}`, pts: j1.cobro, jugador: nom1 });
-      if (j2.tiene) itemsCartas.push({ desc: `${j2.desc}`, pts: j2.cobro, jugador: nom2 });
-      ptsPropios = (j1.tiene ? j1.cobro : 0) + (j2.tiene ? j2.cobro : 0);
+      itemsCobro.push({ desc: descFalso, pts: ptsFalso, jugador: nomGanador });
+
+      if (!esAlPunto) {
+        // En juego, solo la pareja ganadora cobra los tantos de su propio juego (si tienen)
+        if (j1.tiene) {
+          itemsCobro.push({ desc: j1.desc, pts: j1.cobro, jugador: nom1 });
+          ptsPropios += j1.cobro;
+        }
+        if (j2.tiene) {
+          itemsCobro.push({ desc: j2.desc, pts: j2.cobro, jugador: nom2 });
+          ptsPropios += j2.cobro;
+        }
+      }
+
+      // ptsFalso ya fue sumado al no querer; aquí solo se suman los tantos de cartas de la pareja ganadora
+      sala.puntos[ganador] += ptsPropios;
+
+      desgloseTexto = `${nombreLanceTexto}: Cobrado en el lance por ${nomGanador} (+${ptsFalso} pts). Cobro de cartas propias: +${ptsPropios} pts para ${nomGanador}. (El rival no quiso el envite y renuncia al tanteo).`;
+    } else {
+      // Lance jugado de paso o con envite querido
+      const resultado = evaluarGanadorLanceDetalle(sala, lance);
+      ganador = resultado.parejaGanadora;
+      nomGanador = obtenerNombrePareja(sala, ganador);
+      asientoGanador = resultado.asientoGanador;
+
+      let ptsEnviteSumar = 0;
+      if (info.querido) {
+        ptsEnviteSumar = info.puntos || 2;
+        itemsCobro.push({ desc: esAlPunto ? `Envite al punto` : `Envite de juego`, pts: ptsEnviteSumar, jugador: nomGanador });
+      } else if (esAlPunto) {
+        // Punto en paso da 1 punto a la mejor mano
+        ptsEnviteSumar = 1;
+        itemsCobro.push({ desc: `Punto ganado en paso`, pts: 1, jugador: resultado.nombreGanador });
+      }
+
+      if (esAlPunto) {
+        if (info.querido) {
+          itemsCobro.push({ desc: `Tanto de punto`, pts: 1, jugador: resultado.nombreGanador });
+          ptsPropios = 1;
+        }
+      } else {
+        const a1 = ganador === 0 ? 0 : 1;
+        const a2 = ganador === 0 ? 2 : 3;
+        const j1 = evaluarDetalleJuego(sala.manos[a1]);
+        const j2 = evaluarDetalleJuego(sala.manos[a2]);
+        const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
+        const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
+
+        if (j1.tiene) {
+          itemsCobro.push({ desc: j1.desc, pts: j1.cobro, jugador: nom1 });
+          ptsPropios += j1.cobro;
+        }
+        if (j2.tiene) {
+          itemsCobro.push({ desc: j2.desc, pts: j2.cobro, jugador: nom2 });
+          ptsPropios += j2.cobro;
+        }
+      }
+
+      sala.puntos[ganador] += ptsPropios + ptsEnviteSumar;
+      desgloseTexto = `${resultado.motivo}. +${ptsPropios + ptsEnviteSumar} pts para ${nomGanador} (${esAlPunto ? 'punto' : 'juego'}).`;
     }
 
-    itemsCobro.push(...itemsCartas);
-    const ptsEnviteSumar = info.resueltoEnFalso ? 0 : ptsEnvite;
-    sala.puntos[ganador] += ptsPropios + ptsEnviteSumar;
-
-    const desgloseTexto = `${resultado.motivo}. ${info.resueltoEnFalso ? `(Envite en falso: +${info.puntosEnFalso || 1} pts). ` : ''}Cobro de juego: +${ptsPropios} pts para ${nomGanador}.`;
-
     io.to(sala.id).emit('eventoLanceGanado', {
-      lance: info.resueltoEnFalso && info.ganadorEnFalso !== ganador ? "JUEGO (CARTAS)" : "JUEGO",
+      lance: nombreLanceTexto,
       asientoGanador: asientoGanador,
       parejaGanadora: ganador,
       desglose: desgloseTexto,
-      desgloseItems: info.resueltoEnFalso && info.ganadorEnFalso !== ganador ? itemsCartas : itemsCobro,
+      desgloseItems: itemsCobro,
       puntosActualizados: sala.puntos,
       esOrdagoDirecto: false
     });
