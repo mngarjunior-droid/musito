@@ -1541,7 +1541,7 @@
             const formato = (info) => {
                 if (info.ordago && info.querido) return "Órdago querido";
                 if (info.ordago) return "Órdago en juego";
-                if (info.resueltoEnFalso) return "Rechazado (Para ti)";
+                if (info.resueltoEnFalso) return info.puntosEnFalso ? `Para ti (+${info.puntosEnFalso} pts)` : "Rechazado (Para ti)";
                 if (info.querido) return `Aceptado (${info.puntos} pts)`;
                 if (info.enPaso) return "Paso (1 pt)";
                 return "-";
