@@ -10,24 +10,91 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
+            /* TEMA OSCURO (POR DEFECTO) */
             --bg-canvas: #060a08;
+            --bg-gradient: radial-gradient(at 50% 0%, rgba(20, 94, 56, 0.32) 0px, transparent 65%),
+                            radial-gradient(at 50% 100%, rgba(0, 0, 0, 0.92) 0px, transparent 100%);
             --tapete-core: #135e38;
-            --tapete-edge: #0a331e;
+            --tapete-edge: #09331e;
+            --tapete-bottom: #051d11;
             --rail-outer: #1c1109;
-            --rail-inner: #321f12;
-            
-            --accent-gold: #f2c94c;
-            --team-us: #2ecc71;
-            --team-us-glow: rgba(46, 204, 113, 0.35);
-            --team-rival: #e74c3c;
-            --team-rival-glow: rgba(231, 76, 60, 0.35);
-            
-            --glass-surface: rgba(14, 26, 19, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-highlight: rgba(255, 255, 255, 0.16);
+            --rail-inner: #342013;
+            --rail-gold: #c69224;
 
-            --carta-w: 64px;
-            --carta-h: 96px;
+            --accent-gold: #f5cf58;
+            --accent-gold-hover: #ffd966;
+            --accent-gold-glow: rgba(245, 207, 88, 0.38);
+
+            --team-us: #2ecc71;
+            --team-us-bg: rgba(46, 204, 113, 0.15);
+            --team-us-border: rgba(46, 204, 113, 0.45);
+            --team-us-glow: rgba(46, 204, 113, 0.35);
+
+            --team-rival: #e74c3c;
+            --team-rival-bg: rgba(231, 76, 60, 0.15);
+            --team-rival-border: rgba(231, 76, 60, 0.45);
+            --team-rival-glow: rgba(231, 76, 60, 0.35);
+
+            --glass-surface: rgba(14, 28, 20, 0.88);
+            --glass-card: rgba(18, 36, 26, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.14);
+
+            --text-primary: #f5f6f7;
+            --text-muted: #8fa599;
+            --text-sub: #c8ded4;
+
+            --card-bg: #ffffff;
+            --card-border: rgba(0, 0, 0, 0.22);
+            --card-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+            --card-back-core: #8e1818;
+            --card-back-edge: #520909;
+
+            --carta-w: clamp(52px, 6.4vw, 72px);
+            --carta-h: clamp(78px, 9.6vw, 108px);
+            --table-max-w: 960px;
+        }
+
+        /* TEMA CLARO */
+        body.theme-light {
+            --bg-canvas: #e9eee9;
+            --bg-gradient: radial-gradient(at 50% 0%, rgba(39, 140, 89, 0.22) 0px, transparent 65%),
+                            radial-gradient(at 50% 100%, rgba(210, 222, 214, 0.7) 0px, transparent 100%);
+            --tapete-core: #1c7444;
+            --tapete-edge: #11502e;
+            --tapete-bottom: #0b3820;
+            --rail-outer: #331f13;
+            --rail-inner: #5c3820;
+            --rail-gold: #e2ab3b;
+
+            --accent-gold: #c58d0d;
+            --accent-gold-hover: #dc9e0e;
+            --accent-gold-glow: rgba(197, 141, 13, 0.35);
+
+            --team-us: #1b7e47;
+            --team-us-bg: rgba(27, 126, 71, 0.14);
+            --team-us-border: rgba(27, 126, 71, 0.38);
+            --team-us-glow: rgba(27, 126, 71, 0.25);
+
+            --team-rival: #c0392b;
+            --team-rival-bg: rgba(192, 57, 43, 0.14);
+            --team-rival-border: rgba(192, 57, 43, 0.38);
+            --team-rival-glow: rgba(192, 57, 43, 0.25);
+
+            --glass-surface: rgba(255, 255, 255, 0.92);
+            --glass-card: rgba(246, 250, 247, 0.94);
+            --glass-border: rgba(0, 0, 0, 0.12);
+            --glass-highlight: rgba(255, 255, 255, 0.8);
+
+            --text-primary: #122218;
+            --text-muted: #576d61;
+            --text-sub: #2d4537;
+
+            --card-bg: #ffffff;
+            --card-border: rgba(0, 0, 0, 0.18);
+            --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+            --card-back-core: #9e1d1d;
+            --card-back-edge: #690c0c;
         }
 
         * {
@@ -37,20 +104,19 @@
             user-select: none;
             -webkit-user-select: none;
             font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Text", "Segoe UI", sans-serif;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
         }
 
         body {
             background-color: var(--bg-canvas);
-            background-image: 
-                radial-gradient(at 50% 0%, rgba(20, 94, 56, 0.22) 0px, transparent 65%),
-                radial-gradient(at 50% 100%, rgba(0, 0, 0, 0.8) 0px, transparent 100%);
-            color: #f5f6f7;
+            background-image: var(--bg-gradient);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 16px;
+            padding: 6px 12px 14px 12px;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
@@ -58,19 +124,17 @@
         /* ===== MODALES FLOTANTES ===== */
         .overlay-modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(3, 8, 5, 0.88);
+            background: rgba(4, 10, 7, 0.86);
             backdrop-filter: blur(28px) saturate(190%);
             -webkit-backdrop-filter: blur(28px) saturate(190%);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 99999;
+            transition: opacity 0.3s ease;
         }
 
         .overlay-modal.oculto {
@@ -78,22 +142,29 @@
         }
 
         .modal-box {
-            background: rgba(14, 28, 20, 0.95);
-            border: 1px solid rgba(242, 201, 76, 0.35);
+            background: var(--glass-surface);
+            border: 1px solid var(--accent-gold-glow);
             border-radius: 24px;
-            padding: 24px 28px;
+            padding: 26px 30px;
             max-width: 480px;
-            width: 90%;
+            width: 92%;
             text-align: center;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 var(--glass-highlight);
+            animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .modal-box h2 {
             font-family: 'Cinzel', serif;
             color: var(--accent-gold);
-            font-size: 1.45rem;
-            letter-spacing: 2px;
+            font-size: 1.5rem;
+            letter-spacing: 2.5px;
             margin-bottom: 14px;
+            text-shadow: 0 2px 8px var(--accent-gold-glow);
         }
 
         .modal-inputs-row {
@@ -105,18 +176,18 @@
         .modal-box input, .modal-box select {
             padding: 10px 14px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--text-primary);
             font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .modal-box select {
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f2c94c'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f5cf58'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 10px center;
             background-size: 18px;
@@ -130,6 +201,7 @@
 
         .modal-box input:focus, .modal-box select:focus {
             border-color: var(--accent-gold);
+            box-shadow: 0 0 12px var(--accent-gold-glow);
         }
 
         .grid-asientos {
@@ -140,8 +212,8 @@
         }
 
         .asiento-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
             padding: 12px 10px;
             border-radius: 14px;
             cursor: pointer;
@@ -154,20 +226,20 @@
 
         .asiento-card:hover:not(.ocupado) {
             border-color: var(--accent-gold);
-            background: rgba(242, 201, 76, 0.1);
+            background: var(--accent-gold-glow);
             transform: translateY(-2px);
         }
 
         .asiento-card.seleccionado {
             border-color: var(--accent-gold) !important;
-            background: rgba(242, 201, 76, 0.18) !important;
-            box-shadow: 0 0 16px rgba(242, 201, 76, 0.35);
+            background: var(--accent-gold-glow) !important;
+            box-shadow: 0 0 20px var(--accent-gold-glow);
         }
 
         .asiento-card.ocupado {
-            opacity: 0.35;
+            opacity: 0.38;
             cursor: not-allowed;
-            border-color: rgba(255, 255, 255, 0.05);
+            border-color: transparent;
         }
 
         .asiento-card .tag-p {
@@ -179,106 +251,131 @@
         .asiento-card.p1 .tag-p { color: var(--team-us); }
         .asiento-card.p2 .tag-p { color: var(--team-rival); }
 
-        /* ===== TOOLBAR SUPERIOR ===== */
+        /* ===== TOOLBAR SUPERIOR RESPONSIVE ===== */
         .app-header {
             width: 100%;
-            max-width: 1220px;
+            max-width: var(--table-max-w);
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 4px;
-            gap: 12px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .brand-container {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             gap: 8px;
         }
 
         .brand-title {
             font-family: 'Cinzel', serif;
-            font-size: 1.25rem;
+            font-size: clamp(1.1rem, 2.5vw, 1.35rem);
             font-weight: 900;
-            letter-spacing: 2.5px;
-            background: linear-gradient(180deg, #ffffff 20%, #d8e2dc 100%);
+            letter-spacing: 2.2px;
+            background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-gold) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .brand-badge {
             font-size: 0.62rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 1.5px;
             text-transform: uppercase;
             color: var(--accent-gold);
-            background: rgba(242, 201, 76, 0.12);
-            border: 1px solid rgba(242, 201, 76, 0.3);
-            padding: 2px 7px;
+            background: var(--accent-gold-glow);
+            border: 1px solid var(--accent-gold);
+            padding: 2px 8px;
             border-radius: 6px;
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .capsule {
             background: var(--glass-surface);
             backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid var(--glass-border);
-            padding: 6px 14px;
-            border-radius: 980px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: #d1ded7;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-        }
-
-        .btn-compact {
-            background: rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f0f3f2;
-            padding: 6px 12px;
+            padding: 5px 12px;
             border-radius: 980px;
             font-size: 0.74rem;
             font-weight: 600;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+        }
+
+        .btn-compact {
+            background: var(--glass-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 5px 11px;
+            border-radius: 980px;
+            font-size: 0.73rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .btn-compact:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.22);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-gold-glow);
         }
 
         .btn-compact.danger {
-            background: rgba(231, 76, 60, 0.14);
-            border-color: rgba(231, 76, 60, 0.35);
-            color: #ff8b80;
+            background: var(--team-rival-bg);
+            border-color: var(--team-rival-border);
+            color: var(--team-rival);
+        }
+
+        .btn-compact.active-toggle {
+            background: var(--accent-gold);
+            color: #1a1003;
+            border-color: #ffd966;
+            font-weight: 800;
+        }
+
+        .badge-count {
+            background: var(--accent-gold);
+            color: #120e03;
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 1px 6px;
+            border-radius: 990px;
+            margin-left: 2px;
         }
 
         /* ===== MARCADOR WIDGET ===== */
         .scoreboard-widget {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             background: var(--glass-surface);
             backdrop-filter: blur(28px) saturate(190%);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 1px 0 var(--glass-highlight);
-            border-radius: 20px;
-            padding: 6px 18px;
-            margin-bottom: 6px;
-            gap: 22px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 var(--glass-highlight);
+            border-radius: 18px;
+            padding: 5px 20px;
+            margin-bottom: 5px;
+            width: 100%;
+            max-width: var(--table-max-w);
+            gap: 16px;
         }
 
         .team-score {
@@ -292,8 +389,8 @@
 
         .team-label {
             font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
             text-transform: uppercase;
             display: flex;
             align-items: center;
@@ -305,78 +402,82 @@
 
         .team-tourney {
             font-size: 0.65rem;
-            color: #8c9c93;
+            color: var(--text-muted);
             font-weight: 600;
         }
 
         .score-num {
-            font-size: 1.7rem;
-            font-weight: 800;
+            font-size: clamp(1.5rem, 3.2vw, 1.85rem);
+            font-weight: 900;
             letter-spacing: -0.5px;
             line-height: 1;
-            color: #ffffff;
+            color: var(--text-primary);
         }
 
         .scoreboard-divider {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 10px;
-            border-left: 1px solid rgba(255, 255, 255, 0.08);
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0 12px;
+            border-left: 1px solid var(--glass-border);
+            border-right: 1px solid var(--glass-border);
         }
 
         .scoreboard-target {
             font-size: 0.62rem;
-            font-weight: 700;
-            letter-spacing: 1.2px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
             color: var(--accent-gold);
             text-transform: uppercase;
         }
 
-        /* ===== BARRA DE LANCES MEJORADA CON HALO ACTIVO ===== */
+        /* ===== BARRA DE LANCES CON ESTILO RADIANTE ===== */
         .stakes-bar-advanced {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            max-width: 950px;
+            max-width: var(--table-max-w);
             margin-bottom: 6px;
             justify-content: center;
         }
 
         .lance-node {
             flex: 1;
-            background: rgba(14, 26, 19, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 5px 10px;
+            padding: 4px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 2px;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            min-width: 0;
         }
 
         .lance-node .lance-name {
-            font-size: 0.68rem;
-            font-weight: 700;
+            font-size: 0.66rem;
+            font-weight: 800;
             letter-spacing: 0.8px;
             text-transform: uppercase;
-            color: #8fa599;
+            color: var(--text-muted);
         }
 
         .lance-node .lance-status {
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             font-weight: 800;
-            color: #ffffff;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
-        /* Lance en curso resaltado en oro */
         .lance-node.activo-ronda {
             border-color: var(--accent-gold) !important;
-            background: rgba(242, 201, 76, 0.18) !important;
-            box-shadow: 0 0 20px rgba(242, 201, 76, 0.35);
+            background: var(--accent-gold-glow) !important;
+            box-shadow: 0 0 20px var(--accent-gold-glow);
             transform: translateY(-2px);
         }
 
@@ -388,69 +489,85 @@
             display: none;
             width: 100%;
             max-width: 720px;
-            background: linear-gradient(90deg, rgba(231,76,60,0.85) 0%, rgba(192,57,43,0.92) 100%);
+            background: linear-gradient(90deg, rgba(231,76,60,0.92) 0%, rgba(192,57,43,0.98) 100%);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 14px;
             padding: 6px 16px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.82rem;
+            font-weight: 700;
             color: #ffffff;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 6px;
-            box-shadow: 0 8px 24px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 8px 24px rgba(231, 76, 60, 0.5);
             animation: pulseBanner 1.2s infinite alternate;
         }
 
         @keyframes pulseBanner {
-            from { transform: scale(1); }
-            to { transform: scale(1.01); }
+            from { transform: scale(1); filter: drop-shadow(0 0 6px rgba(231,76,60,0.4)); }
+            to { transform: scale(1.015); filter: drop-shadow(0 0 16px rgba(231,76,60,0.8)); }
         }
 
         .banner-decision .reloj {
-            font-weight: 800;
-            background: rgba(0, 0, 0, 0.35);
+            font-weight: 900;
+            background: rgba(0, 0, 0, 0.4);
             padding: 2px 10px;
             border-radius: 980px;
-            color: var(--accent-gold);
+            color: #ffd966;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== CONTENEDOR WORKSPACE ===== */
+        /* ===== CONTENEDOR WORKSPACE RESPONSIVE ===== */
         .workspace {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             width: 100%;
-            max-width: 1220px;
+            max-width: var(--table-max-w);
             justify-content: center;
             align-items: stretch;
             flex: 1;
+            position: relative;
         }
 
+        /* Panel lateral en escritorio / Drawer en móvil */
         .desglose-panel {
             width: 260px;
             background: var(--glass-surface);
             backdrop-filter: blur(28px) saturate(180%);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            border-radius: 20px;
             padding: 12px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 var(--glass-highlight);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.4), inset 0 1px 0 var(--glass-highlight);
+            z-index: 100;
         }
 
         .desglose-header {
             font-size: 0.74rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 1px;
             text-transform: uppercase;
-            color: #8fa599;
+            color: var(--text-muted);
             margin-bottom: 10px;
             padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
+        }
+
+        .drawer-close-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 6px;
         }
 
         .desglose-list {
@@ -458,16 +575,16 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding-right: 4px;
+            gap: 8px;
+            padding-right: 3px;
         }
 
         .desglose-list::-webkit-scrollbar { width: 4px; }
-        .desglose-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .desglose-list::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
 
         .desglose-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
             border-left: 4px solid var(--accent-gold);
             padding: 8px 10px;
             border-radius: 10px;
@@ -475,8 +592,15 @@
             line-height: 1.4;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
+            animation: cardSlideIn 0.3s ease;
         }
+
+        @keyframes cardSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .desglose-card.verde { border-left-color: var(--team-us); }
         .desglose-card.rojo { border-left-color: var(--team-rival); }
 
@@ -488,54 +612,65 @@
 
         .desglose-title {
             font-weight: 800;
-            color: #ffffff;
-            font-size: 0.76rem;
+            color: var(--text-primary);
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
 
         .desglose-puntos-tag {
             font-weight: 900;
-            font-size: 0.75rem;
+            font-size: 0.73rem;
             padding: 2px 7px;
             border-radius: 6px;
-            background: rgba(242, 201, 76, 0.18);
+            background: var(--accent-gold-glow);
             color: var(--accent-gold);
-            border: 1px solid rgba(242, 201, 76, 0.35);
+            border: 1px solid var(--accent-gold);
         }
         .desglose-card.verde .desglose-puntos-tag {
-            background: rgba(46, 204, 113, 0.2);
+            background: var(--team-us-bg);
             color: var(--team-us);
-            border-color: rgba(46, 204, 113, 0.45);
+            border-color: var(--team-us-border);
         }
         .desglose-card.rojo .desglose-puntos-tag {
-            background: rgba(231, 76, 60, 0.2);
-            color: #ff7675;
-            border-color: rgba(231, 76, 60, 0.45);
+            background: var(--team-rival-bg);
+            color: var(--team-rival);
+            border-color: var(--team-rival-border);
         }
 
         .desglose-detail {
-            color: #cadfd4;
+            color: var(--text-sub);
             font-size: 0.68rem;
         }
 
-        /* ===== MESA DE CASINO ===== */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(6px);
+            z-index: 9998;
+            display: none;
+        }
+        .drawer-overlay.activo { display: block; }
+
+        /* ===== MESA DE CASINO CON RELIEVE Y TEXTURA ===== */
         .table-viewport {
             position: relative;
             flex: 1;
-            min-height: 490px;
-            max-width: 950px;
-            background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 80%, #061c10 100%);
+            min-height: 470px;
+            width: 100%;
+            background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 78%, var(--tapete-bottom) 100%);
             border: 14px solid var(--rail-inner);
-            outline: 5px solid var(--rail-outer);
+            outline: 4px solid var(--rail-outer);
             border-radius: 260px;
             box-shadow: 
-                inset 0 0 70px rgba(0,0,0,0.85),
-                inset 0 0 15px rgba(0,0,0,0.7),
-                0 25px 60px rgba(0,0,0,0.85);
+                inset 0 0 80px rgba(0,0,0,0.85),
+                inset 0 0 20px rgba(0,0,0,0.6),
+                0 0 0 2px var(--rail-gold),
+                0 25px 60px rgba(0,0,0,0.8);
             display: grid;
-            grid-template-columns: 160px 1fr 160px;
-            grid-template-rows: 105px 1fr 130px;
+            grid-template-columns: minmax(80px, 160px) 1fr minmax(80px, 160px);
+            grid-template-rows: auto 1fr auto;
             grid-template-areas:
                 ". norte ."
                 "oeste centro este"
@@ -562,39 +697,46 @@
 
         .player-badge {
             position: relative;
-            background: rgba(10, 22, 16, 0.88);
+            background: var(--glass-surface);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 4px 12px;
+            border: 1px solid var(--glass-border);
+            padding: 4px 14px;
             border-radius: 980px;
             font-size: 0.72rem;
-            font-weight: 700;
+            font-weight: 800;
             display: flex;
             flex-direction: column;
             align-items: center;
             line-height: 1.2;
-            min-width: 104px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            min-width: 100px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
             transition: all 0.25s ease;
         }
 
-        .player-badge.mi-equipo { border-color: rgba(46, 204, 113, 0.45); }
+        .player-badge.mi-equipo { border-color: var(--team-us-border); }
         .player-badge.mi-equipo .sub-role { color: var(--team-us); }
 
-        .player-badge.rival-equipo { border-color: rgba(231, 76, 60, 0.45); }
-        .player-badge.rival-equipo .sub-role { color: #f1948a; }
+        .player-badge.rival-equipo { border-color: var(--team-rival-border); }
+        .player-badge.rival-equipo .sub-role { color: var(--team-rival); }
 
         .player-badge .sub-role {
             font-size: 0.6rem;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.4px;
             text-transform: uppercase;
         }
 
+        /* Halo y foco del jugador activo */
         .player-badge.activo {
             border-color: var(--accent-gold) !important;
-            box-shadow: 0 0 20px rgba(242, 201, 76, 0.45);
-            transform: scale(1.05);
+            box-shadow: 0 0 24px var(--accent-gold-glow), 0 0 8px var(--accent-gold);
+            transform: scale(1.06);
+            animation: pulseTurnBadge 1.5s infinite alternate;
+        }
+
+        @keyframes pulseTurnBadge {
+            from { box-shadow: 0 0 14px var(--accent-gold-glow); }
+            to { box-shadow: 0 0 28px var(--accent-gold-glow), 0 0 10px var(--accent-gold); }
         }
 
         .badge-mano {
@@ -606,7 +748,7 @@
             font-size: 0.62rem;
             font-weight: 900;
             letter-spacing: 0.8px;
-            padding: 1px 7px;
+            padding: 1px 8px;
             border-radius: 980px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.4);
             border: 1px solid #ffffff;
@@ -614,8 +756,8 @@
         }
 
         .player-pod.ganador-lance-halo {
-            filter: drop-shadow(0 0 24px rgba(242, 201, 76, 0.8));
-            transform: scale(1.06);
+            filter: drop-shadow(0 0 26px var(--accent-gold));
+            transform: scale(1.07);
             z-index: 40;
         }
 
@@ -628,9 +770,9 @@
             font-size: 0.74rem;
             font-weight: 800;
             white-space: nowrap;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             opacity: 0;
-            transform: scale(0.7);
+            transform: scale(0.65);
             transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
             z-index: 50;
@@ -645,8 +787,7 @@
         .notificacion-sena {
             position: absolute;
             top: -46px;
-            background: rgba(242, 201, 76, 0.95);
-            backdrop-filter: blur(16px);
+            background: var(--accent-gold);
             color: #102418;
             padding: 5px 14px;
             border-radius: 980px;
@@ -655,6 +796,12 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.6);
             z-index: 60;
             display: none;
+            animation: bounceIn 0.3s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .card-row {
@@ -662,18 +809,40 @@
             gap: 6px;
             min-height: var(--carta-h);
             align-items: center;
+            justify-content: center;
         }
 
-        .card-row.vertical { transform: scale(0.86); }
+        /* Cartas fanning para Este y Oeste para que quepan holgadamente */
+        .card-row.fanned-horizontal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-row.fanned-horizontal .card,
+        .card-row.fanned-horizontal .card-back {
+            margin-left: -18px;
+            transition: margin 0.2s ease, transform 0.2s ease;
+        }
+        .card-row.fanned-horizontal .card:first-child,
+        .card-row.fanned-horizontal .card-back:first-child {
+            margin-left: 0;
+        }
 
-        /* NAIPES */
+        /* Cartas de tu mano con abanico sutil táctil */
+        .card-row.mi-mano-fanned .card {
+            margin-left: -6px;
+            transform-origin: 50% 120%;
+        }
+        .card-row.mi-mano-fanned .card:first-child { margin-left: 0; }
+
+        /* NAIPES ESPAÑOLES REALISTAS CON PROFUNDIDAD 3D */
         .card {
             width: var(--carta-w);
             height: var(--carta-h);
-            background: #ffffff;
-            border-radius: 9px;
-            border: 1px solid rgba(0,0,0,0.22);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -681,6 +850,7 @@
             cursor: pointer;
             position: relative;
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+            transform-style: preserve-3d;
         }
 
         .card::after {
@@ -688,27 +858,29 @@
             position: absolute;
             inset: 2px;
             border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 6px;
+            border-radius: 7px;
             pointer-events: none;
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+            transform: translateY(-14px) scale(1.08) !important;
+            box-shadow: 0 16px 32px rgba(0,0,0,0.55);
+            z-index: 25;
         }
 
         .card.seleccionada {
-            transform: translateY(-16px);
-            outline: 2px solid var(--accent-gold);
-            box-shadow: 0 14px 28px rgba(242, 201, 76, 0.45);
+            transform: translateY(-22px) scale(1.1) !important;
+            outline: 3px solid var(--accent-gold);
+            box-shadow: 0 18px 36px var(--accent-gold-glow) !important;
+            z-index: 30;
         }
 
         .card.revelada-anim {
-            animation: cardFlip 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: cardFlip3D 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        @keyframes cardFlip {
-            0% { transform: rotateY(90deg) scale(0.85); opacity: 0.3; }
+        @keyframes cardFlip3D {
+            0% { transform: rotateY(90deg) scale(0.85); opacity: 0.2; }
             100% { transform: rotateY(0deg) scale(1); opacity: 1; }
         }
 
@@ -720,8 +892,8 @@
             z-index: 1;
         }
         .card-corner.inf { align-self: flex-end; transform: rotate(180deg); }
-        .card-num { font-size: 0.95rem; font-weight: 800; }
-        .card-mini-symbol { width: 10px; height: 10px; margin-top: 1px; }
+        .card-num { font-size: clamp(0.82rem, 1.3vw, 0.95rem); font-weight: 800; }
+        .card-mini-symbol { width: 11px; height: 11px; margin-top: 1px; }
 
         .palo-oros .card-num { color: #d48b00; }
         .palo-copas .card-num { color: #c0392b; }
@@ -736,18 +908,19 @@
             z-index: 1;
         }
         .card-center-art svg {
-            width: 30px;
-            height: 42px;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+            width: clamp(22px, 3.2vw, 32px);
+            height: clamp(30px, 4.2vw, 44px);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.18));
         }
 
+        /* Reverso de cartas de mus */
         .card-back {
             width: var(--carta-w);
             height: var(--carta-h);
-            background: radial-gradient(circle at center, #961b1b 0%, #570909 100%);
-            border: 2px solid #e2d2b4;
-            border-radius: 9px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            background: radial-gradient(circle at center, var(--card-back-core) 0%, var(--card-back-edge) 100%);
+            border: 2px solid #e8dbbe;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -757,8 +930,8 @@
         .card-back-pattern {
             width: calc(100% - 6px);
             height: calc(100% - 6px);
-            border: 1px dashed rgba(226, 210, 180, 0.4);
-            border-radius: 6px;
+            border: 1px dashed rgba(232, 219, 190, 0.45);
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -769,33 +942,34 @@
             font-size: 0.72rem;
             font-weight: 900;
             letter-spacing: 1.5px;
-            color: #f5e4c6;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            color: #f7edd6;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.85);
         }
 
-        /* ===== MAZO REUBICADO A UN LATERAL ===== */
+        /* ===== HUB CENTRAL DE LA MESA CON BOTE DE FICHAS ===== */
         .table-hub {
             position: relative;
-            background: rgba(8, 20, 14, 0.88);
+            background: var(--glass-surface);
             backdrop-filter: blur(32px) saturate(200%);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            padding: 12px 22px;
+            padding: 10px 20px;
             text-align: center;
-            max-width: 440px;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.65), inset 0 1px 0 var(--glass-highlight);
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.55), inset 0 1px 0 var(--glass-highlight);
         }
 
         .mazo-central {
             position: absolute;
-            top: -20px;
-            left: -52px;
-            width: 42px;
-            height: 60px;
-            background: radial-gradient(circle at center, #961b1b 0%, #570909 100%);
-            border: 1.5px solid #e2d2b4;
+            top: -18px;
+            left: -48px;
+            width: 40px;
+            height: 58px;
+            background: radial-gradient(circle at center, var(--card-back-core) 0%, var(--card-back-edge) 100%);
+            border: 1.5px solid #e8dbbe;
             border-radius: 6px;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.7), -2px -2px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.65);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -819,10 +993,32 @@
 
         .mazo-central span {
             font-family: 'Cinzel', serif;
-            font-size: 0.52rem;
+            font-size: 0.5rem;
             font-weight: 900;
-            color: #f5e4c6;
+            color: #f7edd6;
             letter-spacing: 0.8px;
+        }
+
+        /* Píldora de bote de fichas animado */
+        .fichas-bote-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-gold-glow);
+            border: 1px solid var(--accent-gold);
+            padding: 2px 10px;
+            border-radius: 980px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            animation: chipToss 0.3s ease;
+        }
+
+        @keyframes chipToss {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         .carta-voladora {
@@ -831,8 +1027,8 @@
             left: 50%;
             width: 42px;
             height: 60px;
-            background: radial-gradient(circle at center, #961b1b 0%, #570909 100%);
-            border: 1.5px solid #e2d2b4;
+            background: radial-gradient(circle at center, var(--card-back-core) 0%, var(--card-back-edge) 100%);
+            border: 1.5px solid #e8dbbe;
             border-radius: 6px;
             z-index: 1000;
             pointer-events: none;
@@ -843,65 +1039,79 @@
         .table-hub h3 {
             font-family: 'Cinzel', serif;
             color: var(--accent-gold);
-            font-size: 1.05rem;
+            font-size: clamp(0.95rem, 1.8vw, 1.15rem);
             font-weight: 800;
             letter-spacing: 1px;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .table-hub p {
-            font-size: 0.78rem;
-            color: #d8e5de;
-            min-height: 36px;
+            font-size: clamp(0.72rem, 1.3vw, 0.8rem);
+            color: var(--text-sub);
+            min-height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
             line-height: 1.35;
         }
 
-        /* ===== CONTROLES DOCK ===== */
+        /* ===== CONTROLES DOCK TÁCTILES Y ERGONÓMICOS ===== */
         .action-dock {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 6px;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            min-height: 44px;
+            min-height: 46px;
+            width: 100%;
+            max-width: var(--table-max-w);
         }
 
         .btn-action {
             background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%), #1c2b22;
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.16);
             color: #ffffff;
-            padding: 8px 20px;
-            border-radius: 12px;
-            font-size: 0.84rem;
-            font-weight: 700;
+            padding: 9px 18px;
+            border-radius: 14px;
+            font-size: clamp(0.78rem, 1.5vw, 0.86rem);
+            font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .btn-action:hover:not(:disabled) {
             transform: translateY(-2px);
             filter: brightness(1.15);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.45);
         }
 
-        .btn-action:active:not(:disabled) { transform: scale(0.96); }
-        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-action:active:not(:disabled) {
+            transform: translateY(1px) scale(0.97);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+            transform: none;
+        }
 
         .btn-action.gold {
             background: linear-gradient(180deg, #ffd75e 0%, #e5a910 100%);
             color: #1a1003;
             border: 1px solid #ffeaa7;
-            box-shadow: 0 6px 20px rgba(242, 201, 76, 0.35);
+            box-shadow: 0 6px 20px var(--accent-gold-glow);
         }
 
         .btn-action.red {
             background: linear-gradient(180deg, #ff6b6b 0%, #c0392b 100%);
             border: 1px solid #ff8787;
-            box-shadow: 0 6px 20px rgba(192, 57, 43, 0.35);
+            box-shadow: 0 6px 20px var(--team-rival-glow);
         }
 
         .btn-action.blue {
@@ -910,49 +1120,56 @@
         }
 
         .message-blocked {
-            background: rgba(231, 76, 60, 0.2);
-            border: 1px solid rgba(231, 76, 60, 0.4);
+            background: var(--team-rival-bg);
+            border: 1px solid var(--team-rival-border);
             padding: 6px 16px;
             border-radius: 980px;
             font-size: 0.78rem;
-            font-weight: 600;
-            color: #ff9f95;
+            font-weight: 700;
+            color: var(--team-rival);
         }
 
+        /* ===== SEÑAS DOCK ===== */
         .senas-dock {
             display: flex;
             gap: 6px;
-            margin-top: 6px;
+            margin-top: 5px;
             background: var(--glass-surface);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             padding: 4px 10px;
             border-radius: 980px;
+            max-width: 100%;
+            overflow-x: auto;
         }
 
         .senas-dock span {
             font-size: 0.68rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 0.6px;
             color: var(--accent-gold);
             align-self: center;
             margin-right: 2px;
+            white-space: nowrap;
         }
 
         .btn-sena {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #e2ede7;
-            padding: 4px 9px;
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
+            color: var(--text-sub);
+            padding: 3px 8px;
             border-radius: 980px;
-            font-size: 0.72rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.15s ease;
+            white-space: nowrap;
         }
 
         .btn-sena:hover {
-            background: rgba(255, 255, 255, 0.12);
+            background: var(--accent-gold-glow);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
             transform: translateY(-1px);
         }
 
@@ -962,7 +1179,7 @@
             right: 12px;
             width: 220px;
             height: 94px;
-            background: rgba(10, 20, 14, 0.85);
+            background: var(--glass-surface);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 14px;
@@ -972,22 +1189,68 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             z-index: 20;
         }
 
         .chat-pane::-webkit-scrollbar { width: 3px; }
-        .chat-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        .chat-pane::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
 
-        @media (max-width: 960px) {
-            .workspace { flex-direction: column; align-items: center; }
-            .desglose-panel { width: 100%; max-width: 600px; height: 110px; }
-            .table-viewport { width: 100%; max-width: 600px; min-height: 390px; }
-            :root { --carta-w: 46px; --carta-h: 70px; }
-            .card-num { font-size: 0.76rem; }
-            .card-center-art svg { width: 20px; height: 30px; }
+        /* ===== ADAPTACIÓN RESPONSIVE AVANZADA ===== */
+        .mobile-only-btn { display: none; }
+
+        @media (max-width: 991px) {
+            .mobile-only-btn { display: inline-flex; }
+
+            .desglose-panel {
+                position: fixed;
+                top: 0;
+                right: -320px;
+                width: 300px;
+                height: 100vh;
+                z-index: 9999;
+                transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                box-shadow: -12px 0 36px rgba(0,0,0,0.7);
+                border-radius: 20px 0 0 20px;
+            }
+
+            .desglose-panel.drawer-open {
+                right: 0 !important;
+            }
+
+            .drawer-close-btn { display: block; }
+
+            .table-viewport {
+                width: 100%;
+                min-height: 410px;
+                padding: 6px 8px;
+                border-width: 10px;
+                outline-width: 3px;
+                border-radius: 160px;
+            }
+
             .mazo-central { left: -36px; top: -14px; width: 32px; height: 46px; }
             .chat-pane { display: none; }
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 4px 6px; }
+            .brand-badge { display: none; }
+            .scoreboard-widget { padding: 4px 12px; gap: 8px; }
+            .table-viewport {
+                min-height: 360px;
+                border-radius: 130px;
+                grid-template-columns: 68px 1fr 68px;
+                border-width: 8px;
+            }
+            .player-badge { min-width: 82px; padding: 3px 8px; font-size: 0.67rem; }
+            .player-badge .sub-role { font-size: 0.55rem; }
+            .action-dock { gap: 6px; }
+            .btn-action { padding: 8px 14px; font-size: 0.78rem; }
+            .card-row.fanned-horizontal .card,
+            .card-row.fanned-horizontal .card-back {
+                margin-left: -24px;
+            }
         }
     </style>
 </head>
@@ -1037,6 +1300,9 @@
 
         <div class="header-actions">
             <div class="capsule" id="miAsientoTexto">Conectando...</div>
+            <button onclick="toggleTemaVisual()" id="btnThemeToggle" class="btn-compact" title="Cambiar modo claro / oscuro">☀️ Modo Claro</button>
+            <button onclick="toggleAudio()" id="btnAudioToggle" class="btn-compact" title="Activar / Desactivar efectos sonoros">🔊 Sonido</button>
+            <button onclick="toggleDesgloseDrawer()" id="btnToggleDesglose" class="btn-compact mobile-only-btn" title="Ver registro de lances de esta mano">📜 Lances <span class="badge-count" id="countLances">0</span></button>
             <button onclick="toggleModoClase()" id="btnModoClase" class="btn-compact" title="Ocultar cartas si juegas en clase">🙈 Ocultar</button>
             <button onclick="socket.emit('rellenarBots')" class="btn-compact">🤖 Rellenar Bots</button>
             <button onclick="abrirModalAdmin()" class="btn-compact danger">🔑 Admin</button>
@@ -1094,13 +1360,18 @@
 
     <!-- WORKSPACE -->
     <main class="workspace">
-        <aside class="desglose-panel">
+        <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDesgloseDrawer()"></div>
+
+        <aside class="desglose-panel" id="desglosePanel">
             <div class="desglose-header">
                 <span>Registro de Lances</span>
-                <span style="font-size: 0.65rem; color: var(--accent-gold);">Esta Mano</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size: 0.65rem; color: var(--accent-gold);">Esta Mano</span>
+                    <button onclick="toggleDesgloseDrawer()" class="drawer-close-btn" title="Cerrar">&times;</button>
+                </div>
             </div>
             <div class="desglose-list" id="desgloseLog">
-                <div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>
+                <div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>
             </div>
         </aside>
 
@@ -1126,13 +1397,17 @@
                     <span id="nom_oeste">Esperando...</span>
                     <span class="sub-role">⚔️ Rival</span>
                 </div>
-                <div class="card-row vertical" id="mano_oeste"></div>
+                <div class="card-row fanned-horizontal" id="mano_oeste"></div>
             </div>
 
-            <!-- CENTRO CON MAZO LATERAL -->
+            <!-- CENTRO CON MAZO Y FICHAS -->
             <div class="table-hub pos-centro" id="boxCentro">
                 <div class="mazo-central" id="mazoVisual">
                     <span>BARAJA</span>
+                </div>
+                <div class="fichas-bote-pill" id="fichasBoteContainer" style="display: none;">
+                    <span>🪙</span>
+                    <span id="txtBoteFichas">Bote: 2 pts</span>
                 </div>
                 <h3 id="faseTxt">MESA PREPARADA</h3>
                 <p id="msgTxt">Conectando los 4 jugadores para iniciar la mano.</p>
@@ -1146,14 +1421,14 @@
                     <span id="nom_este">Esperando...</span>
                     <span class="sub-role">⚔️ Rival</span>
                 </div>
-                <div class="card-row vertical" id="mano_este"></div>
+                <div class="card-row fanned-horizontal" id="mano_este"></div>
             </div>
 
             <!-- SUR: TÚ -->
             <div class="player-pod pos-sur" id="box_sur">
                 <div class="badge-mano" id="badge_sur">👑 MANO</div>
                 <div class="speech-bubble" id="boc_sur"></div>
-                <div class="card-row" id="miMano"></div>
+                <div class="card-row mi-mano-fanned" id="miMano"></div>
                 <div class="player-badge mi-equipo activo" id="lbl_sur">
                     <span id="nom_sur">Tú</span>
                     <span class="sub-role">👤 Tu Asiento</span>
@@ -1187,6 +1462,198 @@
             espadas: `<svg viewBox="0 0 100 100"><path d="M48 6 L52 6 L56 66 L44 66 Z" fill="#bdc3c7" stroke="#2c3e50" stroke-width="4"/><path d="M20 70 Q50 62 80 70 L78 76 Q50 70 22 76 Z" fill="#e5a910" stroke="#7d5506" stroke-width="3"/><path d="M46 75 L54 75 L53 93 L47 93 Z" fill="#6d4c41"/><circle cx="50" cy="95" r="4" fill="#e5a910"/></svg>`,
             bastos: `<svg viewBox="0 0 100 100"><path d="M42 94 L44 64 Q36 50 46 18 Q48 8 52 8 Q56 8 58 18 Q66 50 56 64 L58 94 Z" fill="#27ae60" stroke="#145a32" stroke-width="5"/><ellipse cx="47" cy="30" rx="9" ry="5" fill="#a9dfbf"/><ellipse cx="53" cy="52" rx="9" ry="5" fill="#a9dfbf"/></svg>`
         };
+
+        /* ===== MOTOR DE AUDIO PROCEDURAL SINTETIZADO (WEB AUDIO API) ===== */
+        class MusAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = localStorage.getItem('mus_sound') !== 'muted';
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playCard() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const bufferSize = Math.floor(this.ctx.sampleRate * 0.07);
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+                    }
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1600, now);
+                    filter.Q.setValueAtTime(2.5, now);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    noise.start(now);
+                } catch(e) {}
+            }
+            playChip() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    [2400, 3200].forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.025);
+                        gain.gain.setValueAtTime(0.1, now + idx * 0.025);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.025 + 0.08);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + idx * 0.025);
+                        osc.stop(now + idx * 0.025 + 0.09);
+                    });
+                } catch(e) {}
+            }
+            playOrdago() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    [130.81, 164.81, 196.00, 261.63].forEach((f) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(f, now);
+                        gain.gain.setValueAtTime(0.08, now);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 1.15);
+                    });
+                } catch(e) {}
+            }
+            playTurn() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.09, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.24);
+                } catch(e) {}
+            }
+            playFanfare() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((f, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(f, now + i * 0.11);
+                        gain.gain.setValueAtTime(0.12, now + i * 0.11);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.11 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + i * 0.11);
+                        osc.stop(now + i * 0.11 + 0.45);
+                    });
+                } catch(e) {}
+            }
+        }
+
+        const audioEngine = new MusAudioEngine();
+        document.addEventListener('click', () => audioEngine.init(), { once: true });
+        document.addEventListener('touchstart', () => audioEngine.init(), { once: true });
+
+        /* ===== GESTIÓN DE TEMA CLARO / OSCURO ===== */
+        function aplicarTemaInicial() {
+            const guardado = localStorage.getItem('mus_theme');
+            if (guardado === 'light') {
+                document.body.classList.add('theme-light');
+            } else if (!guardado && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.body.classList.add('theme-light');
+            }
+            actualizarBotonTema();
+        }
+
+        function toggleTemaVisual() {
+            document.body.classList.toggle('theme-light');
+            const esClaro = document.body.classList.contains('theme-light');
+            localStorage.setItem('mus_theme', esClaro ? 'light' : 'dark');
+            actualizarBotonTema();
+        }
+
+        function actualizarBotonTema() {
+            const btn = document.getElementById('btnThemeToggle');
+            if (!btn) return;
+            const esClaro = document.body.classList.contains('theme-light');
+            btn.innerHTML = esClaro ? '🌙 Modo Oscuro' : '☀️ Modo Claro';
+            btn.classList.toggle('active-toggle', esClaro);
+        }
+
+        /* ===== GESTIÓN DE AUDIO ===== */
+        function toggleAudio() {
+            audioEngine.enabled = !audioEngine.enabled;
+            localStorage.setItem('mus_sound', audioEngine.enabled ? 'active' : 'muted');
+            actualizarBotonAudio();
+            if (audioEngine.enabled) audioEngine.playTurn();
+        }
+
+        function actualizarBotonAudio() {
+            const btn = document.getElementById('btnAudioToggle');
+            if (!btn) return;
+            btn.innerHTML = audioEngine.enabled ? '🔊 Sonido' : '🔇 Silencio';
+            btn.classList.toggle('danger', !audioEngine.enabled);
+        }
+
+        /* ===== DRAWER PARA MÓVILES (REGISTRO DE LANCES) ===== */
+        function toggleDesgloseDrawer() {
+            const panel = document.getElementById('desglosePanel');
+            const overlay = document.getElementById('drawerOverlay');
+            if (panel && overlay) {
+                const abierto = panel.classList.toggle('drawer-open');
+                overlay.classList.toggle('activo', abierto);
+            }
+        }
+
+        function actualizarContadorLancesBadge() {
+            const countEl = document.getElementById('countLances');
+            const cont = document.getElementById('desgloseLog');
+            if (countEl && cont) {
+                const total = cont.querySelectorAll('.desglose-card').length;
+                countEl.innerText = total;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            aplicarTemaInicial();
+            actualizarBotonAudio();
+        });
 
         const urlParams = new URLSearchParams(window.location.search);
         let salaUrl = urlParams.get('sala');
@@ -1331,6 +1798,7 @@
 
         socket.on('misCartas', (cartas) => {
             misCartas = cartas.map(c => ({ ...c, seleccionada: false }));
+            audioEngine.playCard();
             renderizarMiMano();
         });
 
@@ -1385,6 +1853,7 @@
                 if (!box) return;
 
                 setTimeout(() => {
+                    audioEngine.playCard();
                     const cartaVol = document.createElement('div');
                     cartaVol.className = 'carta-voladora';
                     cartaVol.style.left = `${origenX}px`;
@@ -1409,9 +1878,15 @@
             });
         }
 
-        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados }) => {
+        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados, esOrdagoDirecto }) => {
             document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
             document.getElementById('msgTxt').innerText = desglose;
+
+            if (esOrdagoDirecto) {
+                audioEngine.playOrdago();
+            } else {
+                audioEngine.playChip();
+            }
 
             actualizarPuntuacionesPersonalizadas(puntosActualizados, estadoActual.chicosGanados, estadoActual.vacasGanadas);
             actualizarTablaDesgloseLateral(lance, parejaGanadora, desgloseItems);
@@ -1431,14 +1906,18 @@
         });
 
         socket.on('victoriaChico', ({ mensaje, chicosGanados, vacasGanadas }) => {
+            audioEngine.playFanfare();
             actualizarPuntuacionesPersonalizadas({ 0: 0, 1: 0 }, chicosGanados, vacasGanadas);
             alert(mensaje);
-            document.getElementById('desgloseLog').innerHTML = `<div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Nuevo Chico comenzado.</div>`;
+            document.getElementById('desgloseLog').innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Nuevo Chico comenzado.</div>`;
+            actualizarContadorLancesBadge();
         });
 
+        let ultimoTurnoNotificado = null;
         socket.on('estadoJuego', (estado) => {
             if (estado.fase === 'mus' && ultimaFaseRegistrada !== 'mus') {
-                document.getElementById('desgloseLog').innerHTML = `<div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>`;
+                document.getElementById('desgloseLog').innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>`;
+                actualizarContadorLancesBadge();
             }
             ultimaFaseRegistrada = estado.fase;
 
@@ -1456,6 +1935,22 @@
             }
 
             actualizarPuntuacionesPersonalizadas(estado.puntos, estado.chicosGanados, estado.vacasGanadas);
+
+            // Actualizar fichas / bote en la mesa central
+            const hubFichas = document.getElementById('fichasBoteContainer');
+            const txtBote = document.getElementById('txtBoteFichas');
+            if (hubFichas && txtBote) {
+                const ap = estado.apuestaActual;
+                if (ap && ap.ordago) {
+                    hubFichas.style.display = 'inline-flex';
+                    txtBote.innerText = '⚔️ ÓRDAGO EN JUEGO';
+                } else if (ap && ap.total > 0) {
+                    hubFichas.style.display = 'inline-flex';
+                    txtBote.innerText = `Bote: ${ap.total} pts`;
+                } else {
+                    hubFichas.style.display = 'none';
+                }
+            }
 
             const banner = document.getElementById('bannerDecision');
             if (estado.decisionPareja && estado.decisionPareja.activa) {
@@ -1476,6 +1971,26 @@
             } else {
                 reveladoEjecutado = false;
                 actualizarReversosOtrosJugadores(estado.fase !== 'espera', estado.cartasReveladasModoLoco);
+            }
+
+            // Notificación sonora y háptica de turno activo
+            const miPareja = (miAsiento !== null && miAsiento % 2 !== 0) ? 1 : 0;
+            const esMiTurnoDirecto = (miAsiento !== null && estado.turno === miAsiento && ['mus', 'declaracion_pares', 'declaracion_juego', 'grande', 'chica', 'pares', 'juego'].includes(estado.fase));
+            const esMiDecisionPareja = (estado.decisionPareja && estado.decisionPareja.activa && estado.decisionPareja.parejaVotante === miPareja);
+
+            if (esMiTurnoDirecto || esMiDecisionPareja) {
+                const claveTurno = `${estado.fase}_${estado.turno}_${estado.decisionPareja?.tiempoRestante > 0}`;
+                if (ultimoTurnoNotificado !== claveTurno) {
+                    if (estado.apuestaActual && estado.apuestaActual.ordago) {
+                        audioEngine.playOrdago();
+                    } else {
+                        audioEngine.playTurn();
+                    }
+                    if (navigator.vibrate) navigator.vibrate([25, 40]);
+                    ultimoTurnoNotificado = claveTurno;
+                }
+            } else {
+                ultimoTurnoNotificado = null;
             }
 
             actualizarControles();
@@ -1549,6 +2064,7 @@
                 `;
                 contenedor.prepend(card);
             }
+            actualizarContadorLancesBadge();
         }
 
         /* ===== BARRA DE LANCES DINÁMICA CON HALO DE RONDA ===== */
@@ -1623,15 +2139,39 @@
                 return;
             }
 
-            misCartas.forEach((c) => {
+            const rotAngles = [-3.5, -1.2, 1.2, 3.5];
+            const yOffsets = [2, 0, 0, 2];
+
+            misCartas.forEach((c, idx) => {
                 const div = document.createElement('div');
                 div.className = `card palo-${c.palo} ${c.seleccionada ? 'seleccionada' : ''}`;
+                const baseRot = rotAngles[idx] || 0;
+                const baseY = c.seleccionada ? -18 : (yOffsets[idx] || 0);
+                div.style.transform = `rotate(${baseRot}deg) translateY(${baseY}px)`;
+                div.style.transition = 'transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.2s ease';
+
                 div.innerHTML = `
                     <div class="card-corner"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
                     <div class="card-center-art">${svgPalos[c.palo]}</div>
                     <div class="card-corner inf"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
                 `;
+
+                // Interactive 3D perspective mouse tilt
+                div.addEventListener('mousemove', (e) => {
+                    const rect = div.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    const rotX = -(y / (rect.height / 2)) * 12;
+                    const rotY = (x / (rect.width / 2)) * 12;
+                    div.style.transform = `perspective(600px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) rotateZ(${baseRot}deg) translateY(${c.seleccionada ? -22 : -10}px) scale(1.05)`;
+                });
+
+                div.addEventListener('mouseleave', () => {
+                    div.style.transform = `rotate(${baseRot}deg) translateY(${c.seleccionada ? -18 : (yOffsets[idx] || 0)}px)`;
+                });
+
                 div.onclick = () => {
+                    audioEngine.playCard();
                     if (estadoActual.fase === 'descartes') {
                         c.seleccionada = !c.seleccionada;
                         renderizarMiMano();
@@ -1733,6 +2273,13 @@
         }
 
         function emitirAccionVisual(tipo, cantidad) {
+            if (tipo === 'ordago') {
+                audioEngine.playOrdago();
+            } else if (tipo === 'envidar' || tipo === 'quiero') {
+                audioEngine.playChip();
+            } else {
+                audioEngine.playTurn();
+            }
             socket.emit('accionLance', { tipo, cantidad });
             const panel = document.getElementById('botonesAccion');
             panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Emitiendo jugada: <strong>${tipo.toUpperCase()}</strong>...</div>`;
@@ -1786,13 +2333,13 @@
                 const infoPares = evaluarMisPares();
                 if (infoPares.tipo > 0) {
                     panel.innerHTML = `
-                        <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, llevo! (${infoPares.desc})</button>
-                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo</button>
+                        <button onclick="audioEngine.playTurn(); socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, llevo! (${infoPares.desc})</button>
+                        <button onclick="audioEngine.playTurn(); socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo</button>
                     `;
                 } else {
                     panel.innerHTML = `
                         <button disabled class="btn-action gold" style="opacity:0.38; cursor:not-allowed;" title="No tienes pares en tu mano">¡Sí, llevo! (Sin pares)</button>
-                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo pares</button>
+                        <button onclick="audioEngine.playTurn(); socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo pares</button>
                     `;
                 }
                 return;
@@ -1802,13 +2349,13 @@
                 const infoJuego = evaluarMiJuego();
                 if (infoJuego.tiene) {
                     panel.innerHTML = `
-                        <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, tengo! (${infoJuego.puntos === 31 ? 'La una (31)' : infoJuego.puntos + ' de juego'})</button>
-                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No tengo</button>
+                        <button onclick="audioEngine.playTurn(); socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, tengo! (${infoJuego.puntos === 31 ? 'La una (31)' : infoJuego.puntos + ' de juego'})</button>
+                        <button onclick="audioEngine.playTurn(); socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No tengo</button>
                     `;
                 } else {
                     panel.innerHTML = `
                         <button disabled class="btn-action gold" style="opacity:0.38; cursor:not-allowed;" title="Punto: ${infoJuego.puntos}">¡Sí, tengo! (${infoJuego.puntos} pts - Sin juego)</button>
-                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No tengo juego (${infoJuego.puntos} pts)</button>
+                        <button onclick="audioEngine.playTurn(); socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No tengo juego (${infoJuego.puntos} pts)</button>
                     `;
                 }
                 return;
@@ -1816,8 +2363,8 @@
 
             if (estadoActual.fase === 'mus' && estadoActual.turno === miAsiento) {
                 panel.innerHTML = `
-                    <button onclick="socket.emit('votoMus', { quiereMus: true })" class="btn-action gold">¡Mus!</button>
-                    <button onclick="socket.emit('votoMus', { quiereMus: false })" class="btn-action red">Corto el Mus</button>
+                    <button onclick="audioEngine.playTurn(); socket.emit('votoMus', { quiereMus: true })" class="btn-action gold">¡Mus!</button>
+                    <button onclick="audioEngine.playTurn(); socket.emit('votoMus', { quiereMus: false })" class="btn-action red">Corto el Mus</button>
                 `;
                 return;
             }
@@ -1917,6 +2464,7 @@
         }
 
         function confirmarDescartes() {
+            audioEngine.playCard();
             let seleccionados = [];
             misCartas.forEach((c, idx) => {
                 if (c.seleccionada) seleccionados.push(idx);
