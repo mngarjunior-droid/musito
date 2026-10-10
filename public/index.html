@@ -22,7 +22,7 @@
             --team-rival: #e74c3c;
             --team-rival-glow: rgba(231, 76, 60, 0.35);
             
-            --glass-surface: rgba(14, 26, 19, 0.82);
+            --glass-surface: rgba(14, 26, 19, 0.85);
             --glass-border: rgba(255, 255, 255, 0.1);
             --glass-highlight: rgba(255, 255, 255, 0.16);
 
@@ -50,7 +50,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 16px;
+            padding: 8px 16px;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
@@ -132,7 +132,6 @@
             border-color: var(--accent-gold);
         }
 
-        /* GRID DE ASIENTOS CON ESTILO DE TARJETA */
         .grid-asientos {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
@@ -187,7 +186,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             gap: 12px;
         }
 
@@ -228,7 +227,6 @@
         .capsule {
             background: var(--glass-surface);
             backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid var(--glass-border);
             padding: 6px 14px;
             border-radius: 980px;
@@ -275,7 +273,6 @@
             align-items: center;
             background: var(--glass-surface);
             backdrop-filter: blur(28px) saturate(190%);
-            -webkit-backdrop-filter: blur(28px) saturate(190%);
             border: 1px solid var(--glass-border);
             box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 1px 0 var(--glass-highlight);
             border-radius: 20px;
@@ -337,18 +334,55 @@
             text-transform: uppercase;
         }
 
-        .stakes-bar {
+        /* ===== BARRA DE LANCES MEJORADA CON HALO ACTIVO ===== */
+        .stakes-bar-advanced {
             display: flex;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 3px 14px;
-            border-radius: 980px;
-            font-size: 0.7rem;
-            color: #9cb1a6;
+            gap: 8px;
+            width: 100%;
+            max-width: 950px;
             margin-bottom: 6px;
+            justify-content: center;
         }
-        .stakes-bar strong { color: #f2f5f3; font-weight: 600; }
+
+        .lance-node {
+            flex: 1;
+            background: rgba(14, 26, 19, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 5px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .lance-node .lance-name {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #8fa599;
+        }
+
+        .lance-node .lance-status {
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        /* Lance en curso resaltado en oro */
+        .lance-node.activo-ronda {
+            border-color: var(--accent-gold) !important;
+            background: rgba(242, 201, 76, 0.18) !important;
+            box-shadow: 0 0 20px rgba(242, 201, 76, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .lance-node.activo-ronda .lance-name {
+            color: var(--accent-gold);
+        }
 
         .banner-decision {
             display: none;
@@ -382,7 +416,7 @@
             color: var(--accent-gold);
         }
 
-        /* ===== CONTENEDOR WORKSPACE: DESGLOSE + MESA ===== */
+        /* ===== CONTENEDOR WORKSPACE ===== */
         .workspace {
             display: flex;
             gap: 16px;
@@ -397,7 +431,6 @@
             width: 260px;
             background: var(--glass-surface);
             backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 12px;
@@ -531,7 +564,6 @@
             position: relative;
             background: rgba(10, 22, 16, 0.88);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 4px 12px;
             border-radius: 980px;
@@ -741,15 +773,14 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* ===== MAZO CENTRAL DE CARTAS CON ANIMACIONES ===== */
+        /* ===== MAZO REUBICADO A UN LATERAL ===== */
         .table-hub {
             position: relative;
             background: rgba(8, 20, 14, 0.88);
             backdrop-filter: blur(32px) saturate(200%);
-            -webkit-backdrop-filter: blur(32px) saturate(200%);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            padding: 10px 22px;
+            padding: 12px 22px;
             text-align: center;
             max-width: 440px;
             box-shadow: 0 20px 45px rgba(0,0,0,0.65), inset 0 1px 0 var(--glass-highlight);
@@ -757,11 +788,10 @@
 
         .mazo-central {
             position: absolute;
-            top: -46px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 44px;
-            height: 62px;
+            top: -20px;
+            left: -52px;
+            width: 42px;
+            height: 60px;
             background: radial-gradient(circle at center, #961b1b 0%, #570909 100%);
             border: 1.5px solid #e2d2b4;
             border-radius: 6px;
@@ -789,19 +819,18 @@
 
         .mazo-central span {
             font-family: 'Cinzel', serif;
-            font-size: 0.55rem;
+            font-size: 0.52rem;
             font-weight: 900;
             color: #f5e4c6;
             letter-spacing: 0.8px;
         }
 
-        /* NAIPES DISPARADOS DEL MAZO (ANIMACIÓN DE REPARTO) */
         .carta-voladora {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 44px;
-            height: 62px;
+            width: 42px;
+            height: 60px;
             background: radial-gradient(circle at center, #961b1b 0%, #570909 100%);
             border: 1.5px solid #e2d2b4;
             border-radius: 6px;
@@ -817,7 +846,7 @@
             font-size: 1.05rem;
             font-weight: 800;
             letter-spacing: 1px;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .table-hub p {
@@ -957,6 +986,7 @@
             :root { --carta-w: 46px; --carta-h: 70px; }
             .card-num { font-size: 0.76rem; }
             .card-center-art svg { width: 20px; height: 30px; }
+            .mazo-central { left: -36px; top: -14px; width: 32px; height: 46px; }
             .chat-pane { display: none; }
         }
     </style>
@@ -969,7 +999,6 @@
             <h2>EL MUS DE MARIO</h2>
             <div class="modal-inputs-row">
                 <input type="text" id="inputNombre" placeholder="Tu Apodo..." maxlength="14" style="flex: 2;">
-                <!-- DESPLEGABLE NATIVO DE SALAS -->
                 <select id="selectSala" style="flex: 1.4;">
                     <option value="principal">Sala Principal</option>
                     <option value="sala2">Sala 2</option>
@@ -988,11 +1017,13 @@
     <div class="overlay-modal oculto" id="modalAdmin">
         <div class="modal-box" style="max-width: 380px;">
             <h2 style="color: #ff7675;">Panel Administrador</h2>
-            <p style="font-size: 0.8rem; color: #a4beaf; margin-bottom: 12px;">Introduce la clave maestra para reiniciar la mesa:</p>
+            <p style="font-size: 0.8rem; color: #a4beaf; margin-bottom: 12px;">Introduce la clave maestra:</p>
             <input type="password" id="inputAdminPass" placeholder="Clave admin..." style="border-color: #e74c3c; width: 100%; margin-bottom: 12px;">
-            <div style="display: flex; gap: 8px; justify-content: center;">
-                <button onclick="ejecutarAdminReset()" class="btn-action red">Resetear Mesa</button>
-                <button onclick="cerrarModalAdmin()" class="btn-compact">Cancelar</button>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button onclick="ejecutarToggleModoLoco()" class="btn-action gold" id="btnModoLocoAdmin">🃏 Alternar Modo Loco (1 carta visible)</button>
+                <button onclick="ejecutarAdminReset()" class="btn-action red">⚠️ Resetear Mesa</button>
+                <button onclick="cerrarModalAdmin()" class="btn-compact" style="justify-content: center;">Cerrar</button>
             </div>
         </div>
     </div>
@@ -1006,6 +1037,7 @@
 
         <div class="header-actions">
             <div class="capsule" id="miAsientoTexto">Conectando...</div>
+            <button onclick="toggleModoClase()" id="btnModoClase" class="btn-compact" title="Ocultar cartas si juegas en clase">🙈 Ocultar</button>
             <button onclick="socket.emit('rellenarBots')" class="btn-compact">🤖 Rellenar Bots</button>
             <button onclick="abrirModalAdmin()" class="btn-compact danger">🔑 Admin</button>
             <div class="capsule" id="codigoSalaTexto" style="color: var(--accent-gold);">Sala: ...</div>
@@ -1035,12 +1067,24 @@
         </div>
     </div>
 
-    <!-- BOTES Y ESTADO -->
-    <div class="stakes-bar">
-        <div>Grande: <strong id="bote_grande">Paso (1)</strong></div>
-        <div>Chica: <strong id="bote_chica">Paso (1)</strong></div>
-        <div>Pares: <strong id="bote_pares">-</strong></div>
-        <div>Juego: <strong id="bote_juego">-</strong></div>
+    <!-- BARRA AVANZADA DE LANCES ACTIVA E ILUMINADA -->
+    <div class="stakes-bar-advanced" id="barraLancesVisual">
+        <div class="lance-node" id="node_grande">
+            <span class="lance-name">Grande</span>
+            <span class="lance-status" id="bote_grande">Paso (1 pt)</span>
+        </div>
+        <div class="lance-node" id="node_chica">
+            <span class="lance-name">Chica</span>
+            <span class="lance-status" id="bote_chica">Paso (1 pt)</span>
+        </div>
+        <div class="lance-node" id="node_pares">
+            <span class="lance-name">Pares</span>
+            <span class="lance-status" id="bote_pares">-</span>
+        </div>
+        <div class="lance-node" id="node_juego">
+            <span class="lance-name">Juego</span>
+            <span class="lance-status" id="bote_juego">-</span>
+        </div>
     </div>
 
     <div class="banner-decision" id="bannerDecision">
@@ -1085,7 +1129,7 @@
                 <div class="card-row vertical" id="mano_oeste"></div>
             </div>
 
-            <!-- CENTRO CON MAZO DE NAIPES -->
+            <!-- CENTRO CON MAZO LATERAL -->
             <div class="table-hub pos-centro" id="boxCentro">
                 <div class="mazo-central" id="mazoVisual">
                     <span>BARAJA</span>
@@ -1148,7 +1192,6 @@
         let salaUrl = urlParams.get('sala');
         let salaActualId = (salaUrl && salaUrl.trim() !== '') ? salaUrl.trim().toLowerCase() : (localStorage.getItem('mus_sala') || "principal");
 
-        // Sincronizar el desplegable de salas
         const selectSala = document.getElementById('selectSala');
         if (selectSala) {
             selectSala.value = ["principal", "sala2", "sala3"].includes(salaActualId) ? salaActualId : "principal";
@@ -1179,6 +1222,17 @@
         let estadoActual = {};
         let reveladoEjecutado = false;
         let ultimaFaseRegistrada = null;
+        let modoClaseActivo = false;
+
+        function toggleModoClase() {
+            modoClaseActivo = !modoClaseActivo;
+            const btn = document.getElementById('btnModoClase');
+            if (btn) {
+                btn.innerHTML = modoClaseActivo ? "👁️ Ver" : "🙈 Ocultar";
+                btn.classList.toggle('danger', modoClaseActivo);
+            }
+            renderizarMiMano();
+        }
 
         socket.on('connect', () => {
             socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
@@ -1265,6 +1319,10 @@
             const pass = document.getElementById('inputAdminPass').value;
             socket.emit('solicitarResetAdmin', { password: pass });
         }
+        function ejecutarToggleModoLoco() {
+            const pass = document.getElementById('inputAdminPass').value;
+            socket.emit('toggleModoLoco', { password: pass });
+        }
         socket.on('errorAdminPassword', (msg) => alert(msg));
         socket.on('resetCompleto', () => {
             alert("Sala reiniciada por el administrador.");
@@ -1295,7 +1353,6 @@
             if (reloj) reloj.innerText = `${tiempo}s`;
         });
 
-        /* ===== ANIMACIONES DE DESCARTE Y REPARTO DESDE EL MAZO ===== */
         socket.on('eventoDescarteAnim', ({ asiento, cantidad }) => {
             const yo = miAsiento !== null ? miAsiento : 0;
             const ref = { sur: yo, norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
@@ -1314,7 +1371,13 @@
 
         function dispararAnimacionReparto() {
             const mesa = document.getElementById('tableroMesa');
-            if (!mesa) return;
+            const mazo = document.getElementById('mazoVisual');
+            if (!mesa || !mazo) return;
+
+            const rectMazo = mazo.getBoundingClientRect();
+            const rectMesa = mesa.getBoundingClientRect();
+            const origenX = rectMazo.left - rectMesa.left;
+            const origenY = rectMazo.top - rectMesa.top;
 
             const posiciones = ['box_sur', 'box_norte', 'box_oeste', 'box_este'];
             posiciones.forEach((boxId, index) => {
@@ -1324,13 +1387,13 @@
                 setTimeout(() => {
                     const cartaVol = document.createElement('div');
                     cartaVol.className = 'carta-voladora';
+                    cartaVol.style.left = `${origenX}px`;
+                    cartaVol.style.top = `${origenY}px`;
                     mesa.appendChild(cartaVol);
 
                     const rectDestino = box.getBoundingClientRect();
-                    const rectMesa = mesa.getBoundingClientRect();
-
-                    const destX = rectDestino.left - rectMesa.left + (rectDestino.width / 2) - 22;
-                    const destY = rectDestino.top - rectMesa.top + (rectDestino.height / 2) - 31;
+                    const destX = rectDestino.left - rectMesa.left + (rectDestino.width / 2) - 21;
+                    const destY = rectDestino.top - rectMesa.top + (rectDestino.height / 2) - 30;
 
                     requestAnimationFrame(() => {
                         cartaVol.style.left = `${destX}px`;
@@ -1381,7 +1444,6 @@
 
             estadoActual = estado;
             if (estado.fase !== 'recuento') {
-                // Formateo natural y castizo de las rondas
                 let textoFase = estado.fase.toUpperCase();
                 if (estado.fase === 'declaracion_pares') textoFase = '¿LLEVAS PARES?';
                 else if (estado.fase === 'declaracion_juego') textoFase = '¿TIENES JUEGO?';
@@ -1403,7 +1465,7 @@
                 banner.style.display = 'none';
             }
 
-            actualizarBotesLances(estado.apuestasLances);
+            actualizarBarraLancesVisual(estado.apuestasLances, estado.fase);
             actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno, estado.asientoMano);
 
             if ((estado.fase === 'recuento' || estado.fase === 'fin') && estado.todasLasManos) {
@@ -1413,7 +1475,7 @@
                 }
             } else {
                 reveladoEjecutado = false;
-                actualizarReversosOtrosJugadores(estado.fase !== 'espera');
+                actualizarReversosOtrosJugadores(estado.fase !== 'espera', estado.cartasReveladasModoLoco);
             }
 
             actualizarControles();
@@ -1473,18 +1535,41 @@
             contenedor.prepend(card);
         }
 
-        function actualizarBotesLances(lances) {
+        /* ===== BARRA DE LANCES DINÁMICA CON HALO DE RONDA ===== */
+        function actualizarBarraLancesVisual(lances, faseActual) {
             if (!lances) return;
             const formato = (info) => {
-                if (info.resueltoEnFalso) return "Para ti (+1)";
+                if (info.ordago && info.querido) return "Órdago querido";
+                if (info.ordago) return "Órdago en juego";
+                if (info.resueltoEnFalso) return "Rechazado (Para ti)";
                 if (info.querido) return `Aceptado (${info.puntos} pts)`;
                 if (info.enPaso) return "Paso (1 pt)";
                 return "-";
             };
+
             document.getElementById('bote_grande').innerText = formato(lances.grande);
             document.getElementById('bote_chica').innerText = formato(lances.chica);
             document.getElementById('bote_pares').innerText = lances.pares.hayPares ? formato(lances.pares) : "Sin pares";
             document.getElementById('bote_juego').innerText = lances.juego.esAlPunto ? `Punto (${formato(lances.juego)})` : formato(lances.juego);
+
+            // Resaltar exactamente el lance activo
+            const mapaNodos = {
+                'grande': 'node_grande',
+                'chica': 'node_chica',
+                'declaracion_pares': 'node_pares',
+                'pares': 'node_pares',
+                'declaracion_juego': 'node_juego',
+                'juego': 'node_juego'
+            };
+
+            ['node_grande', 'node_chica', 'node_pares', 'node_juego'].forEach(id => {
+                document.getElementById(id).classList.remove('activo-ronda');
+            });
+
+            if (mapaNodos[faseActual]) {
+                const targetNode = document.getElementById(mapaNodos[faseActual]);
+                if (targetNode) targetNode.classList.add('activo-ronda');
+            }
         }
 
         function generarCartaHTML(c, conAnim = false) {
@@ -1501,6 +1586,20 @@
             const cont = document.getElementById('miMano');
             if (!cont) return;
             cont.innerHTML = '';
+
+            if (modoClaseActivo) {
+                for (let i = 0; i < 4; i++) {
+                    const rev = document.createElement('div');
+                    rev.className = 'card-back';
+                    rev.style.cursor = 'pointer';
+                    rev.title = 'Modo Clase: Pulsa para descubrir';
+                    rev.innerHTML = `<div class="card-back-pattern"><div class="card-back-logo">OCULTO</div></div>`;
+                    rev.onclick = toggleModoClase;
+                    cont.appendChild(rev);
+                }
+                return;
+            }
+
             misCartas.forEach((c) => {
                 const div = document.createElement('div');
                 div.className = `card palo-${c.palo} ${c.seleccionada ? 'seleccionada' : ''}`;
@@ -1519,14 +1618,26 @@
             });
         }
 
-        function actualizarReversosOtrosJugadores(mostrar) {
-            const huecos = ['mano_norte', 'mano_este', 'mano_oeste'];
-            huecos.forEach(id => {
-                const el = document.getElementById(id);
+        function actualizarReversosOtrosJugadores(mostrar, cartasModoLoco) {
+            const yo = miAsiento !== null ? miAsiento : 0;
+            const ref = { norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
+            const mapeo = [
+                { id: 'mano_norte', asiento: ref.norte },
+                { id: 'mano_oeste', asiento: ref.oeste },
+                { id: 'mano_este', asiento: ref.este }
+            ];
+
+            mapeo.forEach(item => {
+                const el = document.getElementById(item.id);
                 if (!mostrar) { el.innerHTML = ''; return; }
-                if (el.children.length === 0 || !el.querySelector('.card-back')) {
-                    el.innerHTML = '';
-                    for (let i = 0; i < 4; i++) {
+                el.innerHTML = '';
+
+                const locoInfo = (cartasModoLoco && cartasModoLoco[item.asiento]) ? cartasModoLoco[item.asiento] : null;
+
+                for (let i = 0; i < 4; i++) {
+                    if (locoInfo && locoInfo.indice === i) {
+                        el.innerHTML += generarCartaHTML(locoInfo.carta, false);
+                    } else {
                         el.innerHTML += `
                             <div class="card-back">
                                 <div class="card-back-pattern">
@@ -1604,6 +1715,7 @@
             panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Emitiendo jugada: <strong>${tipo.toUpperCase()}</strong>...</div>`;
         }
 
+        /* ===== CONTROLES Y BOTONES CON DETALLE EXACTO DE PUNTOS ===== */
         function actualizarControles() {
             const panel = document.getElementById('botonesAccion');
             panel.innerHTML = '';
@@ -1639,17 +1751,36 @@
                     return;
                 }
 
+                // CÁLCULO PRECISO DE PUNTOS PARA LOS BOTONES
+                const ap = estadoActual.apuestaActual || { total: 0, ultimoAumento: 0, ordago: false };
+                const totalBote = ap.total;
+                const ultimoAumento = ap.ultimoAumento;
+                
+                // Si rechazas, das los puntos que ya había antes del último aumento (o 1 pt si es la primera apuesta)
+                let ptsRechazo = 1;
+                if (totalBote > ultimoAumento) {
+                    ptsRechazo = totalBote - ultimoAumento;
+                }
+
+                const textoQuiero = ap.ordago 
+                    ? `¡QUIERO EL ÓRDAGO!` 
+                    : `¡QUIERO! (${totalBote} pts)`;
+
+                const textoNoQuiero = ap.ordago
+                    ? `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`
+                    : `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`;
+
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
                         panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Has votado: <strong>${yaVoto.tipo.toUpperCase()}</strong>. Esperando resolución...</div>`;
                     } else {
                         panel.innerHTML = `
-                            <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">¡Quiero!</button>
-                            <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">No quiero</button>
-                            <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más</button>
-                            <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más</button>
-                            <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡Órdago!</button>
+                            <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">${textoQuiero}</button>
+                            <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">${textoNoQuiero}</button>
+                            <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más (Bote: ${totalBote + 2})</button>
+                            <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más (Bote: ${totalBote + 5})</button>
+                            <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
                         `;
                     }
                     return;
@@ -1660,7 +1791,7 @@
                         <button onclick="emitirAccionVisual('paso')" class="btn-action red">Paso</button>
                         <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action gold">Envido 2</button>
                         <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">Envido 5</button>
-                        <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡Órdago!</button>
+                        <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
                     `;
                     return;
                 }
