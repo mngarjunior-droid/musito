@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mus de Mario - Tanteo y Recuento Oficial</title>
+    <title>El Mus de Mario - Online</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -149,7 +149,7 @@
         .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
         .asiento-card.p2 .tag-p { color: var(--color-rival); }
 
-        /* MARCADOR */
+        /* MARCADOR RELATIVO PERSONALIZADO */
         .marcador-contenedor {
             display: flex;
             gap: 20px;
@@ -253,7 +253,30 @@
             transition: all 0.4s ease;
         }
 
-        /* EFECTO DE ILUMINACIÓN Y RESALTE AL GANADOR DEL LANCE */
+        /* INSIGNIA DESTACADA DE LA MANO */
+        .badge-mano {
+            display: none;
+            position: absolute;
+            top: -14px;
+            background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%);
+            color: #2b1704;
+            font-size: 0.68rem;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+            letter-spacing: 0.5px;
+            z-index: 25;
+            animation: bounceMano 1s infinite alternate;
+        }
+
+        @keyframes bounceMano {
+            from { transform: translateY(0); }
+            to { transform: translateY(-3px); }
+        }
+
+        /* HALO DE ILUMINACIÓN DECORATIVO AL GANADOR */
         .jugador-box.ganador-lance-halo {
             box-shadow: 0 0 25px 8px #ffd700, inset 0 0 15px #ffd700;
             background: rgba(241, 196, 15, 0.25);
@@ -297,6 +320,7 @@
             line-height: 1.15;
             transition: all 0.2s;
             border: 2px solid transparent;
+            min-width: 105px;
         }
 
         .cartel .sub-pareja {
@@ -356,7 +380,6 @@
         .mano { display: flex; gap: 6px; min-height: 94px; align-items: center; }
         .mano.vertical { transform: scale(0.88); }
 
-        /* NAIPES Y ANIMACIÓN 3D FLIP */
         .carta {
             width: 64px;
             height: 94px;
@@ -545,9 +568,9 @@
     </div>
 
     <div class="marcador-contenedor">
-        <div>🛡️ Tu Pareja: <span class="pts pts-nosotros" id="puntosP1">0</span> / 40</div>
+        <div>🛡️ Tu Pareja: <span class="pts pts-nosotros" id="puntosNosotros">0</span> / 40</div>
         <div style="color: #a4762c;">|</div>
-        <div>⚔️ Pareja Rival: <span class="pts pts-rivales" id="puntosP2">0</span> / 40</div>
+        <div>⚔️ Pareja Rival: <span class="pts pts-rivales" id="puntosRivales">0</span> / 40</div>
     </div>
 
     <div class="banner-decision" id="bannerDecision">
@@ -565,6 +588,7 @@
     <div class="mesa">
         <!-- NORTE: COMPAÑERO -->
         <div class="jugador-box pos-norte" id="box_norte">
+            <div class="badge-mano" id="badge_norte">👑 MANO</div>
             <div class="bocadillo" id="boc_norte"></div>
             <div class="cartel mi-equipo" id="lbl_norte">
                 <span id="nom_norte">Esperando...</span>
@@ -575,6 +599,7 @@
 
         <!-- OESTE: RIVAL 1 -->
         <div class="jugador-box pos-oeste" id="box_oeste">
+            <div class="badge-mano" id="badge_oeste">👑 MANO</div>
             <div class="bocadillo" id="boc_oeste"></div>
             <div class="cartel rival-equipo" id="lbl_oeste">
                 <span id="nom_oeste">Esperando...</span>
@@ -591,6 +616,7 @@
 
         <!-- ESTE: RIVAL 2 -->
         <div class="jugador-box pos-este" id="box_este">
+            <div class="badge-mano" id="badge_este">👑 MANO</div>
             <div class="bocadillo" id="boc_este"></div>
             <div class="cartel rival-equipo" id="lbl_este">
                 <span id="nom_este">Esperando...</span>
@@ -601,6 +627,7 @@
 
         <!-- SUR: TÚ -->
         <div class="jugador-box pos-sur" id="box_sur">
+            <div class="badge-mano" id="badge_sur">👑 MANO</div>
             <div class="bocadillo" id="boc_sur"></div>
             <div class="mano" id="miMano"></div>
             <div class="cartel mi-equipo activo" id="lbl_sur">
@@ -657,7 +684,6 @@
             document.documentElement.style.setProperty('--escala-hud', val);
         }
 
-        // SINCRONIZACIÓN DE ASIENTOS EN TIEMPO REAL
         socket.on('asientosEstado', (asientos) => {
             renderizarSelectorAsientos(asientos);
         });
@@ -699,8 +725,7 @@
             miAsiento = asiento;
             document.getElementById('modalInicio').style.display = 'none';
             const parejaNum = info.pareja + 1;
-            document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong> - ${info.rol})`;
-            document.getElementById('nom_sur').innerText = `${info.nombre} (Tú)`;
+            document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
             reproducirTono(523, 0.2);
         });
 
@@ -718,12 +743,14 @@
             alert(`No puedes hablar en esta ronda: ${motivo}`);
         });
 
-        socket.on('mensajeChat', ({ jugador, texto }) => {
+        socket.on('mensajeChat', ({ asiento, jugador, texto }) => {
             const chat = document.getElementById('chatLog');
             chat.innerHTML += `<div><strong>${jugador}:</strong> ${texto}</div>`;
             chat.scrollTop = chat.scrollHeight;
 
-            mostrarBocadilloPorNombre(jugador, texto);
+            if (asiento !== undefined && asiento !== -1) {
+                mostrarBocadilloPorAsiento(asiento, texto);
+            }
             reproducirTono(330, 0.12);
         });
 
@@ -738,32 +765,23 @@
             if (tiempo <= 3) reproducirTono(700, 0.05);
         });
 
-        // ANIMACIÓN DE RESALTE AL GANADOR DEL LANCE
         socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, puntosActualizados }) => {
             document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
             document.getElementById('msgTxt').innerText = desglose;
 
-            // Actualizar marcador
-            if (miAsiento !== null) {
-                const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
-                const rivalPareja = miPareja === 0 ? 1 : 0;
-                document.getElementById('puntosP1').innerText = puntosActualizados[miPareja];
-                document.getElementById('puntosP2').innerText = puntosActualizados[rivalPareja];
-            }
+            actualizarPuntuacionesPersonalizadas(puntosActualizados);
 
-            // Mapear qué box de la mesa es el ganador relativo a 'mí'
             const yo = miAsiento !== null ? miAsiento : 0;
             let targetBox = 'box_sur';
             if (asientoGanador === (yo + 2) % 4) targetBox = 'box_norte';
             else if (asientoGanador === (yo + 1) % 4) targetBox = 'box_oeste';
             else if (asientoGanador === (yo + 3) % 4) targetBox = 'box_este';
 
-            // Quitar halos anteriores y añadir el halo al ganador
             document.querySelectorAll('.jugador-box').forEach(el => el.classList.remove('ganador-lance-halo'));
             const elGanador = document.getElementById(targetBox);
             if (elGanador) {
                 elGanador.classList.add('ganador-lance-halo');
-                reproducirTono(587, 0.3); // Sonido triunfal
+                reproducirTono(587, 0.3);
                 setTimeout(() => elGanador.classList.remove('ganador-lance-halo'), 3200);
             }
         });
@@ -775,15 +793,7 @@
                 document.getElementById('msgTxt').innerText = estado.mensaje;
             }
 
-            if (miAsiento !== null) {
-                const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
-                const rivalPareja = miPareja === 0 ? 1 : 0;
-                document.getElementById('puntosP1').innerText = estado.puntos[miPareja];
-                document.getElementById('puntosP2').innerText = estado.puntos[rivalPareja];
-            } else {
-                document.getElementById('puntosP1').innerText = estado.puntos[0];
-                document.getElementById('puntosP2').innerText = estado.puntos[1];
-            }
+            actualizarPuntuacionesPersonalizadas(estado.puntos);
 
             const banner = document.getElementById('bannerDecision');
             if (estado.decisionPareja && estado.decisionPareja.activa) {
@@ -794,7 +804,7 @@
             }
 
             actualizarBotesLances(estado.apuestasLances);
-            actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno);
+            actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno, estado.asientoMano);
 
             if ((estado.fase === 'recuento' || estado.fase === 'fin') && estado.todasLasManos) {
                 if (!reveladoEjecutado) {
@@ -808,6 +818,18 @@
 
             actualizarControles();
         });
+
+        function actualizarPuntuacionesPersonalizadas(puntos) {
+            if (miAsiento !== null) {
+                const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
+                const rivalPareja = miPareja === 0 ? 1 : 0;
+                document.getElementById('puntosNosotros').innerText = puntos[miPareja];
+                document.getElementById('puntosRivales').innerText = puntos[rivalPareja];
+            } else {
+                document.getElementById('puntosNosotros').innerText = puntos[0];
+                document.getElementById('puntosRivales').innerText = puntos[1];
+            }
+        }
 
         function actualizarBotesLances(lances) {
             if (!lances) return;
@@ -909,7 +931,7 @@
             });
         }
 
-        function actualizarCartelesMesa(jugadoresEnMesa, turnoActivo) {
+        function actualizarCartelesMesa(jugadoresEnMesa, turnoActivo, asientoMano) {
             const yo = miAsiento !== null ? miAsiento : 0;
             const ref = {
                 sur: yo,
@@ -923,34 +945,26 @@
                 return j ? j.nombre : "Esperando...";
             }
 
+            document.getElementById('nom_sur').innerText = obtenerNombreJugador(ref.sur) + (ref.sur === miAsiento ? ' (Tú)' : '');
             document.getElementById('nom_norte').innerText = obtenerNombreJugador(ref.norte);
             document.getElementById('nom_oeste').innerText = obtenerNombreJugador(ref.oeste);
             document.getElementById('nom_este').innerText = obtenerNombreJugador(ref.este);
 
             ['norte', 'este', 'oeste', 'sur'].forEach(pos => {
                 const el = document.getElementById(`lbl_${pos}`);
+                const badge = document.getElementById(`badge_${pos}`);
+                const esLaMano = (ref[pos] === asientoMano);
+
+                if (badge) {
+                    badge.style.display = esLaMano ? 'block' : 'none';
+                }
+
                 if (ref[pos] === turnoActivo) {
                     el.classList.add('activo');
                 } else {
                     el.classList.remove('activo');
                 }
             });
-        }
-
-        function mostrarBocadilloPorNombre(nombre, texto) {
-            const pos = ['sur', 'norte', 'este', 'oeste'];
-            for (let p of pos) {
-                let lbl = document.getElementById(`nom_${p}`);
-                if (lbl && lbl.innerText.includes(nombre)) {
-                    let boc = document.getElementById(`boc_${p}`);
-                    if (boc) {
-                        boc.innerText = texto;
-                        boc.classList.add('activo');
-                        setTimeout(() => boc.classList.remove('activo'), 1800);
-                    }
-                    break;
-                }
-            }
         }
 
         function mostrarBocadilloPorAsiento(asiento, texto) {
@@ -1002,7 +1016,7 @@
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
-                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f;">✔️ Has emitido tu voto (${yaVoto.tipo.toUpperCase()}). Esperando a tu compañero o fin de tiempo...</div>`;
+                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f;">✔️ Has votado (${yaVoto.tipo.toUpperCase()}). Esperando decisión final...</div>`;
                     } else {
                         panel.innerHTML = `
                             <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
