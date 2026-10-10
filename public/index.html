@@ -55,7 +55,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== MODALES FLOTANTES CENTRADOS (CORREGIDO SIN CONFLICTOS) ===== */
+        /* ===== MODALES FLOTANTES ===== */
         .overlay-modal {
             position: fixed;
             top: 0;
@@ -73,7 +73,6 @@
             z-index: 99999;
         }
 
-        /* Clase para ocultar modales limpiamente */
         .overlay-modal.oculto {
             display: none !important;
         }
@@ -118,7 +117,6 @@
             border-color: var(--accent-gold);
         }
 
-        /* GRID DE ASIENTOS CON ESTILO DE TARJETA */
         .grid-asientos {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -380,7 +378,7 @@
         }
 
         .desglose-panel {
-            width: 240px;
+            width: 260px;
             background: var(--glass-surface);
             backdrop-filter: blur(28px) saturate(180%);
             -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -393,7 +391,7 @@
         }
 
         .desglose-header {
-            font-size: 0.72rem;
+            font-size: 0.74rem;
             font-weight: 700;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -411,27 +409,67 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             padding-right: 4px;
         }
 
         .desglose-list::-webkit-scrollbar { width: 4px; }
         .desglose-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
+        /* TARJETA MEJORADA DEL LANCE CON TOTAL DESTACADO */
         .desglose-card {
-            background: rgba(255, 255, 255, 0.035);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-left: 3px solid var(--accent-gold);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 4px solid var(--accent-gold);
             padding: 8px 10px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 0.72rem;
-            line-height: 1.35;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         .desglose-card.verde { border-left-color: var(--team-us); }
         .desglose-card.rojo { border-left-color: var(--team-rival); }
 
-        .desglose-title { font-weight: 700; color: #ffffff; margin-bottom: 2px; }
-        .desglose-detail { color: #b0c0b7; font-size: 0.68rem; }
+        .desglose-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .desglose-title {
+            font-weight: 800;
+            color: #ffffff;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .desglose-puntos-tag {
+            font-weight: 900;
+            font-size: 0.75rem;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(242, 201, 76, 0.18);
+            color: var(--accent-gold);
+            border: 1px solid rgba(242, 201, 76, 0.35);
+        }
+        .desglose-card.verde .desglose-puntos-tag {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--team-us);
+            border-color: rgba(46, 204, 113, 0.45);
+        }
+        .desglose-card.rojo .desglose-puntos-tag {
+            background: rgba(231, 76, 60, 0.2);
+            color: #ff7675;
+            border-color: rgba(231, 76, 60, 0.45);
+        }
+
+        .desglose-detail {
+            color: #cadfd4;
+            font-size: 0.68rem;
+        }
 
         /* ===== MESA DE CASINO ===== */
         .table-viewport {
@@ -852,7 +890,7 @@
 </head>
 <body>
 
-    <!-- MODAL DE ENTRADA FIJO, CENTRADO Y FLOTANTE -->
+    <!-- MODAL DE ENTRADA FIJO -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
@@ -868,7 +906,7 @@
         </div>
     </div>
 
-    <!-- MODAL ADMIN (INICIALMENTE OCULTO) -->
+    <!-- MODAL ADMIN -->
     <div class="overlay-modal oculto" id="modalAdmin">
         <div class="modal-box" style="max-width: 380px;">
             <h2 style="color: #ff7675;">Panel Administrador</h2>
@@ -937,7 +975,7 @@
         <aside class="desglose-panel">
             <div class="desglose-header">
                 <span>Registro de Lances</span>
-                <span style="font-size: 0.65rem; color: var(--accent-gold);">Tanteo</span>
+                <span style="font-size: 0.65rem; color: var(--accent-gold);">Esta Mano</span>
             </div>
             <div class="desglose-list" id="desgloseLog">
                 <div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>
@@ -1046,6 +1084,7 @@
         let misCartas = [];
         let estadoActual = {};
         let reveladoEjecutado = false;
+        let ultimaFaseRegistrada = null;
 
         socket.on('connect', () => {
             socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
@@ -1188,10 +1227,17 @@
         socket.on('victoriaChico', ({ mensaje, chicosGanados, vacasGanadas }) => {
             actualizarPuntuacionesPersonalizadas({ 0: 0, 1: 0 }, chicosGanados, vacasGanadas);
             alert(mensaje);
+            // Limpiar el registro al cambiar de chico
             document.getElementById('desgloseLog').innerHTML = `<div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Nuevo Chico comenzado.</div>`;
         });
 
         socket.on('estadoJuego', (estado) => {
+            // LIMPIEZA AUTOMÁTICA DEL REGISTRO AL EMPEZAR UNA NUEVA MANO (RONDA DE MUS)
+            if (estado.fase === 'mus' && ultimaFaseRegistrada !== 'mus') {
+                document.getElementById('desgloseLog').innerHTML = `<div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>`;
+            }
+            ultimaFaseRegistrada = estado.fase;
+
             estadoActual = estado;
             if (estado.fase !== 'recuento') {
                 document.getElementById('faseTxt').innerText = estado.fase.toUpperCase().replace('DECLARACION_', '¿LLEVAS ');
@@ -1247,6 +1293,7 @@
             }
         }
 
+        // TABLA LATERAL CON CÁLCULO CLARO Y PLACA DE PUNTOS TOTALES
         function actualizarTablaDesgloseLateral(lance, parejaGanadora, items) {
             const contenedor = document.getElementById('desgloseLog');
             if (contenedor.children.length === 1 && contenedor.children[0].innerText.includes('Sin lances')) {
@@ -1257,9 +1304,11 @@
             const esMiEquipo = (parejaGanadora === miPareja);
             const colorClase = esMiEquipo ? 'verde' : 'rojo';
 
+            let totalLance = 0;
             let itemsHTML = '';
             if (items && items.length > 0) {
                 items.forEach(it => {
+                    totalLance += (it.pts || 0);
                     itemsHTML += `<div>• <strong>${it.jugador}:</strong> ${it.desc} (+${it.pts})</div>`;
                 });
             }
@@ -1267,7 +1316,10 @@
             const card = document.createElement('div');
             card.className = `desglose-card ${colorClase}`;
             card.innerHTML = `
-                <div class="desglose-title">${lance} (Pareja ${parejaGanadora + 1})</div>
+                <div class="desglose-top">
+                    <span class="desglose-title">${lance} · Pareja ${parejaGanadora + 1}</span>
+                    <span class="desglose-puntos-tag">+${totalLance} PTS</span>
+                </div>
                 <div class="desglose-detail">${itemsHTML}</div>
             `;
             contenedor.prepend(card);
