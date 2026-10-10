@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mus de Mario - Parejas y Decisión Conjunta</title>
+    <title>El Mus de Mario - Tanteo y Recuento Oficial</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -66,7 +66,7 @@
         }
         .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
 
-        /* MODAL SALA DE ESPERA Y SELECCIÓN DE ASIENTO */
+        /* MODAL SALA DE ESPERA */
         .overlay-modal {
             position: fixed;
             inset: 0;
@@ -149,7 +149,7 @@
         .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
         .asiento-card.p2 .tag-p { color: var(--color-rival); }
 
-        /* MARCADOR GLOBAL CON BARRA A 40 */
+        /* MARCADOR */
         .marcador-contenedor {
             display: flex;
             gap: 20px;
@@ -166,7 +166,6 @@
         .pts-nosotros { color: var(--color-mi-pareja); }
         .pts-rivales { color: var(--color-rival); }
 
-        /* BANNER DE TEMPORIZADOR Y DECISIÓN DE PAREJA */
         .banner-decision {
             display: none;
             width: 100%;
@@ -214,7 +213,7 @@
         .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
         .panel-botes .item-lance strong { color: var(--oro); }
 
-        /* MESA OVALADA ESPACIOSA */
+        /* MESA OVALADA */
         .mesa {
             position: relative;
             width: 100%;
@@ -249,6 +248,17 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
+            border-radius: 16px;
+            padding: 4px;
+            transition: all 0.4s ease;
+        }
+
+        /* EFECTO DE ILUMINACIÓN Y RESALTE AL GANADOR DEL LANCE */
+        .jugador-box.ganador-lance-halo {
+            box-shadow: 0 0 25px 8px #ffd700, inset 0 0 15px #ffd700;
+            background: rgba(241, 196, 15, 0.25);
+            transform: scale(1.08);
+            z-index: 50;
         }
 
         .bocadillo {
@@ -322,8 +332,9 @@
             border-radius: 18px;
             padding: 10px 20px;
             text-align: center;
-            max-width: 380px;
+            max-width: 420px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+            transition: all 0.3s ease;
         }
 
         .centro-mesa h3 {
@@ -336,7 +347,7 @@
         .centro-mesa p {
             font-size: 0.82rem;
             color: #e6f1ec;
-            min-height: 38px;
+            min-height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -503,14 +514,13 @@
 </head>
 <body>
 
-    <!-- MODAL DE SELECCIÓN DE ASIENTO Y NOMBRE -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
             <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Introduce tu apodo:</p>
             <input type="text" id="inputNombre" placeholder="Tu nombre..." maxlength="15">
             
-            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Elige tu asiento en la mesa:</p>
+            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Elige tu asiento (se actualiza en directo):</p>
             <div class="grid-asientos" id="selectorAsientos"></div>
 
             <button onclick="confirmarUnion()" class="oro" id="btnEntrar" style="width: 100%; padding: 10px;" disabled>Elige un asiento para entrar</button>
@@ -540,7 +550,6 @@
         <div>⚔️ Pareja Rival: <span class="pts pts-rivales" id="puntosP2">0</span> / 40</div>
     </div>
 
-    <!-- BANNER DE CUENTA ATRÁS 10 SEGUNDOS -->
     <div class="banner-decision" id="bannerDecision">
         <div>⏱️ ¡ENVITE EN LA MESA! Tu pareja está decidiendo conjuntamente:</div>
         <div class="reloj" id="contadorSegundos">10s</div>
@@ -554,8 +563,8 @@
     </div>
 
     <div class="mesa">
-        <!-- NORTE: SIEMPRE TU COMPAÑERO -->
-        <div class="jugador-box pos-norte">
+        <!-- NORTE: COMPAÑERO -->
+        <div class="jugador-box pos-norte" id="box_norte">
             <div class="bocadillo" id="boc_norte"></div>
             <div class="cartel mi-equipo" id="lbl_norte">
                 <span id="nom_norte">Esperando...</span>
@@ -565,7 +574,7 @@
         </div>
 
         <!-- OESTE: RIVAL 1 -->
-        <div class="jugador-box pos-oeste">
+        <div class="jugador-box pos-oeste" id="box_oeste">
             <div class="bocadillo" id="boc_oeste"></div>
             <div class="cartel rival-equipo" id="lbl_oeste">
                 <span id="nom_oeste">Esperando...</span>
@@ -575,13 +584,13 @@
         </div>
 
         <!-- CENTRO -->
-        <div class="pos-centro centro-mesa">
+        <div class="pos-centro centro-mesa" id="boxCentro">
             <h3 id="faseTxt">SALA DE ESPERA</h3>
             <p id="msgTxt">Esperando a que se unan 4 jugadores o pulsa en rellenar con Bots.</p>
         </div>
 
         <!-- ESTE: RIVAL 2 -->
-        <div class="jugador-box pos-este">
+        <div class="jugador-box pos-este" id="box_este">
             <div class="bocadillo" id="boc_este"></div>
             <div class="cartel rival-equipo" id="lbl_este">
                 <span id="nom_este">Esperando...</span>
@@ -591,7 +600,7 @@
         </div>
 
         <!-- SUR: TÚ -->
-        <div class="jugador-box pos-sur">
+        <div class="jugador-box pos-sur" id="box_sur">
             <div class="bocadillo" id="boc_sur"></div>
             <div class="mano" id="miMano"></div>
             <div class="cartel mi-equipo activo" id="lbl_sur">
@@ -648,7 +657,7 @@
             document.documentElement.style.setProperty('--escala-hud', val);
         }
 
-        // SELECCIONAR SILLA LIBRE
+        // SINCRONIZACIÓN DE ASIENTOS EN TIEMPO REAL
         socket.on('asientosEstado', (asientos) => {
             renderizarSelectorAsientos(asientos);
         });
@@ -659,6 +668,7 @@
             asientos.forEach(a => {
                 const div = document.createElement('div');
                 div.className = `asiento-card ${a.pareja === 0 ? 'p1' : 'p2'} ${a.ocupado ? 'ocupado' : ''}`;
+                if (asientoElegidoTemporal === a.id && !a.ocupado) div.classList.add('seleccionado');
                 div.id = `card_asiento_${a.id}`;
                 div.innerHTML = `
                     <div style="font-weight:bold; font-size:0.85rem;">${a.nombreDef}</div>
@@ -728,10 +738,42 @@
             if (tiempo <= 3) reproducirTono(700, 0.05);
         });
 
+        // ANIMACIÓN DE RESALTE AL GANADOR DEL LANCE
+        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, puntosActualizados }) => {
+            document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
+            document.getElementById('msgTxt').innerText = desglose;
+
+            // Actualizar marcador
+            if (miAsiento !== null) {
+                const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
+                const rivalPareja = miPareja === 0 ? 1 : 0;
+                document.getElementById('puntosP1').innerText = puntosActualizados[miPareja];
+                document.getElementById('puntosP2').innerText = puntosActualizados[rivalPareja];
+            }
+
+            // Mapear qué box de la mesa es el ganador relativo a 'mí'
+            const yo = miAsiento !== null ? miAsiento : 0;
+            let targetBox = 'box_sur';
+            if (asientoGanador === (yo + 2) % 4) targetBox = 'box_norte';
+            else if (asientoGanador === (yo + 1) % 4) targetBox = 'box_oeste';
+            else if (asientoGanador === (yo + 3) % 4) targetBox = 'box_este';
+
+            // Quitar halos anteriores y añadir el halo al ganador
+            document.querySelectorAll('.jugador-box').forEach(el => el.classList.remove('ganador-lance-halo'));
+            const elGanador = document.getElementById(targetBox);
+            if (elGanador) {
+                elGanador.classList.add('ganador-lance-halo');
+                reproducirTono(587, 0.3); // Sonido triunfal
+                setTimeout(() => elGanador.classList.remove('ganador-lance-halo'), 3200);
+            }
+        });
+
         socket.on('estadoJuego', (estado) => {
             estadoActual = estado;
-            document.getElementById('faseTxt').innerText = estado.fase.toUpperCase();
-            document.getElementById('msgTxt').innerText = estado.mensaje;
+            if (estado.fase !== 'recuento') {
+                document.getElementById('faseTxt').innerText = estado.fase.toUpperCase();
+                document.getElementById('msgTxt').innerText = estado.mensaje;
+            }
 
             if (miAsiento !== null) {
                 const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
@@ -743,7 +785,6 @@
                 document.getElementById('puntosP2').innerText = estado.puntos[1];
             }
 
-            // GESTIÓN DEL BANNER DE DECISIÓN CONJUNTA
             const banner = document.getElementById('bannerDecision');
             if (estado.decisionPareja && estado.decisionPareja.activa) {
                 banner.style.display = 'flex';
@@ -863,7 +904,7 @@
                     setTimeout(() => {
                         cont.innerHTML += generarCartaHTML(c, true);
                         reproducirTono(400 + (idxCarta * 50), 0.08);
-                    }, (idxJugador * 250) + (idxCarta * 100));
+                    }, (idxJugador * 200) + (idxCarta * 80));
                 });
             });
         }
@@ -958,7 +999,6 @@
                     return;
                 }
 
-                // CASO A: DECISIÓN CONJUNTA DE PAREJA ACTIVA (10 SEGUNDOS)
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
@@ -975,7 +1015,6 @@
                     return;
                 }
 
-                // CASO B: APERTURA NORMAL DEL LANCE
                 if (!estadoActual.decisionPareja?.activa && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
                         <button onclick="socket.emit('accionLance', { tipo: 'paso' })" class="rojo">Paso</button>
