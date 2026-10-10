@@ -11,11 +11,13 @@ const io = new Server(server);
 const publicDir = fs.existsSync(path.join(__dirname, 'public')) ? path.join(__dirname, 'public') : __dirname;
 app.use(express.static(publicDir));
 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
 const ASIENTOS_INFO = [
-  { id: 0, nombreDef: "Asiento 1", rol: "Mano", pareja: 0 },
-  { id: 1, nombreDef: "Asiento 2", rol: "Segundo", pareja: 1 },
-  { id: 2, nombreDef: "Asiento 3", rol: "Tercero", pareja: 0 },
-  { id: 3, nombreDef: "Asiento 4", rol: "Postre", pareja: 1 }
+  { id: 0, nombreDef: "Asiento 1", pareja: 0 },
+  { id: 1, nombreDef: "Asiento 2", pareja: 1 },
+  { id: 2, nombreDef: "Asiento 3", pareja: 0 },
+  { id: 3, nombreDef: "Asiento 4", pareja: 1 }
 ];
 
 let sala = {
@@ -25,6 +27,7 @@ let sala = {
   descartes: [],
   manos: { 0: [], 1: [], 2: [], 3: [] },
   puntos: { 0: 0, 1: 0 },
+  juegosGanados: { 0: 0, 1: 0 }, // Contador global (Chicos ganados)
   fase: 'espera',
   asientoMano: 0,
   turno: 0,
@@ -205,6 +208,7 @@ function notificarEstado(msg) {
     turno: sala.turno,
     asientoMano: sala.asientoMano,
     puntos: sala.puntos,
+    juegosGanados: sala.juegosGanados,
     apuestaActual: sala.apuestaActual,
     apuestasLances: sala.apuestasLances,
     decisionPareja: {
@@ -321,7 +325,6 @@ function iniciarDecisionConjunta(parejaVotante) {
 
   notificarEstado(`¡Envite! Pareja ${parejaVotante + 1} tiene 10s para decidir.`);
 
-  // Auto-voto de bots
   for (let sId in sala.jugadores) {
     const j = sala.jugadores[sId];
     if (j.esBot && ASIENTOS_INFO[j.asiento].pareja === parejaVotante) {
@@ -411,7 +414,7 @@ function finalizarDecisionPareja(porTiempo) {
     sala.apuestasLances[sala.fase].querido = true;
     sala.apuestasLances[sala.fase].puntos = sala.apuestaActual.ordago ? 40 : sala.apuestaActual.total;
     sala.apuestasLances[sala.fase].ordago = sala.apuestaActual.ordago;
-    notificarEstado(`¡Envite de ${sala.apuestasLances[sala.fase].puntos} pts aceptado! Se cobrará en el recuento.`);
+    notificarEstado(`¡Envite aceptado de ${sala.apuestaActual.ordago ? 'ÓRDAGO' : sala.apuestasLances[sala.fase].puntos + ' pts'}!`);
     setTimeout(() => avanzarSiguienteLance(), 1600);
   } else {
     io.emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo: No quiero (Para ti)" : "No quiero (Para ti)" });
@@ -422,7 +425,7 @@ function finalizarDecisionPareja(porTiempo) {
     sala.puntos[sala.apuestaActual.ultimoApostador] += ptsGanados;
     sala.apuestasLances[sala.fase].resueltoEnFalso = true;
     notificarEstado(`No querido. +${ptsGanados} punto(s) para Pareja ${sala.apuestaActual.ultimoApostador + 1}.`);
-    if (comprobarFinPartida()) return;
+    if (comprobarVictoriaChico(sala.apuestaActual.ultimoApostador, `Alcanzados 40 puntos por envite rechazado`)) return;
     setTimeout(() => avanzarSiguienteLance(), 1600);
   }
 }
@@ -564,28 +567,32 @@ function avanzarSiguienteLance() {
   }
 }
 
+/* ========================================================
+   RECUENTO FINAL, ÓRDAGO Y REGLAMENTO OFICIAL DE COBRO
+======================================================== */
+
 function ejecutarRecuentoFinalMano() {
   limpiarTimersBots();
   sala.fase = 'recuento';
-  notificarEstado("¡A enseñar cartas! Volteando las manos...");
+  notificarEstado("¡A enseñar cartas! Volteando las manos para el recuento...");
 
   setTimeout(() => {
-    resolverLanceEnRecuento('grande');
-    if (comprobarFinPartida()) return;
+    let ordagoResuelto = resolverLanceEnRecuento('grande');
+    if (ordagoResuelto || comprobarVictoriaChico()) return;
 
     setTimeout(() => {
-      resolverLanceEnRecuento('chica');
-      if (comprobarFinPartida()) return;
+      ordagoResuelto = resolverLanceEnRecuento('chica');
+      if (ordagoResuelto || comprobarVictoriaChico()) return;
 
       setTimeout(() => {
         if (sala.apuestasLances.pares.hayPares) {
-          resolverLanceEnRecuento('pares');
-          if (comprobarFinPartida()) return;
+          ordagoResuelto = resolverLanceEnRecuento('pares');
+          if (ordagoResuelto || comprobarVictoriaChico()) return;
         }
 
         setTimeout(() => {
-          resolverLanceEnRecuento('juego');
-          if (comprobarFinPartida()) return;
+          ordagoResuelto = resolverLanceEnRecuento('juego');
+          if (ordagoResuelto || comprobarVictoriaChico()) return;
 
           setTimeout(() => {
             sala.asientoMano = (sala.asientoMano + 1) % 4;
@@ -601,37 +608,95 @@ function ejecutarRecuentoFinalMano() {
 
 function resolverLanceEnRecuento(lance) {
   const info = sala.apuestasLances[lance];
-  if (info.resueltoEnFalso) return;
+  if (info.resueltoEnFalso) return false;
 
   const resultado = evaluarGanadorLanceDetalle(lance);
   const ganador = resultado.parejaGanadora;
   const asientoGanador = resultado.asientoGanador;
+
+  // CASO ESPECIAL: ÓRDAGO QUERIDO
+  if (info.ordago && info.querido) {
+    let motivoOrdago = `¡ÓRDAGO GANADO EN ${lance.toUpperCase()} por ${resultado.nombreGanador}! Se lleva el juego completo.`;
+    io.emit('eventoLanceGanado', {
+      lance: lance.toUpperCase(),
+      asientoGanador: asientoGanador,
+      parejaGanadora: ganador,
+      desglose: motivoOrdago,
+      desgloseItems: [{ desc: "Órdago querido", pts: 40, jugador: resultado.nombreGanador }],
+      puntosActualizados: sala.puntos,
+      esOrdagoDirecto: true
+    });
+    notificarEstado(motivoOrdago);
+    comprobarVictoriaChico(ganador, motivoOrdago, true);
+    return true; // Termina la mano inmediatamente
+  }
+
   let ptsEnvite = info.puntos;
+  let itemsCobro = [];
   let ptsPropios = 0;
   let desgloseTexto = "";
 
   if (lance === 'pares') {
-    const p1 = evaluarDetallePares(sala.manos[ganador === 0 ? 0 : 1]).cobro;
-    const p2 = evaluarDetallePares(sala.manos[ganador === 0 ? 2 : 3]).cobro;
-    ptsPropios = p1 + p2;
+    // Cobro oficial para cada miembro de la pareja ganadora
+    const a1 = ganador === 0 ? 0 : 1;
+    const a2 = ganador === 0 ? 2 : 3;
+    const p1 = evaluarDetallePares(sala.manos[a1]);
+    const p2 = evaluarDetallePares(sala.manos[a2]);
+    const nom1 = Object.values(sala.jugadores).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
+    const nom2 = Object.values(sala.jugadores).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
+
+    if (info.querido || ptsEnvite > 1) {
+      itemsCobro.push({ desc: `Envite ganado`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
+    } else {
+      itemsCobro.push({ desc: `Paso ganado`, pts: 1, jugador: `Pareja ${ganador+1}` });
+      ptsEnvite = 1;
+    }
+
+    if (p1.cobro > 0) itemsCobro.push({ desc: `${p1.nombre}`, pts: p1.cobro, jugador: nom1 });
+    if (p2.cobro > 0) itemsCobro.push({ desc: `${p2.nombre}`, pts: p2.cobro, jugador: nom2 });
+
+    ptsPropios = p1.cobro + p2.cobro;
     const totalPuntos = ptsEnvite + ptsPropios;
     sala.puntos[ganador] += totalPuntos;
     desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite} del lance + ${ptsPropios} de pares = +${totalPuntos} pts.`;
   } else if (lance === 'juego') {
     if (info.esAlPunto) {
+      if (info.querido || ptsEnvite > 1) {
+        itemsCobro.push({ desc: `Envite al punto`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
+      } else {
+        itemsCobro.push({ desc: `Punto ganado`, pts: 1, jugador: `Pareja ${ganador+1}` });
+        ptsEnvite = 1;
+      }
+      itemsCobro.push({ desc: `Tanto de punto`, pts: 1, jugador: resultado.nombreGanador });
       ptsPropios = 1;
       const totalPuntos = ptsEnvite + ptsPropios;
       sala.puntos[ganador] += totalPuntos;
       desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite} del lance + 1 de punto = +${totalPuntos} pts.`;
     } else {
-      const j1 = evaluarDetalleJuego(sala.manos[ganador === 0 ? 0 : 1]).cobro;
-      const j2 = evaluarDetalleJuego(sala.manos[ganador === 0 ? 2 : 3]).cobro;
-      ptsPropios = j1 + j2;
+      const a1 = ganador === 0 ? 0 : 1;
+      const a2 = ganador === 0 ? 2 : 3;
+      const j1 = evaluarDetalleJuego(sala.manos[a1]);
+      const j2 = evaluarDetalleJuego(sala.manos[a2]);
+      const nom1 = Object.values(sala.jugadores).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
+      const nom2 = Object.values(sala.jugadores).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
+
+      if (info.querido || ptsEnvite > 1) {
+        itemsCobro.push({ desc: `Envite de juego`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
+      } else {
+        itemsCobro.push({ desc: `Juego en paso`, pts: 1, jugador: `Pareja ${ganador+1}` });
+        ptsEnvite = 1;
+      }
+
+      if (j1.tiene) itemsCobro.push({ desc: `${j1.desc}`, pts: j1.cobro, jugador: nom1 });
+      if (j2.tiene) itemsCobro.push({ desc: `${j2.desc}`, pts: j2.cobro, jugador: nom2 });
+
+      ptsPropios = (j1.tiene ? j1.cobro : 0) + (j2.tiene ? j2.cobro : 0);
       const totalPuntos = ptsEnvite + ptsPropios;
       sala.puntos[ganador] += totalPuntos;
       desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite} del lance + ${ptsPropios} de juegos = +${totalPuntos} pts.`;
     }
   } else {
+    itemsCobro.push({ desc: info.querido ? `Envite ganado` : `Paso ganado`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
     sala.puntos[ganador] += ptsEnvite;
     desgloseTexto = `${resultado.motivo}. +${ptsEnvite} pto(s) para Pareja ${ganador + 1}.`;
   }
@@ -641,10 +706,13 @@ function resolverLanceEnRecuento(lance) {
     asientoGanador: asientoGanador,
     parejaGanadora: ganador,
     desglose: desgloseTexto,
-    puntosActualizados: sala.puntos
+    desgloseItems: itemsCobro,
+    puntosActualizados: sala.puntos,
+    esOrdagoDirecto: false
   });
 
   notificarEstado(desgloseTexto);
+  return false;
 }
 
 function evaluarGanadorLanceDetalle(lance) {
@@ -666,7 +734,7 @@ function evaluarGanadorLanceDetalle(lance) {
     let pareja = max0 > max1 ? 0 : (max1 > max0 ? 1 : (tieneMano(a0, a1) ? 0 : 1));
     let asiento = pareja === 0 ? a0 : a1;
     const nom = Object.values(sala.jugadores).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, motivo: `Grande ganada por ${nom}` };
+    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo: `Grande ganada por ${nom}` };
   }
 
   if (lance === 'chica') {
@@ -678,7 +746,7 @@ function evaluarGanadorLanceDetalle(lance) {
     let pareja = min0 < min1 ? 0 : (min1 < min0 ? 1 : (tieneMano(a0, a1) ? 0 : 1));
     let asiento = pareja === 0 ? a0 : a1;
     const nom = Object.values(sala.jugadores).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, motivo: `Chica ganada por ${nom}` };
+    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo: `Chica ganada por ${nom}` };
   }
 
   if (lance === 'pares') {
@@ -691,7 +759,7 @@ function evaluarGanadorLanceDetalle(lance) {
     let asiento = pareja === 0 ? a0 : a1;
     let det = p[asiento];
     const nom = Object.values(sala.jugadores).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, motivo: `Pares ganados por ${nom} con ${det.nombre}` };
+    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo: `Pares ganados por ${nom} con ${det.nombre}` };
   }
 
   if (lance === 'juego') {
@@ -704,18 +772,65 @@ function evaluarGanadorLanceDetalle(lance) {
     let asiento = pareja === 0 ? a0 : a1;
     let det = j[asiento];
     const nom = Object.values(sala.jugadores).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, motivo: `Juego ganado por ${nom} con ${det.desc}` };
+    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo: `Juego ganado por ${nom} con ${det.desc}` };
   }
 }
 
-function comprobarFinPartida() {
-  if (sala.puntos[0] >= 40 || sala.puntos[1] >= 40) {
-    sala.fase = 'fin';
-    sala.enPartida = false;
-    notificarEstado(`¡VICTORIA! Pareja ${sala.puntos[0] >= 40 ? 1 : 2} ha ganado la partida con 40 puntos.`);
+function comprobarVictoriaChico(ganadorForzado = null, motivo = "", esOrdago = false) {
+  let ganador = ganadorForzado;
+  if (ganador === null) {
+    if (sala.puntos[0] >= 40) ganador = 0;
+    else if (sala.puntos[1] >= 40) ganador = 1;
+  }
+
+  if (ganador !== null) {
+    sala.juegosGanados[ganador] += 1;
+    let msgFinal = esOrdago ? motivo : `¡Pareja ${ganador + 1} alcanza 40 puntos y gana el juego! Marcador de juegos: ${sala.juegosGanados[0]} - ${sala.juegosGanados[1]}`;
+    
+    // Reinicio de puntos a 0-0 pero conservando juegos globales
+    sala.puntos = { 0: 0, 1: 0 };
+    sala.asientoMano = (sala.asientoMano + 1) % 4;
+
+    io.emit('victoriaChico', {
+      ganadorPareja: ganador,
+      mensaje: msgFinal,
+      juegosGanados: sala.juegosGanados
+    });
+
+    notificarEstado(msgFinal);
+    setTimeout(iniciarMano, 4000);
     return true;
   }
   return false;
+}
+
+// RESETEO GLOBAL DE ADMINISTRADOR
+function ejecutarResetAdmin() {
+  limpiarTimersBots();
+  limpiarTimerDecision();
+  sala = {
+    jugadores: {},
+    enPartida: false,
+    mazo: [],
+    descartes: [],
+    manos: { 0: [], 1: [], 2: [], 3: [] },
+    puntos: { 0: 0, 1: 0 },
+    juegosGanados: { 0: 0, 1: 0 },
+    fase: 'espera',
+    asientoMano: 0,
+    turno: 0,
+    ordenMusVotos: {},
+    apuestaActual: { total: 0, ultimoAumento: 0, ultimoApostador: null, ordago: false, enPaso: true },
+    decisionPareja: { activa: false, parejaVotante: null, votos: {}, tiempoRestante: 10, timerId: null },
+    apuestasLances: {
+      grande: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
+      chica: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
+      pares: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, hayPares: false },
+      juego: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, esAlPunto: false }
+    }
+  };
+  emitirActualizacionAsientos();
+  io.emit('resetCompleto');
 }
 
 io.on('connection', (socket) => {
@@ -747,7 +862,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('rellenarBots', () => {
-    // Si el usuario que presiona rellenar no se ha sentado aún, lo sentamos en el primer asiento libre
     let ocupados = Object.values(sala.jugadores).map(j => j.asiento);
     if (!sala.jugadores[socket.id]) {
       let primerLibre = [0, 1, 2, 3].find(a => !ocupados.includes(a));
@@ -779,6 +893,14 @@ io.on('connection', (socket) => {
     emitirActualizacionAsientos();
     notificarEstado("Mesa completada con Bots.");
     if (!sala.enPartida) iniciarMano();
+  });
+
+  socket.on('solicitarResetAdmin', ({ password }) => {
+    if (password === ADMIN_PASSWORD) {
+      ejecutarResetAdmin();
+    } else {
+      socket.emit('errorAdminPassword', "Contraseña de administrador incorrecta.");
+    }
   });
 
   socket.on('votoMus', ({ quiereMus }) => {
