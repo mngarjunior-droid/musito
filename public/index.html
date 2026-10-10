@@ -1715,6 +1715,43 @@
             panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Emitiendo jugada: <strong>${tipo.toUpperCase()}</strong>...</div>`;
         }
 
+        function evaluarMisPares() {
+            if (!misCartas || !Array.isArray(misCartas) || misCartas.length === 0) return { tipo: 0, desc: "Sin pares" };
+            let cnt = {};
+            misCartas.forEach(c => {
+                if (!c) return;
+                let val = c.valorMus;
+                if (val === undefined && c.numero) {
+                    let num = parseInt(c.numero);
+                    val = (num === 3) ? 12 : (num === 2 ? 1 : num);
+                }
+                if (val !== undefined) {
+                    cnt[val] = (cnt[val] || 0) + 1;
+                }
+            });
+            let parejas = Object.keys(cnt).filter(k => cnt[k] >= 2).map(Number).sort((a, b) => b - a);
+            let maxRep = Math.max(0, ...Object.values(cnt));
+            if (maxRep === 4) return { tipo: 4, desc: "Cuarteto" };
+            if (parejas.length === 2) return { tipo: 3, desc: "Duples" };
+            if (maxRep === 3) return { tipo: 2, desc: "Medias" };
+            if (parejas.length === 1) return { tipo: 1, desc: "Pareja" };
+            return { tipo: 0, desc: "Sin pares" };
+        }
+
+        function evaluarMiJuego() {
+            if (!misCartas || !Array.isArray(misCartas) || misCartas.length === 0) return { tiene: false, puntos: 0 };
+            let s = misCartas.reduce((acc, c) => {
+                if (!c) return acc;
+                let val = c.valorJuego;
+                if (val === undefined && c.numero) {
+                    let num = parseInt(c.numero);
+                    val = (num >= 10 || num === 3) ? 10 : (num === 2 || num === 1 ? 1 : num);
+                }
+                return acc + (val || 0);
+            }, 0);
+            return { tiene: s >= 31, puntos: s };
+        }
+
         /* ===== CONTROLES Y BOTONES CON DETALLE EXACTO DE PUNTOS ===== */
         function actualizarControles() {
             const panel = document.getElementById('botonesAccion');
@@ -1722,11 +1759,35 @@
             if (miAsiento === null) return;
             const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
 
-            if ((estadoActual.fase === 'declaracion_pares' || estadoActual.fase === 'declaracion_juego') && estadoActual.turno === miAsiento) {
-                panel.innerHTML = `
-                    <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, llevo!</button>
-                    <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo</button>
-                `;
+            if (estadoActual.fase === 'declaracion_pares' && estadoActual.turno === miAsiento) {
+                const infoPares = evaluarMisPares();
+                if (infoPares.tipo > 0) {
+                    panel.innerHTML = `
+                        <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, llevo! (${infoPares.desc})</button>
+                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo</button>
+                    `;
+                } else {
+                    panel.innerHTML = `
+                        <button disabled class="btn-action gold" style="opacity:0.38; cursor:not-allowed;" title="No tienes pares en tu mano">¡Sí, llevo! (Sin pares)</button>
+                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No llevo pares</button>
+                    `;
+                }
+                return;
+            }
+
+            if (estadoActual.fase === 'declaracion_juego' && estadoActual.turno === miAsiento) {
+                const infoJuego = evaluarMiJuego();
+                if (infoJuego.tiene) {
+                    panel.innerHTML = `
+                        <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí, tengo! (${infoJuego.puntos === 31 ? 'La una (31)' : infoJuego.puntos + ' de juego'})</button>
+                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No tengo</button>
+                    `;
+                } else {
+                    panel.innerHTML = `
+                        <button disabled class="btn-action gold" style="opacity:0.38; cursor:not-allowed;" title="Punto: ${infoJuego.puntos}">¡Sí, tengo! (${infoJuego.puntos} pts - Sin juego)</button>
+                        <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No tengo juego (${infoJuego.puntos} pts)</button>
+                    `;
+                }
                 return;
             }
 
