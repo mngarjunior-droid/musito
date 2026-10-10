@@ -55,20 +55,27 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== MODAL DE ENTRADA FIJO, CENTRADO Y FLOTANTE ===== */
+        /* ===== MODALES FLOTANTES CENTRADOS (CORREGIDO SIN CONFLICTOS) ===== */
         .overlay-modal {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: rgba(3, 8, 5, 0.88) !important;
-            backdrop-filter: blur(28px) saturate(190%) !important;
-            -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            z-index: 99999 !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 8, 5, 0.88);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+
+        /* Clase para ocultar modales limpiamente */
+        .overlay-modal.oculto {
+            display: none !important;
         }
 
         .modal-box {
@@ -111,12 +118,12 @@
             border-color: var(--accent-gold);
         }
 
-        /* GRID DE 4 ASIENTOS SELECCIONABLES */
+        /* GRID DE ASIENTOS CON ESTILO DE TARJETA */
         .grid-asientos {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 10px !important;
-            margin-bottom: 16px !important;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .asiento-card {
@@ -845,7 +852,7 @@
 </head>
 <body>
 
-    <!-- MODAL DE ENTRADA FIJO -->
+    <!-- MODAL DE ENTRADA FIJO, CENTRADO Y FLOTANTE -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
@@ -861,8 +868,8 @@
         </div>
     </div>
 
-    <!-- MODAL ADMIN -->
-    <div class="overlay-modal" id="modalAdmin" style="display: none;">
+    <!-- MODAL ADMIN (INICIALMENTE OCULTO) -->
+    <div class="overlay-modal oculto" id="modalAdmin">
         <div class="modal-box" style="max-width: 380px;">
             <h2 style="color: #ff7675;">Panel Administrador</h2>
             <p style="font-size: 0.8rem; color: #a4beaf; margin-bottom: 12px;">Introduce la clave maestra para reiniciar la mesa:</p>
@@ -1095,7 +1102,7 @@
             miAsiento = asiento;
             salaActualId = salaId;
             localStorage.setItem('mus_sala', salaActualId);
-            document.getElementById('modalInicio').style.display = 'none';
+            document.getElementById('modalInicio').classList.add('oculto');
             document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
             const parejaNum = info.pareja + 1;
             document.getElementById('miAsientoTexto').innerHTML = `Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
@@ -1117,8 +1124,12 @@
             mostrarBocadilloPorAsiento(miAsiento, `(Seña enviada)`);
         }
 
-        function abrirModalAdmin() { document.getElementById('modalAdmin').style.display = 'flex'; }
-        function cerrarModalAdmin() { document.getElementById('modalAdmin').style.display = 'none'; }
+        function abrirModalAdmin() {
+            document.getElementById('modalAdmin').classList.remove('oculto');
+        }
+        function cerrarModalAdmin() {
+            document.getElementById('modalAdmin').classList.add('oculto');
+        }
         function ejecutarAdminReset() {
             const pass = document.getElementById('inputAdminPass').value;
             socket.emit('solicitarResetAdmin', { password: pass });
