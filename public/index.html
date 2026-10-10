@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gran Mus Español - Online</title>
+    <title>El Mus de Mario - Online</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --tapete-verde: #0c4a24;
-            --tapete-centro: #156937;
-            --madera: #3e1f0c;
+            --tapete-verde: #0a4623;
+            --tapete-centro: #156d38;
+            --madera: #3c1e09;
             --oro: #f1c40f;
             --rojo: #e74c3c;
             --azul: #3498db;
             --carta-bg: #fffdf5;
             --borde-carta: #2c1a0e;
+            --escala-hud: 1;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Fredoka', sans-serif; user-select: none; }
 
         body {
-            background: radial-gradient(circle at center, #18241d 0%, #060907 100%);
+            background: radial-gradient(circle at center, #1b2920 0%, #060907 100%);
             color: #ffffff;
             min-height: 100vh;
             display: flex;
@@ -30,21 +31,28 @@
             justify-content: space-between;
             padding: 8px 12px;
             overflow-x: hidden;
+            transform: scale(var(--escala-hud));
+            transform-origin: top center;
+            transition: transform 0.2s ease;
         }
 
+        /* CABECERA */
+        header { text-align: center; margin-bottom: 2px; }
         header h1 {
             font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             color: var(--oro);
             letter-spacing: 2px;
-            text-shadow: 0 3px 6px rgba(0,0,0,0.8);
+            text-shadow: 0 3px 8px rgba(0,0,0,0.8);
         }
 
         .barra-superior {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .info-asiento {
@@ -56,29 +64,96 @@
             color: #d2e4db;
         }
 
-        .marcador {
+        /* MODAL SALA DE ESPERA / NOMBRE */
+        .overlay-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
             display: flex;
-            gap: 25px;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-box {
+            background: #102619;
+            border: 3px solid var(--oro);
+            border-radius: 20px;
+            padding: 24px 30px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+        }
+
+        .modal-box h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--oro);
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+        }
+
+        .modal-box input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 2px solid #58d68d;
+            background: #06150c;
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 14px;
+            outline: none;
+            text-align: center;
+        }
+
+        /* MARCADOR GLOBAL CON BARRA A 40 */
+        .marcador-contenedor {
+            display: flex;
+            gap: 20px;
             background: rgba(12, 28, 18, 0.95);
             border: 2px solid #a4762c;
-            padding: 6px 24px;
+            padding: 6px 20px;
             border-radius: 20px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            align-items: center;
         }
 
-        .marcador span {
+        .marcador-contenedor span.pts {
             font-weight: 800;
             color: var(--oro);
-            font-size: 1.25rem;
+            font-size: 1.3rem;
         }
 
+        /* RESUMEN DEL BOTE / CONTADOR DE LANCES */
+        .panel-botes {
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-botes .item-lance {
+            display: flex;
+            gap: 4px;
+            color: #cadfd4;
+        }
+
+        .panel-botes .item-lance strong {
+            color: var(--oro);
+        }
+
+        /* MESA OVALADA ESPACIOSA */
         .mesa {
             position: relative;
             width: 100%;
             max-width: 980px;
             height: 520px;
-            background: radial-gradient(ellipse at center, var(--tapete-centro) 0%, var(--tapete-verde) 70%, #062312 100%);
+            background: radial-gradient(ellipse at center, var(--tapete-centro) 0%, var(--tapete-verde) 70%, #051d0f 100%);
             border: 12px solid var(--madera);
             outline: 4px solid #1a0c04;
             border-radius: 250px;
@@ -108,6 +183,31 @@
             align-items: center;
             gap: 4px;
         }
+
+        /* BOCADILLOS DE DIÁLOGO */
+        .bocadillo {
+            position: absolute;
+            background: #ffffff;
+            color: #1a1a1a;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border: 2px solid var(--madera);
+            white-space: nowrap;
+            opacity: 0;
+            transform: scale(0.6);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .bocadillo.activo { opacity: 1; transform: scale(1); }
+        .pos-sur .bocadillo { top: -30px; }
+        .pos-norte .bocadillo { bottom: -30px; }
+        .pos-oeste .bocadillo { top: -28px; }
+        .pos-este .bocadillo { top: -28px; }
 
         .cartel {
             background: rgba(8, 28, 16, 0.9);
@@ -162,6 +262,7 @@
 
         .mano.vertical { transform: scale(0.88); }
 
+        /* NAIPES ESPAÑOLES */
         .carta {
             width: 64px;
             height: 94px;
@@ -204,11 +305,7 @@
             z-index: 1;
         }
 
-        .carta-corner.inf {
-            align-self: flex-end;
-            transform: rotate(180deg);
-        }
-
+        .carta-corner.inf { align-self: flex-end; transform: rotate(180deg); }
         .carta-num { font-size: 0.95rem; font-weight: 800; }
         .carta-simbolo-mini { width: 10px; height: 10px; margin-top: 1px; }
 
@@ -259,10 +356,11 @@
             letter-spacing: 1px;
         }
 
+        /* BOTONERA */
         .panel-control {
             display: flex;
             gap: 10px;
-            margin-top: 8px;
+            margin-top: 6px;
             flex-wrap: wrap;
             justify-content: center;
             min-height: 44px;
@@ -288,6 +386,17 @@
         button.azul { background: linear-gradient(180deg, #2980b9 0%, #1a5276 100%); border-color: #7fb3d5; }
         button.naranja { background: linear-gradient(180deg, #e67e22 0%, #a04000 100%); border-color: #f5b041; }
 
+        /* PANEL DE AJUSTES HUD */
+        .panel-ajustes {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
         .chat-log {
             position: absolute;
             bottom: 12px;
@@ -309,42 +418,81 @@
 </head>
 <body>
 
+    <!-- MODAL INICIAL PARA INTRODUCIR NOMBRE -->
+    <div class="overlay-modal" id="modalInicio">
+        <div class="modal-box">
+            <h2>EL MUS DE MARIO</h2>
+            <p style="font-size: 0.85rem; color: #bedac8; margin-bottom: 12px;">Introduce tu apodo para ocupar un asiento en la mesa:</p>
+            <input type="text" id="inputNombre" placeholder="Tu nombre o alias..." maxlength="15">
+            <button onclick="confirmarNombre()" class="oro" style="width: 100%; padding: 10px;">¡Sentarse a la Mesa!</button>
+        </div>
+    </div>
+
     <header>
-        <h1>EL GRAN MUS ESPAÑOL ONLINE</h1>
+        <h1>EL MUS DE MARIO</h1>
     </header>
 
     <div class="barra-superior">
-        <div class="info-asiento" id="miAsientoTexto">Conectando al servidor...</div>
+        <div class="info-asiento" id="miAsientoTexto">Conectando...</div>
         <button onclick="socket.emit('rellenarBots')" class="naranja">🤖 Rellenar huecos con Bots</button>
+        
+        <!-- AJUSTES DE HUD -->
+        <div class="panel-ajustes">
+            <span>Zoom:</span>
+            <button onclick="ajustarEscala(0.85)" style="padding: 2px 6px; font-size: 0.7rem;">-</button>
+            <button onclick="ajustarEscala(1.0)" style="padding: 2px 6px; font-size: 0.7rem;">100%</button>
+            <button onclick="ajustarEscala(1.15)" style="padding: 2px 6px; font-size: 0.7rem;">+</button>
+            <button onclick="toggleSonido()" id="btnSonido" style="padding: 2px 6px; font-size: 0.7rem; background:#34495e;">🔊 Sonido</button>
+        </div>
     </div>
 
-    <div class="marcador">
-        <div>Nuestra Pareja (P1): <span id="puntosP1">0</span> / 40 pts</div>
-        <div>Pareja Rival (P2): <span id="puntosP2">0</span> / 40 pts</div>
+    <!-- MARCADOR GLOBAL DIRECTO A 40 -->
+    <div class="marcador-contenedor">
+        <div>Nuestra Pareja (P1): <span class="pts" id="puntosP1">0</span> / 40</div>
+        <div style="color: #a4762c;">|</div>
+        <div>Pareja Rival (P2): <span class="pts" id="puntosP2">0</span> / 40</div>
     </div>
 
+    <!-- CONTADOR DE APUESTAS / BOTES POR LANCE -->
+    <div class="panel-botes">
+        <div class="item-lance">Grande: <strong id="bote_grande">Paso (1)</strong></div>
+        <div class="item-lance">Chica: <strong id="bote_chica">Paso (1)</strong></div>
+        <div class="item-lance">Pares: <strong id="bote_pares">-</strong></div>
+        <div class="item-lance">Juego: <strong id="bote_juego">-</strong></div>
+    </div>
+
+    <!-- MESA OVALADA -->
     <div class="mesa">
+        <!-- RIVAL 2 (Norte) -->
         <div class="jugador-box pos-norte">
+            <div class="bocadillo" id="boc_norte"></div>
             <div class="cartel" id="lbl_norte">Esperando...</div>
             <div class="mano" id="mano_norte"></div>
         </div>
 
+        <!-- RIVAL 1 (Oeste) -->
         <div class="jugador-box pos-oeste">
+            <div class="bocadillo" id="boc_oeste"></div>
             <div class="cartel" id="lbl_oeste">Esperando...</div>
             <div class="mano vertical" id="mano_oeste"></div>
         </div>
 
+        <!-- CENTRO DE MESA -->
         <div class="pos-centro centro-mesa">
             <h3 id="faseTxt">SALA DE ESPERA</h3>
-            <p id="msgTxt">Esperando a 4 jugadores o pulsa "Rellenar huecos con Bots".</p>
+            <p id="msgTxt">Esperando a que se unan 4 amigos o pulsa en rellenar con Bots.</p>
         </div>
 
+        <!-- COMPAÑERO (Este) -->
         <div class="jugador-box pos-este">
+            <div class="bocadillo" id="boc_este"></div>
             <div class="cartel" id="lbl_este">Esperando...</div>
             <div class="mano vertical" id="mano_este"></div>
         </div>
 
+        <!-- TÚ (Sur) -->
         <div class="jugador-box pos-sur">
+            <div class="bocadillo" id="boc_sur"></div>
             <div class="mano" id="miMano"></div>
             <div class="cartel activo" id="lbl_sur">Tú</div>
         </div>
@@ -367,27 +515,67 @@
         let miAsiento = null;
         let misCartas = [];
         let estadoActual = {};
+        let sonidoActivado = true;
+        let audioCtx = null;
+
+        function reproducirTono(freq, dur) {
+            if (!sonidoActivado) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+                osc.start();
+                osc.stop(audioCtx.currentTime + dur);
+            } catch(e) {}
+        }
+
+        function toggleSonido() {
+            sonidoActivado = !sonidoActivado;
+            document.getElementById('btnSonido').innerText = sonidoActivado ? "🔊 Sonido" : "🔇 Mudo";
+        }
+
+        function ajustarEscala(val) {
+            document.documentElement.style.setProperty('--escala-hud', val);
+        }
+
+        function confirmarNombre() {
+            const nom = document.getElementById('inputNombre').value;
+            socket.emit('unirse', { nombre: nom });
+            document.getElementById('modalInicio').style.display = 'none';
+        }
 
         socket.on('asientoAsignado', ({ asiento, info }) => {
             miAsiento = asiento;
-            document.getElementById('miAsientoTexto').innerText = `Tu Asiento: ${info.nombre} (Pareja ${info.pareja + 1})`;
+            document.getElementById('miAsientoTexto').innerText = `Tu Asiento: ${info.nombre} (Pareja ${info.pareja + 1} - ${info.rol})`;
             document.getElementById('lbl_sur').innerText = `👤 ${info.nombre} (Tú)`;
+            reproducirTono(523, 0.2);
         });
 
         socket.on('mesaLlena', () => {
-            alert("La mesa ya tiene 4 jugadores. Entraste como espectador.");
+            alert("La mesa ya tiene 4 jugadores. Estás en modo espectador.");
             document.getElementById('miAsientoTexto').innerText = "Modo Espectador";
+            document.getElementById('modalInicio').style.display = 'none';
         });
 
         socket.on('misCartas', (cartas) => {
             misCartas = cartas.map(c => ({ ...c, seleccionada: false }));
             renderizarMiMano();
+            reproducirTono(440, 0.15);
         });
 
         socket.on('mensajeChat', ({ jugador, texto }) => {
             const chat = document.getElementById('chatLog');
             chat.innerHTML += `<div><strong>${jugador}:</strong> ${texto}</div>`;
             chat.scrollTop = chat.scrollHeight;
+
+            // Mostrar bocadillo sobre el asiento correspondiente
+            mostrarBocadilloPorNombre(jugador, texto);
+            reproducirTono(330, 0.12);
         });
 
         socket.on('estadoJuego', (estado) => {
@@ -397,10 +585,25 @@
             document.getElementById('puntosP1').innerText = estado.puntos[0];
             document.getElementById('puntosP2').innerText = estado.puntos[1];
 
+            actualizarBotesLances(estado.apuestasLances);
             actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno);
             actualizarReversosOtrosJugadores(estado.fase !== 'espera');
             actualizarControles();
         });
+
+        function actualizarBotesLances(lances) {
+            if (!lances) return;
+            const formato = (info) => {
+                if (info.resueltoEnFalso) return "Para ti (+1)";
+                if (info.querido) return `Aceptado (${info.puntos} pts)`;
+                if (info.enPaso) return "En paso (1 pt)";
+                return "-";
+            };
+            document.getElementById('bote_grande').innerText = formato(lances.grande);
+            document.getElementById('bote_chica').innerText = formato(lances.chica);
+            document.getElementById('bote_pares').innerText = lances.pares.hayPares ? formato(lances.pares) : "Sin pares";
+            document.getElementById('bote_juego').innerText = lances.juego.esAlPunto ? `Al punto (${formato(lances.juego)})` : formato(lances.juego);
+        }
 
         function renderizarMiMano() {
             const cont = document.getElementById('miMano');
@@ -423,6 +626,7 @@
                     if (estadoActual.fase === 'descartes') {
                         c.seleccionada = !c.seleccionada;
                         renderizarMiMano();
+                        reproducirTono(600, 0.08);
                     }
                 };
                 cont.appendChild(div);
@@ -433,18 +637,11 @@
             const huecos = ['mano_norte', 'mano_este', 'mano_oeste'];
             huecos.forEach(id => {
                 const el = document.getElementById(id);
-                if (!mostrar) {
-                    el.innerHTML = '';
-                    return;
-                }
+                if (!mostrar) { el.innerHTML = ''; return; }
                 if (el.children.length === 0) {
                     el.innerHTML = '';
                     for (let i = 0; i < 4; i++) {
-                        el.innerHTML += `
-                            <div class="carta-reverso">
-                                <div class="carta-reverso-escudo">MUS</div>
-                            </div>
-                        `;
+                        el.innerHTML += `<div class="carta-reverso"><div class="carta-reverso-escudo">MUS</div></div>`;
                     }
                 }
             });
@@ -479,6 +676,22 @@
             });
         }
 
+        function mostrarBocadilloPorNombre(nombre, texto) {
+            const pos = ['sur', 'norte', 'este', 'oeste'];
+            for (let p of pos) {
+                let lbl = document.getElementById(`lbl_${p}`);
+                if (lbl && lbl.innerText.includes(nombre)) {
+                    let boc = document.getElementById(`boc_${p}`);
+                    if (boc) {
+                        boc.innerText = texto;
+                        boc.classList.add('activo');
+                        setTimeout(() => boc.classList.remove('activo'), 1800);
+                    }
+                    break;
+                }
+            }
+        }
+
         function actualizarControles() {
             const panel = document.getElementById('botonesAccion');
             panel.innerHTML = '';
@@ -496,15 +709,18 @@
                     <button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>
                 `;
             } else if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
+                // Caso A: Hay envite activo esperando respuesta de mi pareja
                 if (estadoActual.esperandoRespuestaDe === miPareja) {
                     panel.innerHTML = `
                         <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'noquiero' })" class="rojo">No quiero</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'noquiero' })" class="rojo">No quiero (Para ti)</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="azul">2 más</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">5 más</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
                     `;
-                } else if (estadoActual.esperandoRespuestaDe === null && estadoActual.turno === miAsiento) {
+                }
+                // Caso B: Nadie ha envidado aún y es mi turno
+                else if (estadoActual.esperandoRespuestaDe === null && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
                         <button onclick="socket.emit('accionLance', { tipo: 'paso' })" class="rojo">Paso</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="oro">Envido 2</button>
