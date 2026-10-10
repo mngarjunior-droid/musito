@@ -669,7 +669,6 @@
         <div class="mesa">
             <div class="notificacion-sena" id="avisoSenaCompanero">👁️ Seña del Compañero</div>
 
-            <!-- NORTE: COMPAÑERO -->
             <div class="jugador-box pos-norte" id="box_norte">
                 <div class="badge-mano" id="badge_norte">👑 MANO</div>
                 <div class="bocadillo" id="boc_norte"></div>
@@ -680,7 +679,6 @@
                 <div class="mano" id="mano_norte"></div>
             </div>
 
-            <!-- OESTE: RIVAL 1 -->
             <div class="jugador-box pos-oeste" id="box_oeste">
                 <div class="badge-mano" id="badge_oeste">👑 MANO</div>
                 <div class="bocadillo" id="boc_oeste"></div>
@@ -691,13 +689,11 @@
                 <div class="mano vertical" id="mano_oeste"></div>
             </div>
 
-            <!-- CENTRO -->
             <div class="pos-centro centro-mesa" id="boxCentro">
                 <h3 id="faseTxt">SALA DE ESPERA</h3>
                 <p id="msgTxt">Conectando 4 jugadores o pulsa en Bots.</p>
             </div>
 
-            <!-- ESTE: RIVAL 2 -->
             <div class="jugador-box pos-este" id="box_este">
                 <div class="badge-mano" id="badge_este">👑 MANO</div>
                 <div class="bocadillo" id="boc_este"></div>
@@ -708,7 +704,6 @@
                 <div class="mano vertical" id="mano_este"></div>
             </div>
 
-            <!-- SUR: TÚ -->
             <div class="jugador-box pos-sur" id="box_sur">
                 <div class="badge-mano" id="badge_sur">👑 MANO</div>
                 <div class="bocadillo" id="boc_sur"></div>
@@ -939,7 +934,6 @@
 
             actualizarControles();
 
-            // Petición automática si el juego está en marcha y no se tienen cartas
             if (miAsiento !== null && estado.enPartida && (!misCartas || misCartas.length === 0)) {
                 socket.emit('pedirMisCartas');
             }
@@ -1109,6 +1103,13 @@
             }
         }
 
+        // RESPUESTA VISUAL INMEDIATA AL PULSAR LOS BOTONES
+        function emitirAccionVisual(tipo, cantidad) {
+            socket.emit('accionLance', { tipo, cantidad });
+            const panel = document.getElementById('botonesAccion');
+            panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f; padding:6px;">✔️ Enviaremos tu voto: <strong>${tipo.toUpperCase()}</strong>...</div>`;
+        }
+
         function actualizarControles() {
             const panel = document.getElementById('botonesAccion');
             panel.innerHTML = '';
@@ -1144,34 +1145,35 @@
                     return;
                 }
 
+                // SI LA PAREJA ESTÁ VOTANDO
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
-                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f;">✔️ Votado (${yaVoto.tipo.toUpperCase()}). Esperando decisión final...</div>`;
+                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f; padding:6px;">✔️ Has votado: <strong>${yaVoto.tipo.toUpperCase()}</strong>. Esperando decisión...</div>`;
                     } else {
                         panel.innerHTML = `
-                            <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
-                            <button onclick="socket.emit('accionLance', { tipo: 'noquiero' })" class="rojo">No quiero (Para ti)</button>
-                            <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="azul">2 más</button>
-                            <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">5 más</button>
-                            <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
+                            <button onclick="emitirAccionVisual('quiero')" class="oro">¡Quiero!</button>
+                            <button onclick="emitirAccionVisual('noquiero')" class="rojo">No quiero (Para ti)</button>
+                            <button onclick="emitirAccionVisual('envidar', 2)" class="azul">2 más</button>
+                            <button onclick="emitirAccionVisual('envidar', 5)" class="azul">5 más</button>
+                            <button onclick="emitirAccionVisual('ordago')" class="rojo">¡Órdago!</button>
                         `;
                     }
                     return;
                 }
 
-                if (!estadoActual.decisionPareja?.activa && estadoActual.turno === miAsiento) {
+                // APERTURA DEL TURNO
+                if ((!estadoActual.decisionPareja || !estadoActual.decisionPareja.activa) && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
-                        <button onclick="socket.emit('accionLance', { tipo: 'paso' })" class="rojo">Paso</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="oro">Envido 2</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">Envido 5</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
+                        <button onclick="emitirAccionVisual('paso')" class="rojo">Paso</button>
+                        <button onclick="emitirAccionVisual('envidar', 2)" class="oro">Envido 2</button>
+                        <button onclick="emitirAccionVisual('envidar', 5)" class="azul">Envido 5</button>
+                        <button onclick="emitirAccionVisual('ordago')" class="rojo">¡Órdago!</button>
                     `;
                     return;
                 }
             }
 
-            // Indicador de espera cuando no es el turno propio
             if (estadoActual.enPartida && !['recuento', 'fin'].includes(estadoActual.fase)) {
                 const nombreTurno = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[estadoActual.turno])
                     ? estadoActual.jugadoresEnMesa[estadoActual.turno].nombre
