@@ -491,7 +491,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
     decisionFinal = { tipo: 'quiero' };
   }
 
-  // REGLA CLAVE DE ÓRDAGO ACEPTADO: RESOLUCIÓN INMEDIATA CON ANIMACIÓN
+  // RESOLUCIÓN INMEDIATA SOLO SI SE ACEPTA UN ÓRDAGO
   if (esOrdagoActivo && decisionFinal.tipo === 'quiero') {
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: "¡QUIERO EL ÓRDAGO!" });
     resolverOrdagoInmediato(sala, sala.fase);
@@ -519,7 +519,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
     notificarEstado(sala, `¡Envite de ${sala.apuestasLances[sala.fase].puntos} pts aceptado! Se cobrará en el recuento.`);
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   } else {
-    // Órdago o envite rechazado: NO se acaba la partida, solo se lleva los puntos y sigue el juego
+    // ÓRDAGO O ENVIDE RECHAZADO: Sumar puntos normalmente y continuar la partida
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo: No quiero (Para ti)" : "No quiero (Para ti)" });
     let ptsGanados = 1;
     if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
@@ -528,7 +528,9 @@ function finalizarDecisionPareja(sala, porTiempo) {
     sala.puntos[sala.apuestaActual.ultimoApostador] += ptsGanados;
     sala.apuestasLances[sala.fase].resueltoEnFalso = true;
     notificarEstado(sala, `Rechazado. +${ptsGanados} punto(s) para Pareja ${sala.apuestaActual.ultimoApostador + 1}.`);
-    if (comprobarVictoriaChico(sala, sala.apuestaActual.ultimoApostador, `Alcanzados 40 puntos por envite rechazado`)) return;
+
+    // Solo termina si al sumar ese punto llegan realmente a 40
+    if (comprobarVictoriaChico(sala)) return;
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   }
 }
@@ -538,7 +540,6 @@ function resolverOrdagoInmediato(sala, lance) {
   limpiarTimerDecision(sala);
   sala.fase = 'recuento';
 
-  // Mostrar mensaje y destapar de inmediato todas las cartas con animación 3D
   notificarEstado(sala, `¡ÓRDAGO ACEPTADO EN ${lance.toUpperCase()}! ¡A ver las cartas!`, true);
 
   setTimeout(() => {
@@ -605,28 +606,25 @@ function botCalcularAccionApertura(sala, asiento, lance) {
   else if (lance === 'pares') fuerza = evaluarDetallePares(mano).fuerza;
   else if (lance === 'juego') fuerza = evaluarDetalleJuego(mano).fuerza;
 
-  // Un bot NUNCA abre tirando un órdago a lo loco
   if (fuerza >= 92) return Math.random() < 0.25 ? { tipo: 'envidar', cantidad: 5 } : { tipo: 'envidar', cantidad: 2 };
   if (fuerza >= 68) return { tipo: 'envidar', cantidad: 2 };
   return { tipo: 'paso' };
 }
 
-// IA PRUDENTE Y HUMANA ANTE ÓRDAGOS Y ENVIDES
 function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
   const mano = sala.manos[asiento];
   const esMano = tieneManoRelativa(asiento, sala);
 
-  // ANTE UN ÓRDAGO: El bot es muy prudente, "no se calienta"
+  // RESPUESTA DE BOTS A UN ÓRDAGO: PRUDENCIA TOTAL
   if (apuestaActual.ordago) {
     if (lance === 'grande') {
       const reyes = mano.filter(c => c.valorMus === 12).length;
-      if (reyes === 4) return { tipo: 'quiero' }; // 4 Reyes es invencible
+      if (reyes === 4) return { tipo: 'quiero' };
       if (reyes === 3) {
         const cuarta = mano.map(c => c.valorMus).sort((a,b) => b-a)[3];
-        // Solo si tiene 3 Reyes con caballo o sota y además tiene la ventaja de Mano
         if (cuarta >= 10 && esMano) return { tipo: 'quiero' };
       }
-      return { tipo: 'noquiero' }; // Con 2 reyes o menos JAMÁS ve un órdago
+      return { tipo: 'noquiero' };
     }
 
     if (lance === 'chica') {
@@ -638,25 +636,24 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
 
     if (lance === 'pares') {
       const p = evaluarDetallePares(mano);
-      if (p.tipo === 4 && p.rey) return { tipo: 'quiero' }; // Cuarteto de reyes
-      if (p.tipo === 3 && p.rey && p.segundo >= 11 && esMano) return { tipo: 'quiero' }; // Duples de Reyes y Caballos con mano
-      return { tipo: 'noquiero' }; // Medias o duples corrientes NUNCA ven órdago
+      if (p.tipo === 4 && p.rey) return { tipo: 'quiero' };
+      if (p.tipo === 3 && p.rey && p.segundo >= 11 && esMano) return { tipo: 'quiero' };
+      return { tipo: 'noquiero' };
     }
 
     if (lance === 'juego') {
       const j = evaluarDetalleJuego(mano);
-      // En Mus es regla de oro: solo se ve un órdago con 31 (La una)
       if (j.tiene && j.valor === 31) {
-        if (esMano) return { tipo: 'quiero' }; // Insuperable
+        if (esMano) return { tipo: 'quiero' };
         return Math.random() < 0.85 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
       }
-      return { tipo: 'noquiero' }; // Con 32 o punto nunca ven órdago
+      return { tipo: 'noquiero' };
     }
 
     return { tipo: 'noquiero' };
   }
 
-  // ENVIDES NORMALES
+  // RESPUESTA DE BOTS A ENVIDES ORDINARIOS
   let fuerza = 0;
   if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
   else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
@@ -769,7 +766,7 @@ function ejecutarRecuentoFinalMano(sala) {
           setTimeout(() => {
             sala.asientoMano = (sala.asientoMano + 1) % 4;
             const nuevoMano = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.asientoMano);
-            notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.`);
+            notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento \${sala.asientoMano + 1}`}.`);
             setTimeout(() => iniciarMano(sala), 3000);
           }, 3500);
         }, 3500);
@@ -780,13 +777,20 @@ function ejecutarRecuentoFinalMano(sala) {
 
 function resolverLanceEnRecuento(sala, lance) {
   const info = sala.apuestasLances[lance];
-  if (info.resueltoEnFalso) return false;
+  let ptsEnvite = info.puntos;
+
+  // Si el lance fue rechazado (no querido):
+  // En Grande y Chica ya no queda nada que cobrar.
+  // En Pares y Juego, el envite ya se cobró, pero los tantos propios de pares o juego sí se cobran de ley.
+  if (info.resueltoEnFalso) {
+    if (lance === 'grande' || lance === 'chica') return false;
+    ptsEnvite = 0;
+  }
 
   const resultado = evaluarGanadorLanceDetalle(sala, lance);
   const ganador = resultado.parejaGanadora;
   const asientoGanador = resultado.asientoGanador;
 
-  let ptsEnvite = info.puntos;
   let itemsCobro = [];
   let ptsPropios = 0;
   let desgloseTexto = "";
@@ -799,11 +803,13 @@ function resolverLanceEnRecuento(sala, lance) {
     const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
     const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
 
-    if (info.querido || ptsEnvite > 1) {
-      itemsCobro.push({ desc: `Envite ganado`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
-    } else {
-      itemsCobro.push({ desc: `Paso ganado`, pts: 1, jugador: `Pareja ${ganador+1}` });
-      ptsEnvite = 1;
+    if (ptsEnvite > 0) {
+      if (info.querido || ptsEnvite > 1) {
+        itemsCobro.push({ desc: `Envite ganado`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
+      } else {
+        itemsCobro.push({ desc: `Paso ganado`, pts: 1, jugador: `Pareja ${ganador+1}` });
+        ptsEnvite = 1;
+      }
     }
 
     if (p1.cobro > 0) itemsCobro.push({ desc: `${p1.nombre}`, pts: p1.cobro, jugador: nom1 });
@@ -812,20 +818,22 @@ function resolverLanceEnRecuento(sala, lance) {
     ptsPropios = p1.cobro + p2.cobro;
     const totalPuntos = ptsEnvite + ptsPropios;
     sala.puntos[ganador] += totalPuntos;
-    desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite} del lance + ${ptsPropios} de pares = +${totalPuntos} pts.`;
+    desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite > 0 ? ptsEnvite + ' del lance + ' : ''}${ptsPropios} de pares = +${totalPuntos} pts.`;
   } else if (lance === 'juego') {
     if (info.esAlPunto) {
-      if (info.querido || ptsEnvite > 1) {
-        itemsCobro.push({ desc: `Envite al punto`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
-      } else {
-        itemsCobro.push({ desc: `Punto ganado`, pts: 1, jugador: `Pareja ${ganador+1}` });
-        ptsEnvite = 1;
+      if (ptsEnvite > 0) {
+        if (info.querido || ptsEnvite > 1) {
+          itemsCobro.push({ desc: `Envite al punto`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
+        } else {
+          itemsCobro.push({ desc: `Punto ganado`, pts: 1, jugador: `Pareja ${ganador+1}` });
+          ptsEnvite = 1;
+        }
       }
       itemsCobro.push({ desc: `Tanto de punto`, pts: 1, jugador: resultado.nombreGanador });
       ptsPropios = 1;
       const totalPuntos = ptsEnvite + ptsPropios;
       sala.puntos[ganador] += totalPuntos;
-      desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite} del lance + 1 de punto = +${totalPuntos} pts.`;
+      desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite > 0 ? ptsEnvite + ' del lance + ' : ''}1 de punto = +${totalPuntos} pts.`;
     } else {
       const a1 = ganador === 0 ? 0 : 1;
       const a2 = ganador === 0 ? 2 : 3;
@@ -834,11 +842,13 @@ function resolverLanceEnRecuento(sala, lance) {
       const nom1 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a1)?.nombre || `Asiento ${a1+1}`;
       const nom2 = Object.values(sala.jugadoresPorToken).find(p => p.asiento === a2)?.nombre || `Asiento ${a2+1}`;
 
-      if (info.querido || ptsEnvite > 1) {
-        itemsCobro.push({ desc: `Envite de juego`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
-      } else {
-        itemsCobro.push({ desc: `Juego en paso`, pts: 1, jugador: `Pareja ${ganador+1}` });
-        ptsEnvite = 1;
+      if (ptsEnvite > 0) {
+        if (info.querido || ptsEnvite > 1) {
+          itemsCobro.push({ desc: `Envite de juego`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
+        } else {
+          itemsCobro.push({ desc: `Juego en paso`, pts: 1, jugador: `Pareja ${ganador+1}` });
+          ptsEnvite = 1;
+        }
       }
 
       if (j1.tiene) itemsCobro.push({ desc: `${j1.desc}`, pts: j1.cobro, jugador: nom1 });
@@ -847,7 +857,7 @@ function resolverLanceEnRecuento(sala, lance) {
       ptsPropios = (j1.tiene ? j1.cobro : 0) + (j2.tiene ? j2.cobro : 0);
       const totalPuntos = ptsEnvite + ptsPropios;
       sala.puntos[ganador] += totalPuntos;
-      desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite} del lance + ${ptsPropios} de juegos = +${totalPuntos} pts.`;
+      desgloseTexto = `${resultado.motivo}. Cobro: ${ptsEnvite > 0 ? ptsEnvite + ' del lance + ' : ''}${ptsPropios} de juegos = +${totalPuntos} pts.`;
     }
   } else {
     itemsCobro.push({ desc: info.querido ? `Envite ganado` : `Paso ganado`, pts: ptsEnvite, jugador: `Pareja ${ganador+1}` });
@@ -938,9 +948,13 @@ function evaluarGanadorLanceDetalle(sala, lance) {
   }
 }
 
+// CORRECCIÓN CRÍTICA: Solo se fuerza victoria si es Órdago aceptado (esOrdago=true).
+// En cualquier otro caso, es obligatorio tener 40 o más puntos.
 function comprobarVictoriaChico(sala, ganadorForzado = null, motivo = "", esOrdago = false) {
-  let ganador = ganadorForzado;
-  if (ganador === null) {
+  let ganador = null;
+  if (esOrdago && ganadorForzado !== null) {
+    ganador = ganadorForzado;
+  } else {
     if (sala.puntos[0] >= 40) ganador = 0;
     else if (sala.puntos[1] >= 40) ganador = 1;
   }
