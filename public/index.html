@@ -1519,20 +1519,36 @@
             if (items && items.length > 0) {
                 items.forEach(it => {
                     totalLance += (it.pts || 0);
-                    itemsHTML += `<div>• <strong>${it.jugador}:</strong> ${it.desc} (+${it.pts})</div>`;
+                    const ptsTxt = it.pts ? ` (+${it.pts})` : '';
+                    itemsHTML += `<div>• <strong>${it.jugador}:</strong> ${it.desc}${ptsTxt}</div>`;
                 });
             }
 
-            const card = document.createElement('div');
-            card.className = `desglose-card ${colorClase}`;
-            card.innerHTML = `
-                <div class="desglose-top">
-                    <span class="desglose-title">${lance} · Pareja ${parejaGanadora + 1}</span>
-                    <span class="desglose-puntos-tag">+${totalLance} PTS</span>
-                </div>
-                <div class="desglose-detail">${itemsHTML}</div>
-            `;
-            contenedor.prepend(card);
+            // Si ya existe tarjeta para este lance, la actualizamos para enriquecer el desglose
+            const idTarjeta = `tarjeta_lance_${lance.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            let card = document.getElementById(idTarjeta);
+            if (card) {
+                card.className = `desglose-card ${colorClase}`;
+                card.innerHTML = `
+                    <div class="desglose-top">
+                        <span class="desglose-title">${lance} · Pareja ${parejaGanadora + 1}</span>
+                        <span class="desglose-puntos-tag">+${totalLance} PTS</span>
+                    </div>
+                    <div class="desglose-detail">${itemsHTML}</div>
+                `;
+            } else {
+                card = document.createElement('div');
+                card.id = idTarjeta;
+                card.className = `desglose-card ${colorClase}`;
+                card.innerHTML = `
+                    <div class="desglose-top">
+                        <span class="desglose-title">${lance} · Pareja ${parejaGanadora + 1}</span>
+                        <span class="desglose-puntos-tag">+${totalLance} PTS</span>
+                    </div>
+                    <div class="desglose-detail">${itemsHTML}</div>
+                `;
+                contenedor.prepend(card);
+            }
         }
 
         /* ===== BARRA DE LANCES DINÁMICA CON HALO DE RONDA ===== */
@@ -1541,7 +1557,14 @@
             const formato = (info) => {
                 if (info.ordago && info.querido) return "Órdago querido";
                 if (info.ordago) return "Órdago en juego";
-                if (info.resueltoEnFalso) return info.puntosEnFalso ? `Para ti (+${info.puntosEnFalso} pts)` : "Rechazado (Para ti)";
+                if (info.resueltoEnFalso) {
+                    const miPareja = (miAsiento !== null) ? ((miAsiento % 2 === 0) ? 0 : 1) : null;
+                    const quien = (miPareja !== null && info.ganadorEnFalso !== undefined)
+                        ? (info.ganadorEnFalso === miPareja ? "Nosotros" : "Rivales")
+                        : `Pareja ${(info.ganadorEnFalso !== undefined ? info.ganadorEnFalso + 1 : 1)}`;
+                    const pts = info.puntosEnFalso || 1;
+                    return `${quien} (+${pts} pt${pts > 1 ? 's' : ''})`;
+                }
                 if (info.querido) return `Aceptado (${info.puntos} pts)`;
                 if (info.enPaso) return "Paso (1 pt)";
                 return "-";
@@ -1836,28 +1859,32 @@
                             const totalBote = ap.total;
                             const ultimoAumento = ap.ultimoAumento;
                             let ptsRechazo = 1;
-                            if (totalBote > ultimoAumento) {
+                            if (ap.ordago) {
+                                ptsRechazo = totalBote > 0 ? totalBote : 1;
+                            } else if (totalBote > ultimoAumento) {
                                 ptsRechazo = totalBote - ultimoAumento;
                             }
 
-                            const textoQuiero = ap.ordago 
-                                ? `¡QUIERO EL ÓRDAGO!` 
-                                : `¡QUIERO! (${totalBote} pts)`;
-
-                            const textoNoQuiero = ap.ordago
-                                ? `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`
-                                : `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`;
-
-                            panel.innerHTML = `
-                                <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">${textoQuiero}</button>
-                                <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">${textoNoQuiero}</button>
-                                <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más (Bote: ${totalBote + 2})</button>
-                                <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más (Bote: ${totalBote + 5})</button>
-                                <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
-                            `;
+                            if (ap.ordago) {
+                                // ¡ANTE UN ÓRDAGO NO SE PUEDE REENVIDAR! O se ve o no se ve.
+                                panel.innerHTML = `
+                                    <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">¡QUIERO EL ÓRDAGO! (Ver cartas)</button>
+                                    <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})</button>
+                                `;
+                            } else {
+                                panel.innerHTML = `
+                                    <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">¡QUIERO! (${totalBote} pts)</button>
+                                    <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})</button>
+                                    <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más (Bote: ${totalBote + 2})</button>
+                                    <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más (Bote: ${totalBote + 5})</button>
+                                    <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
+                                `;
+                            }
                         }
                     } else {
-                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ Envite en la mesa: esperando respuesta de la Pareja ${estadoActual.decisionPareja.parejaVotante + 1}...</div>`;
+                        const esOrdago = estadoActual.apuestaActual && estadoActual.apuestaActual.ordago;
+                        const txtEspera = esOrdago ? '¡ÓRDAGO en la mesa!' : 'Envite en la mesa';
+                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ ${txtEspera}: esperando respuesta de la Pareja ${estadoActual.decisionPareja.parejaVotante + 1}...</div>`;
                     }
                     return;
                 }
