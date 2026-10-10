@@ -589,6 +589,13 @@ function registrarVotoPareja(sala, asiento, accion) {
   const parejaJugador = ASIENTOS_INFO[asiento].pareja;
   if (parejaJugador !== sala.decisionPareja.parejaVotante) return;
 
+  // Ante un órdago, solo se permite 'quiero' o 'noquiero' (no se puede re-envidar)
+  if (sala.apuestaActual && sala.apuestaActual.ordago) {
+    if (accion.tipo !== 'quiero' && accion.tipo !== 'noquiero') {
+      accion = { tipo: 'noquiero' };
+    }
+  }
+
   sala.decisionPareja.votos[asiento] = accion;
   const j = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
   io.to(sala.id).emit('votoParejaEmitido', { asiento, nombre: j?.nombre || 'Jugador', accion });
@@ -621,13 +628,22 @@ function finalizarDecisionPareja(sala, porTiempo) {
   const listaAcciones = Object.values(votos);
   let decisionFinal = { tipo: 'noquiero' };
 
-  if (listaAcciones.some(a => a.tipo === 'ordago')) {
-    decisionFinal = { tipo: 'ordago' };
-  } else if (listaAcciones.some(a => a.tipo === 'envidar')) {
-    const maxAumento = Math.max(...listaAcciones.filter(a => a.tipo === 'envidar').map(a => a.cantidad || 2));
-    decisionFinal = { tipo: 'envidar', cantidad: maxAumento };
-  } else if (listaAcciones.some(a => a.tipo === 'quiero')) {
-    decisionFinal = { tipo: 'quiero' };
+  if (esOrdagoActivo) {
+    // Si hay un órdago, solo se puede ver o no ver. No existe reenvite.
+    if (listaAcciones.some(a => a.tipo === 'quiero')) {
+      decisionFinal = { tipo: 'quiero' };
+    } else {
+      decisionFinal = { tipo: 'noquiero' };
+    }
+  } else {
+    if (listaAcciones.some(a => a.tipo === 'ordago')) {
+      decisionFinal = { tipo: 'ordago' };
+    } else if (listaAcciones.some(a => a.tipo === 'envidar')) {
+      const maxAumento = Math.max(...listaAcciones.filter(a => a.tipo === 'envidar').map(a => a.cantidad || 2));
+      decisionFinal = { tipo: 'envidar', cantidad: maxAumento };
+    } else if (listaAcciones.some(a => a.tipo === 'quiero')) {
+      decisionFinal = { tipo: 'quiero' };
+    }
   }
 
   if (esOrdagoActivo && decisionFinal.tipo === 'quiero') {
@@ -657,16 +673,26 @@ function finalizarDecisionPareja(sala, porTiempo) {
     notificarEstado(sala, `¡Envite de ${sala.apuestasLances[sala.fase].puntos} puntos aceptado! Se cobrará al recuento.`);
     setTimeout(() => avanzarSiguienteLance(sala), 2200);
   } else {
-    io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo agotado: No quiero (Para ti)" : "No quiero (Para ti)" });
+    io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo agotado: No quiero" : "No quiero" });
+    const ganadora = sala.apuestaActual.ultimoApostador !== null ? sala.apuestaActual.ultimoApostador : (pareja === 0 ? 1 : 0);
+
     let ptsGanados = 1;
     let descCobro = "";
-    if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
+    if (esOrdagoActivo) {
+      if (sala.apuestaActual.total > 0) {
+        ptsGanados = sala.apuestaActual.total;
+        descCobro = `Órdago rechazado: Pareja ${ganadora + 1} se lleva el bote de ${ptsGanados} pts`;
+      } else {
+        ptsGanados = 1;
+        descCobro = `Órdago directo rechazado (+1 pto para Pareja ${ganadora + 1})`;
+      }
+    } else if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
       ptsGanados = sala.apuestaActual.total - sala.apuestaActual.ultimoAumento;
-      descCobro = `Envite rechazado (Para ti): Bote de ${sala.apuestaActual.total} menos última subida de ${sala.apuestaActual.ultimoAumento} = +${ptsGanados} pts`;
+      descCobro = `Envite rechazado: Bote de ${sala.apuestaActual.total} menos última subida de ${sala.apuestaActual.ultimoAumento} (+${ptsGanados} pts para Pareja ${ganadora + 1})`;
     } else {
-      descCobro = `Envite de ${sala.apuestaActual.total} no querido (Para ti: +1 pto)`;
+      descCobro = `Envite de ${sala.apuestaActual.total} no querido (+1 pto para Pareja ${ganadora + 1})`;
     }
-    const ganadora = sala.apuestaActual.ultimoApostador !== null ? sala.apuestaActual.ultimoApostador : (pareja === 0 ? 1 : 0);
+
     sala.puntos[ganadora] += ptsGanados;
 
     sala.apuestasLances[sala.fase].resueltoEnFalso = true;
@@ -676,6 +702,21 @@ function finalizarDecisionPareja(sala, porTiempo) {
     sala.apuestasLances[sala.fase].totalBote = sala.apuestaActual.total;
     sala.apuestasLances[sala.fase].ultimoAumento = sala.apuestaActual.ultimoAumento;
     sala.apuestasLances[sala.fase].enPaso = false;
+
+    const nombreLance = (sala.fase === 'pares' || sala.fase === 'juego')
+      ? `${sala.fase.toUpperCase()} (ENVITE)`
+      : sala.fase.toUpperCase();
+
+    // Registrar inmediatamente en el Registro de Lances para que aparezca en tiempo real
+    io.to(sala.id).emit('eventoLanceGanado', {
+      lance: nombreLance,
+      asientoGanador: ganadora === 0 ? 0 : 1,
+      parejaGanadora: ganadora,
+      desglose: `Envite de ${sala.fase.toUpperCase()} no querido: +${ptsGanados} pt(s) para Pareja ${ganadora + 1}.`,
+      desgloseItems: [{ desc: descCobro, pts: ptsGanados, jugador: `Pareja ${ganadora + 1}` }],
+      puntosActualizados: sala.puntos,
+      esOrdagoDirecto: false
+    });
 
     notificarEstado(sala, `No querido. +${ptsGanados} punto(s) para la Pareja ${ganadora + 1} (${descCobro}).`);
 
@@ -958,13 +999,14 @@ function resolverLanceEnRecuento(sala, lance) {
   if (info.resueltoEnFalso && (lance === 'grande' || lance === 'chica')) {
     const ptsFalso = info.puntosEnFalso || 1;
     const ganadoraFalso = info.ganadorEnFalso !== undefined ? info.ganadorEnFalso : 0;
-    const descFalso = info.descEnFalso || `Envite no querido (Para ti: +${ptsFalso} pts)`;
+    const descFalso = info.descEnFalso || `Envite no querido (+${ptsFalso} pts)`;
     const resultado = evaluarGanadorLanceDetalle(sala, lance);
 
     const desgloseTexto = `${lance.toUpperCase()}: Cobrado en el lance por Pareja ${ganadoraFalso + 1} (+${ptsFalso} pts: ${descFalso}). Mejor mano: ${resultado.nombreGanador}.`;
 
     const itemsCobro = [
-      { desc: descFalso, pts: ptsFalso, jugador: `Pareja ${ganadoraFalso + 1}` }
+      { desc: descFalso, pts: ptsFalso, jugador: `Pareja ${ganadoraFalso + 1}` },
+      { desc: `Mejor mano (${resultado.motivo})`, pts: 0, jugador: resultado.nombreGanador }
     ];
 
     io.to(sala.id).emit('eventoLanceGanado', {
