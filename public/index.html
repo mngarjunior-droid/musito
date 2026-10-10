@@ -529,6 +529,7 @@
             flex-wrap: wrap;
             justify-content: center;
             min-height: 40px;
+            align-items: center;
         }
 
         .panel-senas {
@@ -745,7 +746,15 @@
         };
 
         const urlParams = new URLSearchParams(window.location.search);
-        let salaActualId = urlParams.get('sala') || localStorage.getItem('mus_sala') || "principal";
+        let salaUrl = urlParams.get('sala');
+        let salaActualId = (salaUrl && salaUrl.trim() !== '') ? salaUrl.trim().toLowerCase() : (localStorage.getItem('mus_sala') || "principal");
+
+        if (!salaUrl) {
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+        }
+        localStorage.setItem('mus_sala', salaActualId);
+
         let miToken = localStorage.getItem('mus_token');
         if (!miToken) {
             miToken = 'usr_' + Math.random().toString(36).substring(2, 10);
@@ -758,8 +767,13 @@
         let estadoActual = {};
         let reveladoEjecutado = false;
 
-        socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
-        document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
+        socket.on('connect', () => {
+            socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
+            document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
+            if (miAsiento !== null && estadoActual && estadoActual.enPartida) {
+                socket.emit('pedirMisCartas');
+            }
+        });
 
         socket.on('asientosEstado', (asientos) => {
             renderizarSelectorAsientos(asientos);
@@ -798,6 +812,8 @@
             if (customSala && customSala.trim() !== "") {
                 salaActualId = customSala.trim().toLowerCase();
                 localStorage.setItem('mus_sala', salaActualId);
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
+                window.history.replaceState({ path: newUrl }, '', newUrl);
             }
             socket.emit('unirseAsiento', { nombre: nom, asientoElegido: asientoElegidoTemporal, salaId: salaActualId, token: miToken });
         }
@@ -810,6 +826,7 @@
             document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
             const parejaNum = info.pareja + 1;
             document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
+            socket.emit('pedirMisCartas');
         });
 
         socket.on('errorAsiento', (msg) => alert(msg));
@@ -863,7 +880,7 @@
             if (reloj) reloj.innerText = `${tiempo}s`;
         });
 
-        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados, esOrdagoDirecto }) => {
+        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados }) => {
             document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
             document.getElementById('msgTxt').innerText = desglose;
 
@@ -921,6 +938,11 @@
             }
 
             actualizarControles();
+
+            // Petición automática si el juego está en marcha y no se tienen cartas
+            if (miAsiento !== null && estado.enPartida && (!misCartas || misCartas.length === 0)) {
+                socket.emit('pedirMisCartas');
+            }
         });
 
         function actualizarPuntuacionesPersonalizadas(puntos, chicosGanados, vacasGanadas) {
@@ -994,6 +1016,7 @@
 
         function renderizarMiMano() {
             const cont = document.getElementById('miMano');
+            if (!cont) return;
             cont.innerHTML = '';
             misCartas.forEach((c) => {
                 const div = document.createElement('div');
@@ -1144,7 +1167,16 @@
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">Envido 5</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
                     `;
+                    return;
                 }
+            }
+
+            // Indicador de espera cuando no es el turno propio
+            if (estadoActual.enPartida && !['recuento', 'fin'].includes(estadoActual.fase)) {
+                const nombreTurno = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[estadoActual.turno])
+                    ? estadoActual.jugadoresEnMesa[estadoActual.turno].nombre
+                    : `Asiento ${estadoActual.turno + 1}`;
+                panel.innerHTML = `<div style="font-size:0.82rem; color:#f1c40f;">⏳ Turno de <strong>${nombreTurno}</strong>: esperando jugada...</div>`;
             }
         }
 
