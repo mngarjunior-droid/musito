@@ -20,7 +20,6 @@ const ASIENTOS_INFO = [
   { id: 3, nombreDef: "Asiento 4", rol: "Postre", pareja: 1 }
 ];
 
-// Estructura de salas independientes
 const salas = {};
 
 function obtenerOCrearSala(idSala) {
@@ -28,13 +27,13 @@ function obtenerOCrearSala(idSala) {
   if (!salas[sId]) {
     salas[sId] = {
       id: sId,
-      jugadoresPorToken: {}, // token -> { asiento, nombre, pareja, esBot, socketId }
+      jugadoresPorToken: {},
       enPartida: false,
       mazo: [],
       descartes: [],
       manos: { 0: [], 1: [], 2: [], 3: [] },
       puntos: { 0: 0, 1: 0 },
-      chicosGanados: { 0: 0, 1: 0 }, // A 3 chicos se gana 1 Vaca
+      chicosGanados: { 0: 0, 1: 0 },
       vacasGanadas: { 0: 0, 1: 0 },
       fase: 'espera',
       asientoMano: 0,
@@ -130,11 +129,11 @@ function evaluarDetallePares(m) {
   let paresVal = Object.keys(cnt).filter(k => cnt[k] >= 2).map(Number).sort((a,b) => b - a);
   let maxRep = Math.max(0, ...Object.values(cnt));
 
-  if (maxRep === 4) return { tipo: 4, nombre: "Cuarteto", fuerza: 99, cobro: 3 };
-  if (paresVal.length === 2) return { tipo: 3, nombre: "Duples", fuerza: paresVal[0] === 12 ? 95 : 80, cobro: 3 };
-  if (maxRep === 3) return { tipo: 2, nombre: "Medias", fuerza: paresVal[0] === 12 ? 80 : 60, cobro: 2 };
-  if (paresVal.length === 1) return { tipo: 1, nombre: "Pareja", fuerza: paresVal[0] === 12 ? 55 : 35, cobro: 1 };
-  return { tipo: 0, nombre: "Sin pares", fuerza: 0, cobro: 0 };
+  if (maxRep === 4) return { tipo: 4, nombre: "Cuarteto", fuerza: 99, cobro: 3, rey: paresVal[0] === 12 };
+  if (paresVal.length === 2) return { tipo: 3, nombre: "Duples", fuerza: paresVal[0] === 12 ? 95 : 80, cobro: 3, rey: paresVal[0] === 12, segundo: paresVal[1] };
+  if (maxRep === 3) return { tipo: 2, nombre: "Medias", fuerza: paresVal[0] === 12 ? 80 : 60, cobro: 2, rey: paresVal[0] === 12 };
+  if (paresVal.length === 1) return { tipo: 1, nombre: "Pareja", fuerza: paresVal[0] === 12 ? 55 : 35, cobro: 1, rey: paresVal[0] === 12 };
+  return { tipo: 0, nombre: "Sin pares", fuerza: 0, cobro: 0, rey: false };
 }
 
 function evaluarDetalleJuego(m) {
@@ -146,6 +145,16 @@ function evaluarDetalleJuego(m) {
     return { tiene: true, valor: s, fuerza: 65, cobro: 2, desc: `Juego de ${s}` };
   }
   return { tiene: false, valor: s, fuerza: s >= 29 ? 75 : 40, cobro: 1, desc: `Punto (${s})` };
+}
+
+function tieneManoRelativa(asiento, sala) {
+  const miPareja = ASIENTOS_INFO[asiento].pareja;
+  const rival1 = miPareja === 0 ? 1 : 0;
+  const rival2 = miPareja === 0 ? 3 : 2;
+  const distMia = (asiento - sala.asientoMano + 4) % 4;
+  const distRival1 = (rival1 - sala.asientoMano + 4) % 4;
+  const distRival2 = (rival2 - sala.asientoMano + 4) % 4;
+  return distMia < Math.min(distRival1, distRival2);
 }
 
 function jugadorPuedeHablarEnLance(sala, asiento, lance) {
@@ -195,15 +204,14 @@ function iniciarMano(sala) {
   comprobarTurnoBot(sala);
 }
 
-function notificarEstado(sala, msg) {
+function notificarEstado(sala, msg, forzarRevelado = false) {
   let permisosHabla = {};
   for (let a = 0; a < 4; a++) {
     permisosHabla[a] = jugadorPuedeHablarEnLance(sala, a, sala.fase);
   }
 
-  const revelarTodas = (sala.fase === 'recuento' || sala.fase === 'fin');
+  const revelarTodas = forzarRevelado || (sala.fase === 'recuento' || sala.fase === 'fin');
 
-  // Mapa de jugadores indexado por asiento para el cliente
   const mapaJugadores = {};
   Object.values(sala.jugadoresPorToken).forEach(j => {
     mapaJugadores[j.asiento] = { asiento: j.asiento, nombre: j.nombre, pareja: j.pareja, esBot: j.esBot };
@@ -257,7 +265,6 @@ function iniciarLance(sala, nombreLance) {
   limpiarTimersBots(sala);
   limpiarTimerDecision(sala);
 
-  // DECLARACIÓN PREVIA DE PARES
   if (nombreLance === 'pares') {
     sala.fase = 'declaracion_pares';
     sala.turno = sala.asientoMano;
@@ -268,7 +275,6 @@ function iniciarLance(sala, nombreLance) {
     return;
   }
 
-  // DECLARACIÓN PREVIA DE JUEGO
   if (nombreLance === 'juego') {
     sala.fase = 'declaracion_juego';
     sala.turno = sala.asientoMano;
@@ -314,7 +320,6 @@ function procesarDeclaracionPares(sala, asiento, lleva) {
     notificarEstado(sala, `¿Llevas pares, ${sig?.nombre || 'Jugador'}?`);
     comprobarTurnoDeclaracionBot(sala);
   } else {
-    // Los 4 han respondido
     const p0 = sala.declaraciones.pares[0] || sala.declaraciones.pares[2];
     const p1 = sala.declaraciones.pares[1] || sala.declaraciones.pares[3];
 
@@ -471,6 +476,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
   limpiarTimersBots(sala);
   const votos = { ...sala.decisionPareja.votos };
   const pareja = sala.decisionPareja.parejaVotante;
+  const esOrdagoActivo = sala.apuestaActual.ordago;
   limpiarTimerDecision(sala);
 
   const listaAcciones = Object.values(votos);
@@ -483,6 +489,13 @@ function finalizarDecisionPareja(sala, porTiempo) {
     decisionFinal = { tipo: 'envidar', cantidad: maxAumento };
   } else if (listaAcciones.some(a => a.tipo === 'quiero')) {
     decisionFinal = { tipo: 'quiero' };
+  }
+
+  // REGLA CLAVE DE ÓRDAGO ACEPTADO: RESOLUCIÓN INMEDIATA CON ANIMACIÓN
+  if (esOrdagoActivo && decisionFinal.tipo === 'quiero') {
+    io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: "¡QUIERO EL ÓRDAGO!" });
+    resolverOrdagoInmediato(sala, sala.fase);
+    return;
   }
 
   if (decisionFinal.tipo === 'ordago') {
@@ -502,11 +515,11 @@ function finalizarDecisionPareja(sala, porTiempo) {
   } else if (decisionFinal.tipo === 'quiero') {
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: "¡QUIERO!" });
     sala.apuestasLances[sala.fase].querido = true;
-    sala.apuestasLances[sala.fase].puntos = sala.apuestaActual.ordago ? 40 : sala.apuestaActual.total;
-    sala.apuestasLances[sala.fase].ordago = sala.apuestaActual.ordago;
-    notificarEstado(sala, `¡Envite aceptado de ${sala.apuestaActual.ordago ? 'ÓRDAGO' : sala.apuestasLances[sala.fase].puntos + ' pts'}!`);
+    sala.apuestasLances[sala.fase].puntos = sala.apuestaActual.total;
+    notificarEstado(sala, `¡Envite de ${sala.apuestasLances[sala.fase].puntos} pts aceptado! Se cobrará en el recuento.`);
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   } else {
+    // Órdago o envite rechazado: NO se acaba la partida, solo se lleva los puntos y sigue el juego
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo: No quiero (Para ti)" : "No quiero (Para ti)" });
     let ptsGanados = 1;
     if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
@@ -514,10 +527,39 @@ function finalizarDecisionPareja(sala, porTiempo) {
     }
     sala.puntos[sala.apuestaActual.ultimoApostador] += ptsGanados;
     sala.apuestasLances[sala.fase].resueltoEnFalso = true;
-    notificarEstado(sala, `No querido. +${ptsGanados} punto(s) para Pareja ${sala.apuestaActual.ultimoApostador + 1}.`);
+    notificarEstado(sala, `Rechazado. +${ptsGanados} punto(s) para Pareja ${sala.apuestaActual.ultimoApostador + 1}.`);
     if (comprobarVictoriaChico(sala, sala.apuestaActual.ultimoApostador, `Alcanzados 40 puntos por envite rechazado`)) return;
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   }
+}
+
+function resolverOrdagoInmediato(sala, lance) {
+  limpiarTimersBots(sala);
+  limpiarTimerDecision(sala);
+  sala.fase = 'recuento';
+
+  // Mostrar mensaje y destapar de inmediato todas las cartas con animación 3D
+  notificarEstado(sala, `¡ÓRDAGO ACEPTADO EN ${lance.toUpperCase()}! ¡A ver las cartas!`, true);
+
+  setTimeout(() => {
+    const resultado = evaluarGanadorLanceDetalle(sala, lance);
+    const ganador = resultado.parejaGanadora;
+    const asientoGanador = resultado.asientoGanador;
+    const motivoOrdago = `¡ÓRDAGO GANADO EN ${lance.toUpperCase()} por ${resultado.nombreGanador}! (${resultado.motivo})`;
+
+    io.to(sala.id).emit('eventoLanceGanado', {
+      lance: lance.toUpperCase(),
+      asientoGanador: asientoGanador,
+      parejaGanadora: ganador,
+      desglose: motivoOrdago,
+      desgloseItems: [{ desc: "Órdago aceptado y ganado", pts: 40, jugador: resultado.nombreGanador }],
+      puntosActualizados: { 0: 0, 1: 0 },
+      esOrdagoDirecto: true
+    });
+
+    notificarEstado(sala, motivoOrdago, true);
+    comprobarVictoriaChico(sala, ganador, motivoOrdago, true);
+  }, 2400);
 }
 
 function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
@@ -563,24 +605,68 @@ function botCalcularAccionApertura(sala, asiento, lance) {
   else if (lance === 'pares') fuerza = evaluarDetallePares(mano).fuerza;
   else if (lance === 'juego') fuerza = evaluarDetalleJuego(mano).fuerza;
 
-  if (fuerza >= 92) return Math.random() < 0.35 ? { tipo: 'envidar', cantidad: 5 } : { tipo: 'envidar', cantidad: 2 };
+  // Un bot NUNCA abre tirando un órdago a lo loco
+  if (fuerza >= 92) return Math.random() < 0.25 ? { tipo: 'envidar', cantidad: 5 } : { tipo: 'envidar', cantidad: 2 };
   if (fuerza >= 68) return { tipo: 'envidar', cantidad: 2 };
   return { tipo: 'paso' };
 }
 
+// IA PRUDENTE Y HUMANA ANTE ÓRDAGOS Y ENVIDES
 function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
   const mano = sala.manos[asiento];
+  const esMano = tieneManoRelativa(asiento, sala);
+
+  // ANTE UN ÓRDAGO: El bot es muy prudente, "no se calienta"
+  if (apuestaActual.ordago) {
+    if (lance === 'grande') {
+      const reyes = mano.filter(c => c.valorMus === 12).length;
+      if (reyes === 4) return { tipo: 'quiero' }; // 4 Reyes es invencible
+      if (reyes === 3) {
+        const cuarta = mano.map(c => c.valorMus).sort((a,b) => b-a)[3];
+        // Solo si tiene 3 Reyes con caballo o sota y además tiene la ventaja de Mano
+        if (cuarta >= 10 && esMano) return { tipo: 'quiero' };
+      }
+      return { tipo: 'noquiero' }; // Con 2 reyes o menos JAMÁS ve un órdago
+    }
+
+    if (lance === 'chica') {
+      const ases = mano.filter(c => c.valorMus === 1).length;
+      if (ases === 4) return { tipo: 'quiero' };
+      if (ases === 3 && esMano) return { tipo: 'quiero' };
+      return { tipo: 'noquiero' };
+    }
+
+    if (lance === 'pares') {
+      const p = evaluarDetallePares(mano);
+      if (p.tipo === 4 && p.rey) return { tipo: 'quiero' }; // Cuarteto de reyes
+      if (p.tipo === 3 && p.rey && p.segundo >= 11 && esMano) return { tipo: 'quiero' }; // Duples de Reyes y Caballos con mano
+      return { tipo: 'noquiero' }; // Medias o duples corrientes NUNCA ven órdago
+    }
+
+    if (lance === 'juego') {
+      const j = evaluarDetalleJuego(mano);
+      // En Mus es regla de oro: solo se ve un órdago con 31 (La una)
+      if (j.tiene && j.valor === 31) {
+        if (esMano) return { tipo: 'quiero' }; // Insuperable
+        return Math.random() < 0.85 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
+      }
+      return { tipo: 'noquiero' }; // Con 32 o punto nunca ven órdago
+    }
+
+    return { tipo: 'noquiero' };
+  }
+
+  // ENVIDES NORMALES
   let fuerza = 0;
   if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
   else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
   else if (lance === 'pares') fuerza = evaluarDetallePares(mano).fuerza;
   else if (lance === 'juego') fuerza = evaluarDetalleJuego(mano).fuerza;
 
-  if (apuestaActual.ordago) return fuerza >= 95 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
-  if (fuerza >= 94 && apuestaActual.total <= 6) return { tipo: 'envidar', cantidad: 2 };
+  if (fuerza >= 95 && apuestaActual.total <= 4) return { tipo: 'envidar', cantidad: 2 };
   if (apuestaActual.total <= 2 && fuerza >= 50) return { tipo: 'quiero' };
-  if (apuestaActual.total <= 4 && fuerza >= 65) return { tipo: 'quiero' };
-  if (apuestaActual.total <= 8 && fuerza >= 80) return { tipo: 'quiero' };
+  if (apuestaActual.total <= 4 && fuerza >= 68) return { tipo: 'quiero' };
+  if (apuestaActual.total <= 8 && fuerza >= 82) return { tipo: 'quiero' };
   return { tipo: 'noquiero' };
 }
 
@@ -699,22 +785,6 @@ function resolverLanceEnRecuento(sala, lance) {
   const resultado = evaluarGanadorLanceDetalle(sala, lance);
   const ganador = resultado.parejaGanadora;
   const asientoGanador = resultado.asientoGanador;
-
-  if (info.ordago && info.querido) {
-    let motivoOrdago = `¡ÓRDAGO GANADO EN ${lance.toUpperCase()} por ${resultado.nombreGanador}! Se lleva el Chico completo.`;
-    io.to(sala.id).emit('eventoLanceGanado', {
-      lance: lance.toUpperCase(),
-      asientoGanador: asientoGanador,
-      parejaGanadora: ganador,
-      desglose: motivoOrdago,
-      desgloseItems: [{ desc: "Órdago querido", pts: 40, jugador: resultado.nombreGanador }],
-      puntosActualizados: sala.puntos,
-      esOrdagoDirecto: true
-    });
-    notificarEstado(sala, motivoOrdago);
-    comprobarVictoriaChico(sala, ganador, motivoOrdago, true);
-    return true;
-  }
 
   let ptsEnvite = info.puntos;
   let itemsCobro = [];
@@ -879,7 +949,6 @@ function comprobarVictoriaChico(sala, ganadorForzado = null, motivo = "", esOrda
     sala.chicosGanados[ganador] += 1;
     let msgFinal = esOrdago ? motivo : `¡Pareja ${ganador + 1} alcanza 40 puntos y gana el Chico! Chicos: ${sala.chicosGanados[0]} - ${sala.chicosGanados[1]}`;
 
-    // COMPROBACIÓN DE VACA (AL MEJOR DE 3 CHICOS)
     let vacaGanada = false;
     if (sala.chicosGanados[ganador] >= 3) {
       sala.vacasGanadas[ganador] += 1;
@@ -929,10 +998,6 @@ function ejecutarResetAdmin(sala) {
   io.to(sala.id).emit('resetCompleto');
 }
 
-/* ========================================================
-   SOCKET.IO Y COMUNICACIÓN MULTISALA
-======================================================== */
-
 io.on('connection', (socket) => {
   let miSalaId = "principal";
   let miToken = null;
@@ -944,7 +1009,6 @@ io.on('connection', (socket) => {
 
     const sala = obtenerOCrearSala(miSalaId);
 
-    // RECONEXIÓN AUTOMÁTICA
     if (miToken && sala.jugadoresPorToken[miToken]) {
       const j = sala.jugadoresPorToken[miToken];
       j.socketId = socket.id;
@@ -995,7 +1059,6 @@ io.on('connection', (socket) => {
     const sala = obtenerOCrearSala(miSalaId);
     let ocupados = Object.values(sala.jugadoresPorToken).map(j => j.asiento);
 
-    // Si el emisor no se ha sentado, sentarle en el primero libre
     if (!miToken || !sala.jugadoresPorToken[miToken]) {
       let primerLibre = [0, 1, 2, 3].find(a => !ocupados.includes(a));
       if (primerLibre !== undefined) {
@@ -1031,12 +1094,10 @@ io.on('connection', (socket) => {
     if (!sala.enPartida) iniciarMano(sala);
   });
 
-  // SEÑAS SECRETAS
   socket.on('enviarSena', ({ sena }) => {
     const sala = obtenerOCrearSala(miSalaId);
     if (!miToken || !sala.jugadoresPorToken[miToken]) return;
     const miAsiento = sala.jugadoresPorToken[miToken].asiento;
-    const miPareja = ASIENTOS_INFO[miAsiento].pareja;
     const asientoCompanero = (miAsiento + 2) % 4;
 
     const companero = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asientoCompanero);
@@ -1049,7 +1110,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // RESPUESTAS DE DECLARACIÓN
   socket.on('responderDeclaracion', ({ lleva }) => {
     const sala = obtenerOCrearSala(miSalaId);
     if (!miToken || !sala.jugadoresPorToken[miToken]) return;
