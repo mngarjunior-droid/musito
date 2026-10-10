@@ -103,60 +103,128 @@ function robarCarta(sala) {
   return sala.mazo.pop();
 }
 
-function evaluarFuerzaGrande(mano) {
-  const vals = mano.map(c => c.valorMus).sort((a,b) => b - a);
-  const reyes = vals.filter(v => v === 12).length;
-  if (reyes >= 3) return 98;
-  if (reyes === 2 && vals[2] >= 10) return 85;
-  if (reyes === 2) return 72;
-  if (reyes === 1 && vals[1] >= 11) return 55;
-  if (reyes === 1) return 40;
-  return 15;
-}
+/* ========================================================
+   COMPARADORES OFICIALES Y EXACTOS DEL MUS REGLAMENTARIO
+======================================================== */
 
-function evaluarFuerzaChica(mano) {
-  const vals = mano.map(c => c.valorMus).sort((a,b) => a - b);
-  const ases = vals.filter(v => v === 1).length;
-  if (ases >= 3) return 98;
-  if (ases === 2 && vals[2] <= 5) return 82;
-  if (ases === 2) return 68;
-  if (ases === 1 && vals[1] <= 4) return 50;
-  if (ases === 1) return 35;
-  return 10;
-}
-
-function evaluarDetallePares(m) {
-  let cnt = {};
-  m.forEach(c => cnt[c.valorMus] = (cnt[c.valorMus] || 0) + 1);
-  let paresVal = Object.keys(cnt).filter(k => cnt[k] >= 2).map(Number).sort((a,b) => b - a);
-  let maxRep = Math.max(0, ...Object.values(cnt));
-
-  if (maxRep === 4) return { tipo: 4, nombre: "Cuarteto", fuerza: 99, cobro: 3, rey: paresVal[0] === 12 };
-  if (paresVal.length === 2) return { tipo: 3, nombre: "Duples", fuerza: paresVal[0] === 12 ? 95 : 80, cobro: 3, rey: paresVal[0] === 12, segundo: paresVal[1] };
-  if (maxRep === 3) return { tipo: 2, nombre: "Medias", fuerza: paresVal[0] === 12 ? 80 : 60, cobro: 2, rey: paresVal[0] === 12 };
-  if (paresVal.length === 1) return { tipo: 1, nombre: "Pareja", fuerza: paresVal[0] === 12 ? 55 : 35, cobro: 1, rey: paresVal[0] === 12 };
-  return { tipo: 0, nombre: "Sin pares", fuerza: 0, cobro: 0, rey: false };
-}
-
-function evaluarDetalleJuego(m) {
-  let s = m.reduce((acc, c) => acc + c.valorJuego, 0);
-  if (s >= 31) {
-    if (s === 31) return { tiene: true, valor: 31, fuerza: 100, cobro: 3, desc: "La una (31)" };
-    if (s === 32) return { tiene: true, valor: 32, fuerza: 88, cobro: 2, desc: "Juego de 32" };
-    if (s === 40) return { tiene: true, valor: 40, fuerza: 75, cobro: 2, desc: "Juego de 40" };
-    return { tiene: true, valor: s, fuerza: 65, cobro: 2, desc: `Juego de ${s}` };
-  }
-  return { tiene: false, valor: s, fuerza: s >= 29 ? 75 : 40, cobro: 1, desc: `Punto (${s})` };
+function distanciaMano(asiento, asientoMano) {
+  return (asiento - asientoMano + 4) % 4;
 }
 
 function tieneManoRelativa(asiento, sala) {
   const miPareja = ASIENTOS_INFO[asiento].pareja;
   const rival1 = miPareja === 0 ? 1 : 0;
   const rival2 = miPareja === 0 ? 3 : 2;
-  const distMia = (asiento - sala.asientoMano + 4) % 4;
-  const distRival1 = (rival1 - sala.asientoMano + 4) % 4;
-  const distRival2 = (rival2 - sala.asientoMano + 4) % 4;
+  const distMia = distanciaMano(asiento, sala.asientoMano);
+  const distRival1 = distanciaMano(rival1, sala.asientoMano);
+  const distRival2 = distanciaMano(rival2, sala.asientoMano);
   return distMia < Math.min(distRival1, distRival2);
+}
+
+// Grande: compara carta a carta de mayor a menor (12, 12 > 12, 11)
+function compararManosGrande(manoA, manoB) {
+  const vA = manoA.map(c => c.valorMus).sort((a,b) => b - a);
+  const vB = manoB.map(c => c.valorMus).sort((a,b) => b - a);
+  for (let i = 0; i < 4; i++) {
+    if (vA[i] > vB[i]) return 1;
+    if (vA[i] < vB[i]) return -1;
+  }
+  return 0;
+}
+
+// Chica: compara carta a carta de menor a mayor (1, 1 < 1, 4)
+function compararManosChica(manoA, manoB) {
+  const vA = manoA.map(c => c.valorMus).sort((a,b) => a - b);
+  const vB = manoB.map(c => c.valorMus).sort((a,b) => a - b);
+  for (let i = 0; i < 4; i++) {
+    if (vA[i] < vB[i]) return 1; // Menor es mejor
+    if (vA[i] > vB[i]) return -1;
+  }
+  return 0;
+}
+
+function nombreCartaMus(val) {
+  if (val === 12) return "Rey";
+  if (val === 11) return "Caballo";
+  if (val === 10) return "Sota";
+  if (val === 1) return "As";
+  return val.toString();
+}
+
+function formatearCartasMus(mano, orden = 'desc') {
+  const vals = mano.map(c => c.valorMus);
+  if (orden === 'asc') vals.sort((a,b) => a - b);
+  else vals.sort((a,b) => b - a);
+  return vals.map(v => nombreCartaMus(v)).join('-');
+}
+
+function evaluarDetallePares(m) {
+  let cnt = {};
+  m.forEach(c => cnt[c.valorMus] = (cnt[c.valorMus] || 0) + 1);
+  let parejas = Object.keys(cnt).filter(k => cnt[k] >= 2).map(Number).sort((a,b) => b - a);
+  let maxRep = Math.max(0, ...Object.values(cnt));
+
+  if (maxRep === 4) {
+    let val = parejas[0];
+    return { tipo: 4, nombre: "Cuarteto", val1: val, val2: 0, cobro: 3, desc: `Cuarteto de ${nombreCartaMus(val)}` };
+  }
+  if (parejas.length === 2) {
+    return { tipo: 3, nombre: "Duples", val1: parejas[0], val2: parejas[1], cobro: 3, desc: `Duples de ${nombreCartaMus(parejas[0])} y ${nombreCartaMus(parejas[1])}` };
+  }
+  if (maxRep === 3) {
+    return { tipo: 2, nombre: "Medias", val1: parejas[0], val2: 0, cobro: 2, desc: `Medias de ${nombreCartaMus(parejas[0])}` };
+  }
+  if (parejas.length === 1) {
+    return { tipo: 1, nombre: "Pareja", val1: parejas[0], val2: 0, cobro: 1, desc: `Pareja de ${nombreCartaMus(parejas[0])}` };
+  }
+  return { tipo: 0, nombre: "Sin pares", val1: 0, val2: 0, cobro: 0, desc: "Sin pares" };
+}
+
+function compararManosPares(pA, pB) {
+  if (pA.tipo > pB.tipo) return 1;
+  if (pA.tipo < pB.tipo) return -1;
+  if (pA.tipo === 0) return 0;
+  if (pA.val1 > pB.val1) return 1;
+  if (pA.val1 < pB.val1) return -1;
+  if (pA.val2 > pB.val2) return 1;
+  if (pA.val2 < pB.val2) return -1;
+  return 0;
+}
+
+const JERARQUIA_JUEGO = {
+  31: 8,
+  32: 7,
+  40: 6,
+  37: 5,
+  36: 4,
+  35: 3,
+  34: 2,
+  33: 1
+};
+
+function evaluarDetalleJuego(m) {
+  let s = m.reduce((acc, c) => acc + c.valorJuego, 0);
+  if (s >= 31) {
+    let rango = JERARQUIA_JUEGO[s] || 1;
+    let cobro = (s === 31) ? 3 : 2;
+    let desc = (s === 31) ? "La una (31)" : `Juego de ${s}`;
+    return { tiene: true, valor: s, rangoJuego: rango, cobro: cobro, desc: desc };
+  }
+  return { tiene: false, valor: s, rangoJuego: 0, cobro: 1, desc: `Punto (${s})` };
+}
+
+function compararManosJuego(jA, jB) {
+  if (jA.tiene && !jB.tiene) return 1;
+  if (!jA.tiene && jB.tiene) return -1;
+  if (jA.tiene && jB.tiene) {
+    if (jA.rangoJuego > jB.rangoJuego) return 1;
+    if (jA.rangoJuego < jB.rangoJuego) return -1;
+    return 0;
+  }
+  // Al punto: 30 > 29 > 28...
+  if (jA.valor > jB.valor) return 1;
+  if (jA.valor < jB.valor) return -1;
+  return 0;
 }
 
 function jugadorPuedeHablarEnLance(sala, asiento, lance) {
@@ -524,6 +592,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
     notificarEstado(sala, `¡Envite de ${sala.apuestasLances[sala.fase].puntos} pts aceptado! Se cobrará en el recuento.`);
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   } else {
+    // Envite o Órdago rechazado
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo: No quiero (Para ti)" : "No quiero (Para ti)" });
     let ptsGanados = 1;
     if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
@@ -606,8 +675,13 @@ function botCalcularAccionApertura(sala, asiento, lance) {
   let fuerza = 0;
   if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
   else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
-  else if (lance === 'pares') fuerza = evaluarDetallePares(mano).fuerza;
-  else if (lance === 'juego') fuerza = evaluarDetalleJuego(mano).fuerza;
+  else if (lance === 'pares') {
+    let p = evaluarDetallePares(mano);
+    fuerza = p.tipo === 4 ? 99 : (p.tipo === 3 ? 85 : (p.tipo === 2 ? 65 : 35));
+  } else if (lance === 'juego') {
+    let j = evaluarDetalleJuego(mano);
+    fuerza = j.tiene ? (j.valor === 31 ? 100 : 70) : (j.valor >= 29 ? 40 : 15);
+  }
 
   if (fuerza >= 92) return Math.random() < 0.25 ? { tipo: 'envidar', cantidad: 5 } : { tipo: 'envidar', cantidad: 2 };
   if (fuerza >= 68) return { tipo: 'envidar', cantidad: 2 };
@@ -638,8 +712,8 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
 
     if (lance === 'pares') {
       const p = evaluarDetallePares(mano);
-      if (p.tipo === 4 && p.rey) return { tipo: 'quiero' };
-      if (p.tipo === 3 && p.rey && p.segundo >= 11 && esMano) return { tipo: 'quiero' };
+      if (p.tipo === 4 && p.val1 === 12) return { tipo: 'quiero' };
+      if (p.tipo === 3 && p.val1 === 12 && p.val2 >= 11 && esMano) return { tipo: 'quiero' };
       return { tipo: 'noquiero' };
     }
 
@@ -647,7 +721,7 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
       const j = evaluarDetalleJuego(mano);
       if (j.tiene && j.valor === 31) {
         if (esMano) return { tipo: 'quiero' };
-        return Math.random() < 0.85 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
+        return Math.random() < 0.8 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
       }
       return { tipo: 'noquiero' };
     }
@@ -658,8 +732,13 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
   let fuerza = 0;
   if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
   else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
-  else if (lance === 'pares') fuerza = evaluarDetallePares(mano).fuerza;
-  else if (lance === 'juego') fuerza = evaluarDetalleJuego(mano).fuerza;
+  else if (lance === 'pares') {
+    let p = evaluarDetallePares(mano);
+    fuerza = p.tipo === 4 ? 99 : (p.tipo === 3 ? 85 : (p.tipo === 2 ? 65 : 35));
+  } else if (lance === 'juego') {
+    let j = evaluarDetalleJuego(mano);
+    fuerza = j.tiene ? (j.valor === 31 ? 100 : 70) : (j.valor >= 29 ? 40 : 15);
+  }
 
   if (fuerza >= 95 && apuestaActual.total <= 4) return { tipo: 'envidar', cantidad: 2 };
   if (apuestaActual.total <= 2 && fuerza >= 50) return { tipo: 'quiero' };
@@ -767,7 +846,7 @@ function ejecutarRecuentoFinalMano(sala) {
           setTimeout(() => {
             sala.asientoMano = (sala.asientoMano + 1) % 4;
             const nuevoMano = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.asientoMano);
-            notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.`);
+            notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento \${sala.asientoMano + 1}`}.`);
             setTimeout(() => iniciarMano(sala), 3000);
           }, 3500);
         }, 3500);
@@ -877,73 +956,54 @@ function resolverLanceEnRecuento(sala, lance) {
   return false;
 }
 
-function evaluarGanadorLanceDetalle(sala, lance) {
-  const mayorCarta = (m) => Math.max(...m.map(c => c.valorMus));
-  const menorCarta = (m) => Math.min(...m.map(c => c.valorMus));
+/* ========================================================
+   EVALUACIÓN INDIVIDUAL CON COMPARACIÓN SECUENCIAL (RESUELVE EL ERROR)
+======================================================== */
 
-  function tieneMano(asientoA, asientoB) {
-    let distA = (asientoA - sala.asientoMano + 4) % 4;
-    let distB = (asientoB - sala.asientoMano + 4) % 4;
-    return distA <= distB;
+function evaluarGanadorLanceDetalle(sala, lance) {
+  let mejorAsiento = 0;
+
+  for (let i = 1; i < 4; i++) {
+    let cmp = 0;
+    if (lance === 'grande') {
+      cmp = compararManosGrande(sala.manos[i], sala.manos[mejorAsiento]);
+    } else if (lance === 'chica') {
+      cmp = compararManosChica(sala.manos[i], sala.manos[mejorAsiento]);
+    } else if (lance === 'pares') {
+      let pI = evaluarDetallePares(sala.manos[i]);
+      let pMejor = evaluarDetallePares(sala.manos[mejorAsiento]);
+      cmp = compararManosPares(pI, pMejor);
+    } else if (lance === 'juego') {
+      let jI = evaluarDetalleJuego(sala.manos[i]);
+      let jMejor = evaluarDetalleJuego(sala.manos[mejorAsiento]);
+      cmp = compararManosJuego(jI, jMejor);
+    }
+
+    if (cmp > 0) {
+      mejorAsiento = i;
+    } else if (cmp === 0) {
+      // Si las cartas son exactamente idénticas, desempata la Mano
+      if (distanciaMano(i, sala.asientoMano) < distanciaMano(mejorAsiento, sala.asientoMano)) {
+        mejorAsiento = i;
+      }
+    }
   }
+
+  const pareja = ASIENTOS_INFO[mejorAsiento].pareja;
+  const nom = Object.values(sala.jugadoresPorToken).find(p => p.asiento === mejorAsiento)?.nombre || `Asiento ${mejorAsiento + 1}`;
+  let motivo = "";
 
   if (lance === 'grande') {
-    let m = [mayorCarta(sala.manos[0]), mayorCarta(sala.manos[1]), mayorCarta(sala.manos[2]), mayorCarta(sala.manos[3])];
-    let max0 = Math.max(m[0], m[2]), max1 = Math.max(m[1], m[3]);
-    let a0 = m[0] >= m[2] ? 0 : 2;
-    let a1 = m[1] >= m[3] ? 1 : 3;
-
-    let empate = (max0 === max1);
-    let pareja = max0 > max1 ? 0 : (max1 > max0 ? 1 : (tieneMano(a0, a1) ? 0 : 1));
-    let asiento = pareja === 0 ? a0 : a1;
-    const nom = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    let motivo = empate ? `Grande ganada por ${nom} por ser Mano (empate a carta más alta)` : `Grande ganada por ${nom} con la carta más alta`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo };
+    motivo = `Grande ganada por ${nom} (${formatearCartasMus(sala.manos[mejorAsiento], 'desc')})`;
+  } else if (lance === 'chica') {
+    motivo = `Chica ganada por ${nom} (${formatearCartasMus(sala.manos[mejorAsiento], 'asc')})`;
+  } else if (lance === 'pares') {
+    motivo = `Pares ganados por ${nom} (${evaluarDetallePares(sala.manos[mejorAsiento]).desc})`;
+  } else if (lance === 'juego') {
+    motivo = `Juego ganado por ${nom} (${evaluarDetalleJuego(sala.manos[mejorAsiento]).desc})`;
   }
 
-  if (lance === 'chica') {
-    let m = [menorCarta(sala.manos[0]), menorCarta(sala.manos[1]), menorCarta(sala.manos[2]), menorCarta(sala.manos[3])];
-    let min0 = Math.min(m[0], m[2]), min1 = Math.min(m[1], m[3]);
-    let a0 = m[0] <= m[2] ? 0 : 2;
-    let a1 = m[1] <= m[3] ? 1 : 3;
-
-    let empate = (min0 === min1);
-    let pareja = min0 < min1 ? 0 : (min1 < min0 ? 1 : (tieneMano(a0, a1) ? 0 : 1));
-    let asiento = pareja === 0 ? a0 : a1;
-    const nom = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    let motivo = empate ? `Chica ganada por ${nom} por ser Mano (empate a carta más baja)` : `Chica ganada por ${nom} con la carta más baja`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo };
-  }
-
-  if (lance === 'pares') {
-    let p = [evaluarDetallePares(sala.manos[0]), evaluarDetallePares(sala.manos[1]), evaluarDetallePares(sala.manos[2]), evaluarDetallePares(sala.manos[3])];
-    let f0 = Math.max(p[0].fuerza, p[2].fuerza), f1 = Math.max(p[1].fuerza, p[3].fuerza);
-    let a0 = p[0].fuerza >= p[2].fuerza ? 0 : 2;
-    let a1 = p[1].fuerza >= p[3].fuerza ? 1 : 3;
-
-    let empate = (f0 === f1);
-    let pareja = f0 > f1 ? 0 : (f1 > f0 ? 1 : (tieneMano(a0, a1) ? 0 : 1));
-    let asiento = pareja === 0 ? a0 : a1;
-    let det = p[asiento];
-    const nom = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    let motivo = empate ? `Pares ganados por ${nom} por ser Mano con ${det.nombre} (empate exacto)` : `Pares ganados por ${nom} con ${det.nombre}`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo };
-  }
-
-  if (lance === 'juego') {
-    let j = [evaluarDetalleJuego(sala.manos[0]), evaluarDetalleJuego(sala.manos[1]), evaluarDetalleJuego(sala.manos[2]), evaluarDetalleJuego(sala.manos[3])];
-    let f0 = Math.max(j[0].fuerza, j[2].fuerza), f1 = Math.max(j[1].fuerza, j[3].fuerza);
-    let a0 = j[0].fuerza >= j[2].fuerza ? 0 : 2;
-    let a1 = j[1].fuerza >= j[3].fuerza ? 1 : 3;
-
-    let empate = (f0 === f1);
-    let pareja = f0 > f1 ? 0 : (f1 > f0 ? 1 : (tieneMano(a0, a1) ? 0 : 1));
-    let asiento = pareja === 0 ? a0 : a1;
-    let det = j[asiento];
-    const nom = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento)?.nombre || `Asiento ${asiento+1}`;
-    let motivo = empate ? `Juego ganado por ${nom} por ser Mano con ${det.desc} (empate exacto)` : `Juego ganado por ${nom} con ${det.desc}`;
-    return { parejaGanadora: pareja, asientoGanador: asiento, nombreGanador: nom, motivo };
-  }
+  return { parejaGanadora: pareja, asientoGanador: mejorAsiento, nombreGanador: nom, motivo };
 }
 
 function comprobarVictoriaChico(sala, ganadorForzado = null, motivo = "", esOrdago = false) {
