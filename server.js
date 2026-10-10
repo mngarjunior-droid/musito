@@ -4,19 +4,16 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 
-// EVITAR QUE NODE SE CAIGA ANTE CUALQUIER ERROR INESPERADO
 process.on('uncaughtException', (err) => {
-  console.error('ERROR CAPTURADO EN PROCESO (Sin caída):', err);
+  console.error('ERROR CAPTURADO EN PROCESO:', err);
 });
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('RECHAZO NO CONTROLADO:', reason);
 });
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
 const publicDir = fs.existsSync(path.join(__dirname, 'public')) ? path.join(__dirname, 'public') : __dirname;
 app.use(express.static(publicDir));
@@ -51,7 +48,7 @@ function obtenerOCrearSala(idSala) {
       ordenMusVotos: {},
       declaraciones: { pares: {}, juego: {} },
       apuestaActual: { total: 0, ultimoAumento: 0, ultimoApostador: null, ordago: false, enPaso: true },
-      decisionPareja: { activa: false, parejaVotante: null, votos: {}, tiempoRestante: 10, timerId: null },
+      decisionPareja: { activa: false, parejaVotante: null, votos: {}, tiempoRestante: 12, timerId: null },
       apuestasLances: {
         grande: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
         chica: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
@@ -112,10 +109,6 @@ function robarCarta(sala) {
   }
   return sala.mazo.pop() || { palo: 'oros', numero: '1', valorMus: 1, valorJuego: 1 };
 }
-
-/* ========================================================
-   COMPARADORES PROTEGIDOS Y BLINDADOS CONTRA ERRORES
-======================================================== */
 
 function distanciaMano(asiento, asientoMano) {
   return (asiento - asientoMano + 4) % 4;
@@ -361,7 +354,7 @@ function siguienteTurnoMus(sala) {
   const votos = Object.keys(sala.ordenMusVotos);
   if (votos.length === 4) {
     sala.fase = 'descartes';
-    notificarEstado(sala, "¡Hay Mus! A descartar cartas.");
+    notificarEstado(sala, "¡Hay Mus! Selecciona las cartas que quieras cambiar.");
     procesarDescartesBots(sala);
   } else {
     sala.turno = (sala.asientoMano + votos.length) % 4;
@@ -403,6 +396,8 @@ function iniciarLance(sala, nombreLance) {
 
 function comprobarTurnoDeclaracionBot(sala) {
   if (sala.botTurnoTimer) clearTimeout(sala.botTurnoTimer);
+  // Pacing más pausado y humano (1600ms a 2400ms)
+  const demora = Math.floor(Math.random() * 800) + 1600;
   sala.botTurnoTimer = setTimeout(() => {
     sala.botTurnoTimer = null;
     const j = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.turno);
@@ -415,7 +410,7 @@ function comprobarTurnoDeclaracionBot(sala) {
         procesarDeclaracionJuego(sala, j.asiento, tiene);
       }
     }
-  }, 900);
+  }, demora);
 }
 
 function procesarDeclaracionPares(sala, asiento, lleva) {
@@ -436,15 +431,15 @@ function procesarDeclaracionPares(sala, asiento, lleva) {
     if (!p0 && !p1) {
       sala.apuestasLances.pares.hayPares = false;
       notificarEstado(sala, "Nadie lleva pares en la mesa. Lance desierto.");
-      setTimeout(() => avanzarSiguienteLance(sala), 1800);
+      setTimeout(() => avanzarSiguienteLance(sala), 2400);
     } else if (p0 && !p1) {
       sala.apuestasLances.pares.hayPares = true;
-      notificarEstado(sala, "Solo Pareja 1 lleva pares. Se cobran directamente al recuento.");
-      setTimeout(() => avanzarSiguienteLance(sala), 1800);
+      notificarEstado(sala, "Solo Pareja 1 lleva pares. Se cobrarán al recuento.");
+      setTimeout(() => avanzarSiguienteLance(sala), 2400);
     } else if (!p0 && p1) {
       sala.apuestasLances.pares.hayPares = true;
-      notificarEstado(sala, "Solo Pareja 2 lleva pares. Se cobran directamente al recuento.");
-      setTimeout(() => avanzarSiguienteLance(sala), 1800);
+      notificarEstado(sala, "Solo Pareja 2 lleva pares. Se cobrarán al recuento.");
+      setTimeout(() => avanzarSiguienteLance(sala), 2400);
     } else {
       sala.apuestasLances.pares.hayPares = true;
       sala.fase = 'pares';
@@ -480,11 +475,11 @@ function procesarDeclaracionJuego(sala, asiento, lleva) {
     } else if (j0 && !j1) {
       sala.apuestasLances.juego.esAlPunto = false;
       notificarEstado(sala, "Solo Pareja 1 lleva juego. Se cobrará en el recuento sin lance.");
-      setTimeout(() => avanzarSiguienteLance(sala), 1800);
+      setTimeout(() => avanzarSiguienteLance(sala), 2400);
     } else if (!j0 && j1) {
       sala.apuestasLances.juego.esAlPunto = false;
       notificarEstado(sala, "Solo Pareja 2 lleva juego. Se cobrará en el recuento sin lance.");
-      setTimeout(() => avanzarSiguienteLance(sala), 1800);
+      setTimeout(() => avanzarSiguienteLance(sala), 2400);
     } else {
       sala.apuestasLances.juego.esAlPunto = false;
       sala.fase = 'juego';
@@ -507,7 +502,7 @@ function verificarTurnoValidoLance(sala) {
   if (vueltas >= 4) {
     sala.apuestasLances[sala.fase].enPaso = true;
     notificarEstado(sala, `Ronda de ${sala.fase.toUpperCase()} queda en paso.`);
-    setTimeout(() => avanzarSiguienteLance(sala), 1500);
+    setTimeout(() => avanzarSiguienteLance(sala), 2000);
     return;
   }
 
@@ -524,21 +519,22 @@ function iniciarDecisionConjunta(sala, parejaVotante) {
     activa: true,
     parejaVotante: parejaVotante,
     votos: {},
-    tiempoRestante: 10,
+    tiempoRestante: 12,
     timerId: null
   };
 
-  notificarEstado(sala, `¡Envite! Pareja ${parejaVotante + 1} tiene 10s para decidir.`);
+  notificarEstado(sala, `¡Envite! Pareja ${parejaVotante + 1} delibera su respuesta...`);
 
-  // Procesar bots de forma rápida y limpia (400ms para no dar sensación de cuelgue)
+  // Los bots se toman un tiempo humano para contestar (1500ms - 2400ms)
   for (let token in sala.jugadoresPorToken) {
     const j = sala.jugadoresPorToken[token];
     if (j.esBot && ASIENTOS_INFO[j.asiento].pareja === parejaVotante) {
       if (jugadorPuedeHablarEnLance(sala, j.asiento, sala.fase)) {
+        const delayBot = Math.floor(Math.random() * 900) + 1500;
         let t = setTimeout(() => {
           let votoBot = botCalcularRespuestaEnvite(sala, j.asiento, sala.fase, sala.apuestaActual);
           registrarVotoPareja(sala, j.asiento, votoBot);
-        }, 400);
+        }, delayBot);
         sala.botDecisionTimers.push(t);
       } else {
         registrarVotoPareja(sala, j.asiento, { tipo: 'noquiero', noPuedeHablar: true });
@@ -573,10 +569,8 @@ function registrarVotoPareja(sala, asiento, accion) {
   const j = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
   io.to(sala.id).emit('votoParejaEmitido', { asiento, nombre: j?.nombre || 'Jugador', accion });
 
-  // REFRESCAR ESTADO A LOS CLIENTES PARA QUE VEAN SU VOTO CONFIRMADO
-  notificarEstado(sala, `Voto recibido de ${j?.nombre || 'Jugador'}`);
+  notificarEstado(sala, `Voto emitido por ${j?.nombre || 'Jugador'}`);
 
-  // Verificar SOLO los asientos que realmente tienen un jugador/bot asignado
   const asientosAsignados = ASIENTOS_INFO
     .filter(a => a.pareja === parejaJugador)
     .map(a => a.id)
@@ -586,7 +580,10 @@ function registrarVotoPareja(sala, asiento, accion) {
 
   const todosVotaron = asientosHabilitados.every(a => sala.decisionPareja.votos[a] !== undefined);
   if (todosVotaron) {
-    finalizarDecisionPareja(sala, false);
+    // Breve pausa para asimilar los votos antes de resolver
+    setTimeout(() => {
+      finalizarDecisionPareja(sala, false);
+    }, 900);
   }
 }
 
@@ -610,7 +607,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
     decisionFinal = { tipo: 'quiero' };
   }
 
-  // Si se acepta un Órdago
+  // Si se acepta el Órdago: resolución inmediata con revelado
   if (esOrdagoActivo && decisionFinal.tipo === 'quiero') {
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: "¡QUIERO EL ÓRDAGO!" });
     resolverOrdagoInmediato(sala, sala.fase);
@@ -629,16 +626,15 @@ function finalizarDecisionPareja(sala, porTiempo) {
     sala.apuestaActual.ultimoAumento = aumento;
     sala.apuestaActual.ultimoApostador = pareja;
     sala.apuestaActual.enPaso = false;
-    io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: `¡Re-envidado ${aumento} más! (Total: ${sala.apuestaActual.total})` });
+    io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: `¡Re-envidado ${aumento} más! (Bote: ${sala.apuestaActual.total})` });
     iniciarDecisionConjunta(sala, pareja === 0 ? 1 : 0);
   } else if (decisionFinal.tipo === 'quiero') {
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: "¡QUIERO!" });
     sala.apuestasLances[sala.fase].querido = true;
     sala.apuestasLances[sala.fase].puntos = sala.apuestaActual.total;
     notificarEstado(sala, `¡Envite de ${sala.apuestasLances[sala.fase].puntos} pts aceptado! Se cobrará en el recuento.`);
-    setTimeout(() => avanzarSiguienteLance(sala), 1600);
+    setTimeout(() => avanzarSiguienteLance(sala), 2400);
   } else {
-    // ENVIDE O ÓRDAGO RECHAZADO: Sumar puntos normalmente y continuar la mano
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo: No quiero (Para ti)" : "No quiero (Para ti)" });
     let ptsGanados = 1;
     if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
@@ -649,9 +645,8 @@ function finalizarDecisionPareja(sala, porTiempo) {
     sala.apuestasLances[sala.fase].resueltoEnFalso = true;
     notificarEstado(sala, `Rechazado. +${ptsGanados} punto(s) para Pareja ${ganadora + 1}.`);
 
-    // SOLO TERMINA SI LLEGA A 40 PUNTOS REALES
     if (comprobarVictoriaChico(sala)) return;
-    setTimeout(() => avanzarSiguienteLance(sala), 1600);
+    setTimeout(() => avanzarSiguienteLance(sala), 2400);
   }
 }
 
@@ -680,7 +675,7 @@ function resolverOrdagoInmediato(sala, lance) {
 
     notificarEstado(sala, motivoOrdago, true);
     comprobarVictoriaChico(sala, ganador, motivoOrdago, true);
-  }, 2400);
+  }, 3000);
 }
 
 function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
@@ -694,7 +689,7 @@ function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
       sala.apuestasLances[sala.fase].enPaso = true;
       sala.apuestasLances[sala.fase].puntos = 1;
       notificarEstado(sala, `Ronda de ${sala.fase.toUpperCase()} queda en paso.`);
-      setTimeout(() => avanzarSiguienteLance(sala), 1500);
+      setTimeout(() => avanzarSiguienteLance(sala), 2000);
     } else {
       verificarTurnoValidoLance(sala);
     }
@@ -705,7 +700,7 @@ function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
     sala.apuestaActual.ultimoApostador = pareja;
     sala.apuestaActual.enPaso = false;
 
-    const texto = sala.apuestaActual.total === aumento ? `¡Envido ${aumento}!` : `¡${aumento} más! (Total: ${sala.apuestaActual.total})`;
+    const texto = sala.apuestaActual.total === aumento ? `¡Envido ${aumento}!` : `¡${aumento} más! (Bote: ${sala.apuestaActual.total})`;
     io.to(sala.id).emit('mensajeChat', { asiento: jugador.asiento, jugador: jugador.nombre, texto });
     iniciarDecisionConjunta(sala, parejaRival);
   } else if (tipo === 'ordago') {
@@ -798,6 +793,7 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
 function comprobarTurnoBot(sala) {
   if (sala.botTurnoTimer) clearTimeout(sala.botTurnoTimer);
 
+  const pausaBot = Math.floor(Math.random() * 800) + 1600;
   sala.botTurnoTimer = setTimeout(() => {
     sala.botTurnoTimer = null;
     if (sala.fase === 'mus') {
@@ -830,7 +826,7 @@ function comprobarTurnoBot(sala) {
         }
       }
     }
-  }, 950);
+  }, pausaBot);
 }
 
 function procesarDescartesBots(sala) {
@@ -895,12 +891,12 @@ function ejecutarRecuentoFinalMano(sala) {
             sala.asientoMano = (sala.asientoMano + 1) % 4;
             const nuevoMano = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.asientoMano);
             notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.`);
-            setTimeout(() => iniciarMano(sala), 3000);
-          }, 3500);
-        }, 3500);
-      }, 3500);
-    }, 3500);
-  }, 2200);
+            setTimeout(() => iniciarMano(sala), 3500);
+          }, 3800);
+        }, 3800);
+      }, 3800);
+    }, 3800);
+  }, 2500);
 }
 
 function resolverLanceEnRecuento(sala, lance) {
@@ -1105,7 +1101,7 @@ function ejecutarResetAdmin(sala) {
   sala.ordenMusVotos = {};
   sala.declaraciones = { pares: {}, juego: {} };
   sala.apuestaActual = { total: 0, ultimoAumento: 0, ultimoApostador: null, ordago: false, enPaso: true };
-  sala.decisionPareja = { activa: false, parejaVotante: null, votos: {}, tiempoRestante: 10, timerId: null };
+  sala.decisionPareja = { activa: false, parejaVotante: null, votos: {}, tiempoRestante: 12, timerId: null };
 
   emitirActualizacionAsientos(sala);
   io.to(sala.id).emit('resetCompleto');
