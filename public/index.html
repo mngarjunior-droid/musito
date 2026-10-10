@@ -253,6 +253,92 @@
         .asiento-card.p1 .tag-p { color: var(--team-us); }
         .asiento-card.p2 .tag-p { color: var(--team-rival); }
 
+        /* ===== MODAL DE CELEBRACIÓN DE VICTORIA EN PARTIDA ===== */
+        .modal-victoria-box {
+            border: 2px solid var(--accent-gold) !important;
+            box-shadow: 0 0 50px rgba(245, 207, 88, 0.4), 0 25px 60px rgba(0, 0, 0, 0.85) !important;
+            max-width: 440px !important;
+            padding: 28px 24px !important;
+        }
+
+        .victoria-trofeo-anim {
+            font-size: 3.5rem;
+            line-height: 1;
+            margin-bottom: 6px;
+            animation: trophyBounce 0.75s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 16px rgba(245, 207, 88, 0.6));
+        }
+
+        @keyframes trophyBounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-8px) scale(1.08); }
+        }
+
+        .victoria-titulo {
+            font-family: 'Cinzel', serif;
+            color: var(--accent-gold);
+            font-size: clamp(1.35rem, 3.5vw, 1.65rem) !important;
+            letter-spacing: 2px;
+            margin-bottom: 8px !important;
+            text-shadow: 0 2px 14px var(--accent-gold-glow);
+        }
+
+        .victoria-equipo-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(245, 207, 88, 0.22), rgba(245, 207, 88, 0.08));
+            border: 1.5px solid var(--accent-gold);
+            border-radius: 999px;
+            padding: 6px 20px;
+            margin: 8px auto 14px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: var(--accent-gold);
+            box-shadow: 0 4px 20px var(--accent-gold-glow);
+            max-width: 90%;
+            word-break: break-word;
+        }
+
+        .victoria-mensaje {
+            font-size: 0.84rem;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.45;
+        }
+
+        .victoria-recap-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .victoria-recap-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .victoria-recap-card .recap-label {
+            font-size: 0.66rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .victoria-recap-card .recap-valor {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--accent-gold);
+        }
+
         /* ===== TOOLBAR SUPERIOR RESPONSIVE ===== */
         .app-header {
             width: 100%;
@@ -1104,6 +1190,11 @@
             line-height: 1.25;
         }
 
+        @keyframes textNoticePulse {
+            0% { transform: scale(0.95); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         /* ===== CONTROLES DOCK TÁCTILES Y ERGONÓMICOS ===== */
         .action-dock {
             display: flex;
@@ -1357,7 +1448,38 @@
             <p style="font-size: 0.78rem; color: #a4beaf; margin-bottom: 10px; text-align: left; font-weight: 600;">Selecciona tu asiento en la mesa:</p>
             <div class="grid-asientos" id="selectorAsientos"></div>
 
+            <div id="contenedorNombrePareja" style="margin-top: 6px; margin-bottom: 14px; display: none; text-align: left;">
+                <label id="labelNombrePareja" for="inputNombrePareja" style="font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; display: block; margin-bottom: 4px;">🛡️ Nombre de tu Pareja (para repartir puntos):</label>
+                <input type="text" id="inputNombrePareja" placeholder="Ej: Los Campeones, Mario y Dani..." maxlength="18" style="width: 100%; box-sizing: border-box;">
+            </div>
+
             <button onclick="confirmarUnion()" class="btn-action gold" id="btnEntrar" style="width: 100%; padding: 12px;" disabled>Elige un asiento libre</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE VICTORIA Y CELEBRACIÓN EN PARTIDA -->
+    <div class="overlay-modal oculto" id="modalVictoria">
+        <div class="modal-box modal-victoria-box">
+            <div class="victoria-trofeo-anim">🏆</div>
+            <h2 id="victoriaTitulo" class="victoria-titulo">¡CHICO GANADO!</h2>
+            <div class="victoria-equipo-pill" id="victoriaEquipoPill">
+                <span class="victoria-icono-corona">👑</span>
+                <span id="victoriaNombreGanador">Pareja 1</span>
+            </div>
+            <p id="victoriaMensaje" class="victoria-mensaje">¡Pareja 1 alcanza 40 puntos y gana el Chico!</p>
+            
+            <div class="victoria-recap-grid">
+                <div class="victoria-recap-card">
+                    <span class="recap-label">Chicos</span>
+                    <span class="recap-valor" id="victoriaRecapChicos">1 - 0</span>
+                </div>
+                <div class="victoria-recap-card">
+                    <span class="recap-label">Vacas</span>
+                    <span class="recap-valor" id="victoriaRecapVacas">0 - 0</span>
+                </div>
+            </div>
+
+            <button onclick="cerrarModalVictoria()" class="btn-action gold" style="width: 100%; padding: 12px; font-size: 0.92rem; margin-top: 14px;">Continuar Jugando</button>
         </div>
     </div>
 
@@ -1399,7 +1521,7 @@
     <div class="scoreboard-widget">
         <div class="team-score team-us">
             <div class="team-meta">
-                <div class="team-label">🛡️ Tu Pareja</div>
+                <div class="team-label" id="labelNosotros">🛡️ Tu Pareja</div>
                 <div class="team-tourney" id="chicosNosotros">Chicos: 0 · Vacas: 0</div>
             </div>
             <div class="score-num us" id="puntosNosotros">0</div>
@@ -1412,7 +1534,7 @@
         <div class="team-score team-rival rival">
             <div class="score-num rival" id="puntosRivales">0</div>
             <div class="team-meta">
-                <div class="team-label">⚔️ Pareja Rival</div>
+                <div class="team-label" id="labelRivales">⚔️ Pareja Rival</div>
                 <div class="team-tourney" id="chicosRivales">Chicos: 0 · Vacas: 0</div>
             </div>
         </div>
@@ -1768,6 +1890,7 @@
             localStorage.setItem('mus_token', miToken);
         }
 
+        let nombresParejasGlobal = { 0: 'Pareja 1', 1: 'Pareja 2' };
         let miAsiento = null;
         let asientoElegidoTemporal = null;
         let misCartas = [];
@@ -1794,7 +1917,11 @@
             }
         });
 
-        socket.on('asientosEstado', (asientos) => {
+        socket.on('asientosEstado', (data) => {
+            const asientos = Array.isArray(data) ? data : (data?.asientos || []);
+            if (data && data.nombresParejas) {
+                nombresParejasGlobal = data.nombresParejas;
+            }
             renderizarSelectorAsientos(asientos);
         });
 
@@ -1805,10 +1932,11 @@
                 const div = document.createElement('div');
                 div.className = `asiento-card ${a.pareja === 0 ? 'p1' : 'p2'} ${a.ocupado ? 'ocupado' : ''}`;
                 if (asientoElegidoTemporal === a.id && !a.ocupado) div.classList.add('seleccionado');
+                const tagNombre = a.nombrePareja || (nombresParejasGlobal && nombresParejasGlobal[a.pareja]) || `Pareja ${a.pareja + 1}`;
                 div.innerHTML = `
                     <div style="font-weight:700; font-size:0.8rem;">${a.nombreDef}</div>
-                    <div class="tag-p">Pareja ${a.pareja + 1}</div>
-                    <div style="font-size:0.7rem; color:#8ba396;">${a.ocupado ? `👤 \${a.ocupante}` : '🟢 Libre'}</div>
+                    <div class="tag-p">${tagNombre}</div>
+                    <div style="font-size:0.7rem; color:#8ba396;">${a.ocupado ? `👤 ${a.ocupante}` : '🟢 Libre'}</div>
                 `;
                 if (!a.ocupado) {
                     div.onclick = () => {
@@ -1818,6 +1946,21 @@
                         const btn = document.getElementById('btnEntrar');
                         btn.disabled = false;
                         btn.innerText = `Ocupar ${a.nombreDef}`;
+
+                        const contPareja = document.getElementById('contenedorNombrePareja');
+                        if (contPareja) {
+                            contPareja.style.display = 'block';
+                            const inputPareja = document.getElementById('inputNombrePareja');
+                            const nombreExistente = (nombresParejasGlobal && nombresParejasGlobal[a.pareja]) ? nombresParejasGlobal[a.pareja] : '';
+                            if (inputPareja) {
+                                inputPareja.placeholder = nombreExistente || `Nombre para Pareja ${a.pareja + 1}...`;
+                                if (!inputPareja.value && nombreExistente && !nombreExistente.startsWith('Pareja ')) {
+                                    inputPareja.value = nombreExistente;
+                                }
+                            }
+                            const lbl = document.getElementById('labelNombrePareja');
+                            if (lbl) lbl.innerText = `🛡️ Nombre de tu Pareja (${tagNombre}) para repartir puntos:`;
+                        }
                     };
                 }
                 grid.appendChild(div);
@@ -1827,22 +1970,31 @@
         function confirmarUnion() {
             if (asientoElegidoTemporal === null) return;
             const nom = document.getElementById('inputNombre').value;
+            const inputNomP = document.getElementById('inputNombrePareja');
+            const nomPareja = inputNomP ? inputNomP.value.trim() : '';
             salaActualId = selectSala ? selectSala.value : "principal";
             localStorage.setItem('mus_sala', salaActualId);
             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
             window.history.replaceState({ path: newUrl }, '', newUrl);
 
-            socket.emit('unirseAsiento', { nombre: nom, asientoElegido: asientoElegidoTemporal, salaId: salaActualId, token: miToken });
+            socket.emit('unirseAsiento', {
+                nombre: nom,
+                nombrePareja: nomPareja,
+                asientoElegido: asientoElegidoTemporal,
+                salaId: salaActualId,
+                token: miToken
+            });
         }
 
-        socket.on('asientoAsignado', ({ asiento, info, salaId }) => {
+        socket.on('asientoAsignado', ({ asiento, info, salaId, nombresParejas }) => {
+            if (nombresParejas) nombresParejasGlobal = nombresParejas;
             miAsiento = asiento;
             salaActualId = salaId;
             localStorage.setItem('mus_sala', salaActualId);
             document.getElementById('modalInicio').classList.add('oculto');
             document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
-            const parejaNum = info.pareja + 1;
-            document.getElementById('miAsientoTexto').innerHTML = `Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
+            const nomPareja = (nombresParejasGlobal && nombresParejasGlobal[info.pareja]) ? nombresParejasGlobal[info.pareja] : `Pareja ${info.pareja + 1}`;
+            document.getElementById('miAsientoTexto').innerHTML = `Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">${nomPareja}</strong>)`;
             socket.emit('pedirMisCartas');
         });
 
@@ -1963,9 +2115,109 @@
             });
         }
 
+        let ultimoLanceGanadoTimestamp = 0;
+        let ultimoLanceGanadoTexto = '';
+
+        function actualizarMensajeCentral(estado) {
+            const elFase = document.getElementById('faseTxt');
+            const elMsg = document.getElementById('msgTxt');
+            if (!elFase || !elMsg) return;
+
+            let textoFase = '';
+            let textoMsg = estado.mensaje || '';
+
+            switch (estado.fase) {
+                case 'espera':
+                    textoFase = 'SALA DE ESPERA';
+                    if (!textoMsg) textoMsg = 'Esperando a que se sienten los 4 jugadores...';
+                    break;
+                case 'mus':
+                    textoFase = 'RONDA DE MUS';
+                    break;
+                case 'descartes':
+                    textoFase = 'A DESCARTAR';
+                    if (!textoMsg) textoMsg = 'Selecciona las cartas que no quieras y confirma.';
+                    break;
+                case 'declaracion_pares':
+                    textoFase = '¿LLEVAS PARES?';
+                    break;
+                case 'declaracion_juego':
+                    textoFase = '¿TIENES JUEGO?';
+                    break;
+                case 'grande':
+                    textoFase = 'RONDA DE GRANDE';
+                    break;
+                case 'chica':
+                    textoFase = 'RONDA DE CHICA';
+                    break;
+                case 'pares':
+                    textoFase = 'RONDA DE PARES';
+                    break;
+                case 'juego':
+                    const esPunto = estado.apuestasLances && estado.apuestasLances.juego && estado.apuestasLances.juego.esAlPunto;
+                    textoFase = esPunto ? 'RONDA AL PUNTO' : 'RONDA DE JUEGO';
+                    break;
+                case 'recuento':
+                    if (textoMsg.includes('Mano terminada')) {
+                        textoFase = '🔄 FIN DE MANO';
+                    } else if (textoMsg.includes('GRANDE')) {
+                        textoFase = '🏆 RECUENTO: GRANDE';
+                    } else if (textoMsg.includes('CHICA')) {
+                        textoFase = '🏆 RECUENTO: CHICA';
+                    } else if (textoMsg.includes('PARES')) {
+                        textoFase = '🏆 RECUENTO: PARES';
+                    } else if (textoMsg.includes('JUEGO') || textoMsg.includes('PUNTO')) {
+                        textoFase = '🏆 RECUENTO: JUEGO / PUNTO';
+                    } else {
+                        textoFase = '📊 RECUENTO DE TANTOS';
+                    }
+                    break;
+                case 'fin':
+                    textoFase = '🏆 PARTIDA TERMINADA';
+                    break;
+                default:
+                    textoFase = estado.fase ? estado.fase.toUpperCase() : 'EL MUS DE MARIO';
+            }
+
+            if (estado.apuestaActual && estado.apuestaActual.ordago) {
+                textoFase = '⚔️ ¡ÓRDAGO EN LA MESA!';
+            } else if (Date.now() - ultimoLanceGanadoTimestamp < 2200 && ultimoLanceGanadoTexto) {
+                textoFase = ultimoLanceGanadoTexto;
+            }
+
+            if (elFase.innerText !== textoFase) {
+                elFase.innerText = textoFase;
+                elFase.style.animation = 'none';
+                void elFase.offsetWidth;
+                elFase.style.animation = 'textNoticePulse 0.25s ease-out';
+            }
+
+            if (textoMsg && elMsg.innerText !== textoMsg) {
+                elMsg.innerText = textoMsg;
+                elMsg.style.animation = 'none';
+                void elMsg.offsetWidth;
+                elMsg.style.animation = 'textNoticePulse 0.25s ease-out';
+            }
+        }
+
         socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados, esOrdagoDirecto }) => {
-            document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
-            document.getElementById('msgTxt').innerText = desglose;
+            ultimoLanceGanadoTimestamp = Date.now();
+            ultimoLanceGanadoTexto = `🏆 ${lance}`;
+
+            const elFase = document.getElementById('faseTxt');
+            const elMsg = document.getElementById('msgTxt');
+            if (elFase) {
+                elFase.innerText = `🏆 ${lance}`;
+                elFase.style.animation = 'none';
+                void elFase.offsetWidth;
+                elFase.style.animation = 'textNoticePulse 0.25s ease-out';
+            }
+            if (elMsg) {
+                elMsg.innerText = desglose;
+                elMsg.style.animation = 'none';
+                void elMsg.offsetWidth;
+                elMsg.style.animation = 'textNoticePulse 0.25s ease-out';
+            }
 
             if (esOrdagoDirecto) {
                 audioEngine.playOrdago();
@@ -1990,16 +2242,67 @@
             }
         });
 
-        socket.on('victoriaChico', ({ mensaje, chicosGanados, vacasGanadas }) => {
-            audioEngine.playFanfare();
+        socket.on('victoriaChico', ({ ganadorPareja, nombreGanador, mensaje, chicosGanados, vacasGanadas, esVaca }) => {
             actualizarPuntuacionesPersonalizadas({ 0: 0, 1: 0 }, chicosGanados, vacasGanadas);
-            alert(mensaje);
+            mostrarModalVictoria({ ganadorPareja, nombreGanador, mensaje, chicosGanados, vacasGanadas, esVaca });
             document.getElementById('desgloseLog').innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Nuevo Chico comenzado.</div>`;
             actualizarContadorLancesBadge();
         });
 
+        function mostrarModalVictoria({ ganadorPareja, nombreGanador, mensaje, chicosGanados, vacasGanadas, esVaca }) {
+            audioEngine.playFanfare();
+            const modal = document.getElementById('modalVictoria');
+            if (!modal) return;
+
+            const cG = chicosGanados || { 0: 0, 1: 0 };
+            const vG = vacasGanadas || { 0: 0, 1: 0 };
+
+            const tituloEl = document.getElementById('victoriaTitulo');
+            const nomEl = document.getElementById('victoriaNombreGanador');
+            const msgEl = document.getElementById('victoriaMensaje');
+            const recapChicos = document.getElementById('victoriaRecapChicos');
+            const recapVacas = document.getElementById('victoriaRecapVacas');
+
+            const nomFinal = nombreGanador || (nombresParejasGlobal && nombresParejasGlobal[ganadorPareja] ? nombresParejasGlobal[ganadorPareja] : `Pareja ${ganadorPareja + 1}`);
+
+            if (esVaca) {
+                if (tituloEl) tituloEl.innerText = '🏆 ¡VACA DEL TORNEO!';
+            } else {
+                if (tituloEl) tituloEl.innerText = '🎉 ¡CHICO GANADO!';
+            }
+
+            if (nomEl) nomEl.innerText = nomFinal;
+            if (msgEl) msgEl.innerText = mensaje || `¡${nomFinal} ha ganado la ronda!`;
+
+            if (miAsiento !== null) {
+                const miP = (miAsiento % 2 === 0) ? 0 : 1;
+                const rivP = miP === 0 ? 1 : 0;
+                if (recapChicos) recapChicos.innerText = `${cG[miP]} - ${cG[rivP]}`;
+                if (recapVacas) recapVacas.innerText = `${vG[miP]} - ${vG[rivP]}`;
+            } else {
+                if (recapChicos) recapChicos.innerText = `${cG[0]} - ${cG[1]}`;
+                if (recapVacas) recapVacas.innerText = `${vG[0]} - ${vG[1]}`;
+            }
+
+            modal.classList.remove('oculto');
+        }
+
+        function cerrarModalVictoria() {
+            const modal = document.getElementById('modalVictoria');
+            if (modal) modal.classList.add('oculto');
+        }
+
         let ultimoTurnoNotificado = null;
         socket.on('estadoJuego', (estado) => {
+            if (estado.nombresParejas) {
+                nombresParejasGlobal = estado.nombresParejas;
+                if (miAsiento !== null && estado.jugadoresEnMesa && estado.jugadoresEnMesa[miAsiento]) {
+                    const pNum = estado.jugadoresEnMesa[miAsiento].pareja;
+                    const pNom = nombresParejasGlobal[pNum] || `Pareja ${pNum + 1}`;
+                    document.getElementById('miAsientoTexto').innerHTML = `Asiento: <strong>${estado.jugadoresEnMesa[miAsiento].nombre}</strong> (<strong class="pareja-tag">${pNom}</strong>)`;
+                }
+            }
+
             if (estado.fase === 'mus' && ultimaFaseRegistrada !== 'mus') {
                 document.getElementById('desgloseLog').innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>`;
                 actualizarContadorLancesBadge();
@@ -2007,17 +2310,7 @@
             ultimaFaseRegistrada = estado.fase;
 
             estadoActual = estado;
-            if (estado.fase !== 'recuento') {
-                let textoFase = estado.fase.toUpperCase();
-                if (estado.fase === 'declaracion_pares') textoFase = '¿LLEVAS PARES?';
-                else if (estado.fase === 'declaracion_juego') textoFase = '¿TIENES JUEGO?';
-                else if (estado.fase === 'mus') textoFase = 'RONDA DE MUS';
-                else if (estado.fase === 'descartes') textoFase = 'A DESCARTAR';
-                else textoFase = `RONDA DE ${textoFase}`;
-
-                document.getElementById('faseTxt').innerText = textoFase;
-                document.getElementById('msgTxt').innerText = estado.mensaje;
-            }
+            actualizarMensajeCentral(estado);
 
             actualizarPuntuacionesPersonalizadas(estado.puntos, estado.chicosGanados, estado.vacasGanadas);
 
@@ -2089,6 +2382,10 @@
             if (!puntos) return;
             const cG = chicosGanados || { 0: 0, 1: 0 };
             const vG = vacasGanadas || { 0: 0, 1: 0 };
+            const nombres = (nombresParejasGlobal && typeof nombresParejasGlobal === 'object') ? nombresParejasGlobal : { 0: 'Pareja 1', 1: 'Pareja 2' };
+            const lblNos = document.getElementById('labelNosotros');
+            const lblRiv = document.getElementById('labelRivales');
+
             if (miAsiento !== null) {
                 const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
                 const rivalPareja = miPareja === 0 ? 1 : 0;
@@ -2096,11 +2393,15 @@
                 document.getElementById('puntosRivales').innerText = puntos[rivalPareja];
                 document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[miPareja]} · Vacas: ${vG[miPareja]}`;
                 document.getElementById('chicosRivales').innerText = `Chicos: ${cG[rivalPareja]} · Vacas: ${vG[rivalPareja]}`;
+                if (lblNos) lblNos.innerText = `🛡️ ${nombres[miPareja] || 'Tu Pareja'}`;
+                if (lblRiv) lblRiv.innerText = `⚔️ ${nombres[rivalPareja] || 'Pareja Rival'}`;
             } else {
                 document.getElementById('puntosNosotros').innerText = puntos[0];
                 document.getElementById('puntosRivales').innerText = puntos[1];
                 document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[0]} · Vacas: ${vG[0]}`;
                 document.getElementById('chicosRivales').innerText = `Chicos: ${cG[1]} · Vacas: ${vG[1]}`;
+                if (lblNos) lblNos.innerText = `🛡️ ${nombres[0] || 'Pareja 1'}`;
+                if (lblRiv) lblRiv.innerText = `⚔️ ${nombres[1] || 'Pareja 2'}`;
             }
         }
 
@@ -2124,6 +2425,7 @@
                 });
             }
 
+            const nomParejaGanadora = (nombresParejasGlobal && nombresParejasGlobal[parejaGanadora]) ? nombresParejasGlobal[parejaGanadora] : `Pareja ${parejaGanadora + 1}`;
             // Si ya existe tarjeta para este lance, la actualizamos para enriquecer el desglose
             const idTarjeta = `tarjeta_lance_${lance.replace(/[^a-zA-Z0-9]/g, '_')}`;
             let card = document.getElementById(idTarjeta);
@@ -2131,7 +2433,7 @@
                 card.className = `desglose-card ${colorClase}`;
                 card.innerHTML = `
                     <div class="desglose-top">
-                        <span class="desglose-title">${lance} · Pareja ${parejaGanadora + 1}</span>
+                        <span class="desglose-title">${lance} · ${nomParejaGanadora}</span>
                         <span class="desglose-puntos-tag">+${totalLance} PTS</span>
                     </div>
                     <div class="desglose-detail">${itemsHTML}</div>
@@ -2142,7 +2444,7 @@
                 card.className = `desglose-card ${colorClase}`;
                 card.innerHTML = `
                     <div class="desglose-top">
-                        <span class="desglose-title">${lance} · Pareja ${parejaGanadora + 1}</span>
+                        <span class="desglose-title">${lance} · ${nomParejaGanadora}</span>
                         <span class="desglose-puntos-tag">+${totalLance} PTS</span>
                     </div>
                     <div class="desglose-detail">${itemsHTML}</div>
@@ -2160,9 +2462,11 @@
                 if (info.ordago) return "Órdago en juego";
                 if (info.resueltoEnFalso) {
                     const miPareja = (miAsiento !== null) ? ((miAsiento % 2 === 0) ? 0 : 1) : null;
+                    const nomP0 = (nombresParejasGlobal && nombresParejasGlobal[0]) ? nombresParejasGlobal[0] : 'Pareja 1';
+                    const nomP1 = (nombresParejasGlobal && nombresParejasGlobal[1]) ? nombresParejasGlobal[1] : 'Pareja 2';
                     const quien = (miPareja !== null && info.ganadorEnFalso !== undefined)
-                        ? (info.ganadorEnFalso === miPareja ? "Nosotros" : "Rivales")
-                        : `Pareja ${(info.ganadorEnFalso !== undefined ? info.ganadorEnFalso + 1 : 1)}`;
+                        ? (info.ganadorEnFalso === miPareja ? (nombresParejasGlobal[miPareja] || "Nosotros") : (nombresParejasGlobal[info.ganadorEnFalso] || "Rivales"))
+                        : (info.ganadorEnFalso === 0 ? nomP0 : nomP1);
                     const pts = info.puntosEnFalso || 1;
                     return `${quien} (+${pts} pt${pts > 1 ? 's' : ''})`;
                 }
@@ -2516,7 +2820,8 @@
                     } else {
                         const esOrdago = estadoActual.apuestaActual && estadoActual.apuestaActual.ordago;
                         const txtEspera = esOrdago ? '¡ÓRDAGO en la mesa!' : 'Envite en la mesa';
-                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ ${txtEspera}: esperando respuesta de la Pareja ${estadoActual.decisionPareja.parejaVotante + 1}...</div>`;
+                        const nomVot = (nombresParejasGlobal && nombresParejasGlobal[estadoActual.decisionPareja.parejaVotante]) ? nombresParejasGlobal[estadoActual.decisionPareja.parejaVotante] : `la Pareja ${estadoActual.decisionPareja.parejaVotante + 1}`;
+                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ ${txtEspera}: esperando respuesta de ${nomVot}...</div>`;
                     }
                     return;
                 }
