@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mus de Mario - Con Animación de Revelado</title>
+    <title>El Mus de Mario - Parejas y Decisión Conjunta</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -66,10 +66,11 @@
         }
         .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
 
+        /* MODAL SALA DE ESPERA Y SELECCIÓN DE ASIENTO */
         .overlay-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.88);
+            background: rgba(0,0,0,0.9);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -80,9 +81,9 @@
             background: #102619;
             border: 3px solid var(--oro);
             border-radius: 20px;
-            padding: 24px 30px;
-            max-width: 420px;
-            width: 90%;
+            padding: 22px 28px;
+            max-width: 480px;
+            width: 92%;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.9);
         }
@@ -90,23 +91,65 @@
         .modal-box h2 {
             font-family: 'Cinzel', serif;
             color: var(--oro);
-            font-size: 1.4rem;
-            margin-bottom: 12px;
+            font-size: 1.35rem;
+            margin-bottom: 10px;
         }
 
         .modal-box input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 9px 14px;
             border-radius: 8px;
             border: 2px solid #58d68d;
             background: #06150c;
             color: #fff;
-            font-size: 1rem;
-            margin-bottom: 14px;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
             outline: none;
             text-align: center;
         }
 
+        .grid-asientos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .asiento-card {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #444;
+            padding: 10px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .asiento-card:hover:not(.ocupado) {
+            border-color: var(--oro);
+            transform: translateY(-2px);
+            background: rgba(241, 196, 15, 0.15);
+        }
+
+        .asiento-card.seleccionado {
+            border-color: var(--oro);
+            background: rgba(241, 196, 15, 0.25);
+            box-shadow: 0 0 10px var(--oro);
+        }
+
+        .asiento-card.ocupado {
+            opacity: 0.45;
+            cursor: not-allowed;
+            border-color: #666;
+        }
+
+        .asiento-card .tag-p { font-size: 0.72rem; font-weight: bold; }
+        .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
+        .asiento-card.p2 .tag-p { color: var(--color-rival); }
+
+        /* MARCADOR GLOBAL CON BARRA A 40 */
         .marcador-contenedor {
             display: flex;
             gap: 20px;
@@ -123,6 +166,40 @@
         .pts-nosotros { color: var(--color-mi-pareja); }
         .pts-rivales { color: var(--color-rival); }
 
+        /* BANNER DE TEMPORIZADOR Y DECISIÓN DE PAREJA */
+        .banner-decision {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: linear-gradient(90deg, #b03a2e 0%, #78281f 100%);
+            border: 2px solid #f5b041;
+            border-radius: 12px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fff;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            animation: latido 1s infinite alternate;
+        }
+
+        @keyframes latido {
+            from { transform: scale(1); }
+            to { transform: scale(1.01); }
+        }
+
+        .banner-decision .reloj {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            color: var(--oro);
+            background: rgba(0,0,0,0.4);
+            padding: 2px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--oro);
+        }
+
         .panel-botes {
             display: flex;
             gap: 12px;
@@ -137,6 +214,7 @@
         .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
         .panel-botes .item-lance strong { color: var(--oro); }
 
+        /* MESA OVALADA ESPACIOSA */
         .mesa {
             position: relative;
             width: 100%;
@@ -425,12 +503,17 @@
 </head>
 <body>
 
+    <!-- MODAL DE SELECCIÓN DE ASIENTO Y NOMBRE -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
-            <p style="font-size: 0.85rem; color: #bedac8; margin-bottom: 12px;">Introduce tu nombre para sentarte a la mesa:</p>
+            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Introduce tu apodo:</p>
             <input type="text" id="inputNombre" placeholder="Tu nombre..." maxlength="15">
-            <button onclick="confirmarNombre()" class="oro" style="width: 100%; padding: 10px;">¡Entrar a la Partida!</button>
+            
+            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Elige tu asiento en la mesa:</p>
+            <div class="grid-asientos" id="selectorAsientos"></div>
+
+            <button onclick="confirmarUnion()" class="oro" id="btnEntrar" style="width: 100%; padding: 10px;" disabled>Elige un asiento para entrar</button>
         </div>
     </div>
 
@@ -457,6 +540,12 @@
         <div>⚔️ Pareja Rival: <span class="pts pts-rivales" id="puntosP2">0</span> / 40</div>
     </div>
 
+    <!-- BANNER DE CUENTA ATRÁS 10 SEGUNDOS -->
+    <div class="banner-decision" id="bannerDecision">
+        <div>⏱️ ¡ENVITE EN LA MESA! Tu pareja está decidiendo conjuntamente:</div>
+        <div class="reloj" id="contadorSegundos">10s</div>
+    </div>
+
     <div class="panel-botes">
         <div class="item-lance">Grande: <strong id="bote_grande">Paso (1)</strong></div>
         <div class="item-lance">Chica: <strong id="bote_chica">Paso (1)</strong></div>
@@ -465,7 +554,7 @@
     </div>
 
     <div class="mesa">
-        <!-- NORTE: COMPAÑERO -->
+        <!-- NORTE: SIEMPRE TU COMPAÑERO -->
         <div class="jugador-box pos-norte">
             <div class="bocadillo" id="boc_norte"></div>
             <div class="cartel mi-equipo" id="lbl_norte">
@@ -527,6 +616,7 @@
         };
 
         let miAsiento = null;
+        let asientoElegidoTemporal = null;
         let misCartas = [];
         let estadoActual = {};
         let sonidoActivado = true;
@@ -558,24 +648,54 @@
             document.documentElement.style.setProperty('--escala-hud', val);
         }
 
-        function confirmarNombre() {
+        // SELECCIONAR SILLA LIBRE
+        socket.on('asientosEstado', (asientos) => {
+            renderizarSelectorAsientos(asientos);
+        });
+
+        function renderizarSelectorAsientos(asientos) {
+            const grid = document.getElementById('selectorAsientos');
+            grid.innerHTML = '';
+            asientos.forEach(a => {
+                const div = document.createElement('div');
+                div.className = `asiento-card ${a.pareja === 0 ? 'p1' : 'p2'} ${a.ocupado ? 'ocupado' : ''}`;
+                div.id = `card_asiento_${a.id}`;
+                div.innerHTML = `
+                    <div style="font-weight:bold; font-size:0.85rem;">${a.nombreDef}</div>
+                    <div class="tag-p">Pareja ${a.pareja + 1}</div>
+                    <div style="font-size:0.75rem; color:#aaa;">${a.ocupado ? `👤 \${a.ocupante}` : '🟢 Libre'}</div>
+                `;
+                if (!a.ocupado) {
+                    div.onclick = () => {
+                        document.querySelectorAll('.asiento-card').forEach(el => el.classList.remove('seleccionado'));
+                        div.classList.add('seleccionado');
+                        asientoElegidoTemporal = a.id;
+                        const btn = document.getElementById('btnEntrar');
+                        btn.disabled = false;
+                        btn.innerText = `Sentarse en ${a.nombreDef}`;
+                    };
+                }
+                grid.appendChild(div);
+            });
+        }
+
+        function confirmarUnion() {
+            if (asientoElegidoTemporal === null) return;
             const nom = document.getElementById('inputNombre').value;
-            socket.emit('unirse', { nombre: nom });
-            document.getElementById('modalInicio').style.display = 'none';
+            socket.emit('unirseAsiento', { nombre: nom, asientoElegido: asientoElegidoTemporal });
         }
 
         socket.on('asientoAsignado', ({ asiento, info }) => {
             miAsiento = asiento;
+            document.getElementById('modalInicio').style.display = 'none';
             const parejaNum = info.pareja + 1;
             document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong> - ${info.rol})`;
             document.getElementById('nom_sur').innerText = `${info.nombre} (Tú)`;
             reproducirTono(523, 0.2);
         });
 
-        socket.on('mesaLlena', () => {
-            alert("La mesa ya tiene 4 jugadores. Estás como espectador.");
-            document.getElementById('miAsientoTexto').innerText = "Modo Espectador";
-            document.getElementById('modalInicio').style.display = 'none';
+        socket.on('errorAsiento', (msg) => {
+            alert(msg);
         });
 
         socket.on('misCartas', (cartas) => {
@@ -597,6 +717,17 @@
             reproducirTono(330, 0.12);
         });
 
+        socket.on('votoParejaEmitido', ({ asiento, nombre, accion }) => {
+            const desc = accion.tipo === 'envidar' ? `+${accion.cantidad}` : accion.tipo;
+            mostrarBocadilloPorAsiento(asiento, `Vota: ${desc.toUpperCase()}`);
+        });
+
+        socket.on('tickTimer', ({ tiempo }) => {
+            const reloj = document.getElementById('contadorSegundos');
+            if (reloj) reloj.innerText = `${tiempo}s`;
+            if (tiempo <= 3) reproducirTono(700, 0.05);
+        });
+
         socket.on('estadoJuego', (estado) => {
             estadoActual = estado;
             document.getElementById('faseTxt').innerText = estado.fase.toUpperCase();
@@ -612,10 +743,18 @@
                 document.getElementById('puntosP2').innerText = estado.puntos[1];
             }
 
+            // GESTIÓN DEL BANNER DE DECISIÓN CONJUNTA
+            const banner = document.getElementById('bannerDecision');
+            if (estado.decisionPareja && estado.decisionPareja.activa) {
+                banner.style.display = 'flex';
+                document.getElementById('contadorSegundos').innerText = `${estado.decisionPareja.tiempoRestante}s`;
+            } else {
+                banner.style.display = 'none';
+            }
+
             actualizarBotesLances(estado.apuestasLances);
             actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno);
 
-            // GESTIÓN DEL REVELADO Y ANIMACIÓN FINAL
             if ((estado.fase === 'recuento' || estado.fase === 'fin') && estado.todasLasManos) {
                 if (!reveladoEjecutado) {
                     revelarTodasLasCartasConAnimacion(estado.todasLasManos);
@@ -701,7 +840,6 @@
             });
         }
 
-        // ANIMACIÓN FLIP 3D EN CASCADA
         function revelarTodasLasCartasConAnimacion(todasLasManos) {
             const yo = miAsiento !== null ? miAsiento : 0;
             const ref = {
@@ -774,6 +912,21 @@
             }
         }
 
+        function mostrarBocadilloPorAsiento(asiento, texto) {
+            const yo = miAsiento !== null ? miAsiento : 0;
+            let pos = 'sur';
+            if (asiento === (yo + 2) % 4) pos = 'norte';
+            else if (asiento === (yo + 1) % 4) pos = 'oeste';
+            else if (asiento === (yo + 3) % 4) pos = 'este';
+
+            let boc = document.getElementById(`boc_${pos}`);
+            if (boc) {
+                boc.innerText = texto;
+                boc.classList.add('activo');
+                setTimeout(() => boc.classList.remove('activo'), 1800);
+            }
+        }
+
         function actualizarControles() {
             const panel = document.getElementById('botonesAccion');
             panel.innerHTML = '';
@@ -805,15 +958,25 @@
                     return;
                 }
 
-                if (estadoActual.esperandoRespuestaDe === miPareja) {
-                    panel.innerHTML = `
-                        <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'noquiero' })" class="rojo">No quiero (Para ti)</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="azul">2 más</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">5 más</button>
-                        <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
-                    `;
-                } else if (estadoActual.esperandoRespuestaDe === null && estadoActual.turno === miAsiento) {
+                // CASO A: DECISIÓN CONJUNTA DE PAREJA ACTIVA (10 SEGUNDOS)
+                if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
+                    const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
+                    if (yaVoto) {
+                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f;">✔️ Has emitido tu voto (${yaVoto.tipo.toUpperCase()}). Esperando a tu compañero o fin de tiempo...</div>`;
+                    } else {
+                        panel.innerHTML = `
+                            <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
+                            <button onclick="socket.emit('accionLance', { tipo: 'noquiero' })" class="rojo">No quiero (Para ti)</button>
+                            <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="azul">2 más</button>
+                            <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">5 más</button>
+                            <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
+                        `;
+                    }
+                    return;
+                }
+
+                // CASO B: APERTURA NORMAL DEL LANCE
+                if (!estadoActual.decisionPareja?.activa && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
                         <button onclick="socket.emit('accionLance', { tipo: 'paso' })" class="rojo">Paso</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="oro">Envido 2</button>
