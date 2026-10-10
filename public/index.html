@@ -3,293 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>El Mus de Mario - Mesa de Juego</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <title>El Mus de Mario</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --tapete-verde: #0a4623;
-            --tapete-centro: #156d38;
-            --madera: #3c1e09;
-            --oro: #f1c40f;
-            --rojo: #e74c3c;
-            --azul: #3498db;
-            --color-mi-pareja: #2ecc71;
-            --color-rival: #e74c3c;
-            --carta-bg: #fffdf5;
-            --borde-carta: #2c1a0e;
-            --escala-hud: 1;
+            --bg-canvas: #060a08;
+            --tapete-core: #135e38;
+            --tapete-edge: #0a331e;
+            --rail-outer: #1c1109;
+            --rail-inner: #321f12;
+            
+            --accent-gold: #f2c94c;
+            --accent-gold-soft: rgba(242, 201, 76, 0.15);
+            --team-us: #2ecc71;
+            --team-us-glow: rgba(46, 204, 113, 0.35);
+            --team-rival: #e74c3c;
+            --team-rival-glow: rgba(231, 76, 60, 0.35);
+            
+            --glass-surface: rgba(14, 26, 19, 0.72);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.16);
+
+            --carta-w: 64px;
+            --carta-h: 96px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Fredoka', sans-serif; user-select: none; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Text", "Segoe UI", sans-serif;
+        }
 
         body {
-            background: radial-gradient(circle at center, #1b2920 0%, #060907 100%);
-            color: #ffffff;
+            background-color: var(--bg-canvas);
+            background-image: 
+                radial-gradient(at 50% 0%, rgba(20, 94, 56, 0.22) 0px, transparent 65%),
+                radial-gradient(at 50% 100%, rgba(0, 0, 0, 0.8) 0px, transparent 100%);
+            color: #f5f6f7;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 4px 8px;
+            padding: 10px 16px;
             overflow-x: hidden;
-            transform: scale(var(--escala-hud));
-            transform-origin: top center;
-            transition: transform 0.2s ease;
+            -webkit-font-smoothing: antialiased;
         }
 
-        header { text-align: center; margin-bottom: 2px; }
-        header h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 1.45rem;
-            color: var(--oro);
-            letter-spacing: 2px;
-            text-shadow: 0 3px 8px rgba(0,0,0,0.8);
-        }
-
-        .barra-superior {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .info-asiento {
-            background: rgba(0,0,0,0.65);
-            border: 1px solid rgba(241, 196, 15, 0.5);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            color: #d2e4db;
-        }
-        .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
-
-        .overlay-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.92);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal-box {
-            background: #102619;
-            border: 3px solid var(--oro);
-            border-radius: 20px;
-            padding: 18px 22px;
-            max-width: 480px;
-            width: 94%;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-        }
-
-        .modal-box h2 {
-            font-family: 'Cinzel', serif;
-            color: var(--oro);
-            font-size: 1.35rem;
-            margin-bottom: 8px;
-        }
-
-        .modal-box input {
+        /* ===== NAVEGACIÓN SUPERIOR ESTILO APPLE DOCK / TOOLBAR ===== */
+        .app-header {
             width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 2px solid #58d68d;
-            background: #06150c;
-            color: #fff;
-            font-size: 0.92rem;
-            margin-bottom: 10px;
-            outline: none;
-            text-align: center;
+            max-width: 1220px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 12px;
         }
 
-        .grid-asientos {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .brand-container {
+            display: flex;
+            align-items: baseline;
             gap: 8px;
-            margin-bottom: 12px;
         }
 
-        .asiento-card {
-            background: rgba(0,0,0,0.5);
-            border: 2px solid #444;
-            padding: 8px 6px;
-            border-radius: 10px;
+        .brand-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 2.5px;
+            background: linear-gradient(180deg, #ffffff 20%, #d8e2dc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-badge {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            background: rgba(242, 201, 76, 0.12);
+            border: 1px solid rgba(242, 201, 76, 0.3);
+            padding: 2px 7px;
+            border-radius: 6px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .capsule {
+            background: var(--glass-surface);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            padding: 6px 14px;
+            border-radius: 980px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #d1ded7;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-compact {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f0f3f2;
+            padding: 6px 12px;
+            border-radius: 980px;
+            font-size: 0.74rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-compact:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.22);
+            transform: translateY(-1px);
+        }
+
+        .btn-compact.danger {
+            background: rgba(231, 76, 60, 0.14);
+            border-color: rgba(231, 76, 60, 0.35);
+            color: #ff8b80;
+        }
+        .btn-compact.danger:hover {
+            background: rgba(231, 76, 60, 0.25);
+        }
+
+        /* ===== MARCADOR CENTRAL DE ALTA FIDELIDAD ===== */
+        .scoreboard-widget {
+            display: flex;
+            align-items: center;
+            background: var(--glass-surface);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 1px 0 var(--glass-highlight);
+            border-radius: 20px;
+            padding: 6px 18px;
+            margin-bottom: 6px;
+            gap: 22px;
+        }
+
+        .team-score {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .team-meta {
+            text-align: left;
+        }
+        .team-score.rival .team-meta {
+            text-align: right;
+        }
+
+        .team-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .team-us .team-label { color: var(--team-us); }
+        .team-rival .team-label { color: var(--team-rival); }
+
+        .team-tourney {
+            font-size: 0.65rem;
+            color: #8c9c93;
+            font-weight: 600;
+        }
+
+        .score-num {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .score-num.us {
+            color: #ffffff;
+            text-shadow: 0 0 18px var(--team-us-glow);
+        }
+
+        .score-num.rival {
+            color: #ffffff;
+            text-shadow: 0 0 18px var(--team-rival-glow);
+        }
+
+        .scoreboard-divider {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-        }
-
-        .asiento-card:hover:not(.ocupado) {
-            border-color: var(--oro);
-            transform: translateY(-2px);
-            background: rgba(241, 196, 15, 0.15);
-        }
-
-        .asiento-card.seleccionado {
-            border-color: var(--oro);
-            background: rgba(241, 196, 15, 0.25);
-            box-shadow: 0 0 10px var(--oro);
-        }
-
-        .asiento-card.ocupado {
-            opacity: 0.45;
-            cursor: not-allowed;
-            border-color: #666;
-        }
-
-        .asiento-card .tag-p { font-size: 0.7rem; font-weight: bold; }
-        .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
-        .asiento-card.p2 .tag-p { color: var(--color-rival); }
-
-        .marcador-contenedor {
-            display: flex;
-            gap: 16px;
-            background: rgba(12, 28, 18, 0.95);
-            border: 2px solid #a4762c;
-            padding: 4px 16px;
-            border-radius: 18px;
-            font-size: 0.88rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             align-items: center;
+            padding: 0 10px;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .marcador-contenedor .bloque-equipo {
+        .scoreboard-target {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+        }
+
+        /* BARRA DE BOTES Y ESTADO DE LANCES */
+        .stakes-bar {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 90px;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 3px 14px;
+            border-radius: 980px;
+            font-size: 0.7rem;
+            color: #9cb1a6;
+            margin-bottom: 6px;
         }
+        .stakes-bar strong { color: #f2f5f3; font-weight: 600; }
 
-        .marcador-contenedor span.pts { font-weight: 800; font-size: 1.25rem; }
-        .marcador-contenedor span.torneo-tag { font-size: 0.72rem; font-weight: 800; color: var(--oro); }
-        .pts-nosotros { color: var(--color-mi-pareja); }
-        .pts-rivales { color: var(--color-rival); }
-
+        /* BANNER DE DECISIÓN TEMPORIZADA */
         .banner-decision {
             display: none;
             width: 100%;
-            max-width: 980px;
-            background: linear-gradient(90deg, #b03a2e 0%, #78281f 100%);
-            border: 2px solid #f5b041;
-            border-radius: 10px;
-            padding: 4px 12px;
-            font-size: 0.82rem;
-            font-weight: bold;
-            color: #fff;
+            max-width: 720px;
+            background: linear-gradient(90deg, rgba(231,76,60,0.85) 0%, rgba(192,57,43,0.92) 100%);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffffff;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 3px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            animation: latido 1s infinite alternate;
+            margin-bottom: 6px;
+            box-shadow: 0 8px 24px rgba(231, 76, 60, 0.4);
+            animation: pulseBanner 1.2s infinite alternate;
         }
 
-        @keyframes latido {
+        @keyframes pulseBanner {
             from { transform: scale(1); }
             to { transform: scale(1.01); }
         }
 
         .banner-decision .reloj {
-            font-family: 'Cinzel', serif;
-            font-size: 1.2rem;
-            color: var(--oro);
-            background: rgba(0,0,0,0.4);
-            padding: 1px 8px;
-            border-radius: 8px;
-            border: 1px solid var(--oro);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 2px 10px;
+            border-radius: 980px;
+            color: var(--accent-gold);
         }
 
-        .panel-botes {
+        /* ===== CONTENEDOR PRINCIPAL: SIDEBAR + MESA ===== */
+        .workspace {
             display: flex;
-            gap: 10px;
-            background: rgba(0,0,0,0.55);
-            padding: 3px 12px;
-            border-radius: 12px;
-            font-size: 0.72rem;
-            margin-bottom: 3px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
-        .panel-botes .item-lance strong { color: var(--oro); }
-
-        .tablero-wrapper {
-            position: relative;
-            display: flex;
-            gap: 12px;
+            gap: 16px;
             width: 100%;
-            max-width: 1240px;
+            max-width: 1220px;
             justify-content: center;
-            align-items: center;
+            align-items: stretch;
+            flex: 1;
         }
 
-        .sidebar-desglose {
-            width: 220px;
-            height: 490px;
-            background: rgba(10, 24, 16, 0.92);
-            border: 2px solid #a4762c;
-            border-radius: 16px;
-            padding: 8px;
+        /* SIDEBAR DESGLOSE (ESTILO SHEET TRANSLÚCIDO) */
+        .desglose-panel {
+            width: 240px;
+            background: var(--glass-surface);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 var(--glass-highlight);
         }
 
-        .sidebar-desglose h4 {
-            font-family: 'Cinzel', serif;
-            color: var(--oro);
-            font-size: 0.8rem;
-            text-align: center;
-            margin-bottom: 6px;
-            border-bottom: 1px solid rgba(241, 196, 15, 0.3);
-            padding-bottom: 3px;
+        .desglose-header {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #8fa599;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .lista-desglose {
-            flex-grow: 1;
+        .desglose-list {
+            flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .desglose-list::-webkit-scrollbar { width: 4px; }
+        .desglose-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+        .desglose-card {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--accent-gold);
+            padding: 8px 10px;
+            border-radius: 8px;
             font-size: 0.72rem;
+            line-height: 1.35;
+        }
+        .desglose-card.verde { border-left-color: var(--team-us); }
+        .desglose-card.rojo { border-left-color: var(--team-rival); }
+
+        .desglose-title {
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
         }
 
-        .item-desglose {
-            background: rgba(0,0,0,0.45);
-            border-left: 3px solid var(--oro);
-            padding: 4px 6px;
-            border-radius: 4px;
+        .desglose-detail {
+            color: #b0c0b7;
+            font-size: 0.68rem;
         }
-        .item-desglose.verde { border-left-color: var(--color-mi-pareja); }
-        .item-desglose.rojo { border-left-color: var(--color-rival); }
-        .item-desglose .titulo-item { font-weight: bold; color: #fff; margin-bottom: 1px; }
-        .item-desglose .detalle-item { color: #ccc; font-size: 0.68rem; }
 
-        .mesa {
+        /* ===== MESA OVALADA (CRAFTING PREMIUM DE CASINO) ===== */
+        .table-viewport {
             position: relative;
-            width: 960px;
-            height: 490px;
-            background: radial-gradient(ellipse at center, var(--tapete-centro) 0%, var(--tapete-verde) 70%, #051d0f 100%);
-            border: 12px solid var(--madera);
-            outline: 4px solid #1a0c04;
-            border-radius: 250px;
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.85), 0 12px 30px rgba(0,0,0,0.85);
+            flex: 1;
+            min-height: 490px;
+            max-width: 950px;
+            background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 80%, #061c10 100%);
+            border: 14px solid var(--rail-inner);
+            outline: 5px solid var(--rail-outer);
+            border-radius: 260px;
+            box-shadow: 
+                inset 0 0 70px rgba(0,0,0,0.85),
+                inset 0 0 15px rgba(0,0,0,0.7),
+                0 25px 60px rgba(0,0,0,0.85);
             display: grid;
-            grid-template-columns: 150px 1fr 150px;
-            grid-template-rows: 110px 1fr 125px;
+            grid-template-columns: 160px 1fr 160px;
+            grid-template-rows: 105px 1fr 130px;
             grid-template-areas:
                 ". norte ."
                 "oeste centro este"
                 ". sur .";
             align-items: center;
             justify-items: center;
-            padding: 6px;
+            padding: 8px 12px;
         }
 
         .pos-norte { grid-area: norte; }
@@ -298,437 +384,597 @@
         .pos-este { grid-area: este; }
         .pos-centro { grid-area: centro; }
 
-        .jugador-box {
+        /* POD DEL JUGADOR */
+        .player-pod {
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
-            border-radius: 14px;
-            padding: 3px;
-            transition: all 0.3s ease;
+            gap: 4px;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        .player-badge {
+            position: relative;
+            background: rgba(10, 22, 16, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 980px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
+            min-width: 104px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            transition: all 0.25s ease;
+        }
+
+        .player-badge.mi-equipo {
+            border-color: rgba(46, 204, 113, 0.45);
+        }
+        .player-badge.mi-equipo .sub-role { color: var(--team-us); }
+
+        .player-badge.rival-equipo {
+            border-color: rgba(231, 76, 60, 0.45);
+        }
+        .player-badge.rival-equipo .sub-role { color: #f1948a; }
+
+        .player-badge .sub-role {
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .player-badge.activo {
+            border-color: var(--accent-gold) !important;
+            box-shadow: 0 0 20px rgba(242, 201, 76, 0.45);
+            transform: scale(1.05);
+        }
+
+        /* INSIGNIA EXCLUSIVA DE LA MANO */
         .badge-mano {
             display: none;
             position: absolute;
             top: -12px;
-            background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%);
-            color: #2b1704;
-            font-size: 0.65rem;
+            background: linear-gradient(180deg, #ffd700 0%, #d4ac0d 100%);
+            color: #1a1003;
+            font-size: 0.62rem;
             font-weight: 900;
+            letter-spacing: 0.8px;
             padding: 1px 7px;
-            border-radius: 10px;
-            border: 1px solid #fff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-            z-index: 25;
-            animation: bounceMano 1s infinite alternate;
+            border-radius: 980px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            border: 1px solid #ffffff;
+            z-index: 10;
         }
 
-        @keyframes bounceMano {
-            from { transform: translateY(0); }
-            to { transform: translateY(-3px); }
-        }
-
-        .jugador-box.ganador-lance-halo {
-            box-shadow: 0 0 25px 8px #ffd700, inset 0 0 15px #ffd700;
-            background: rgba(241, 196, 15, 0.25);
+        /* HALO TRIUNFAL DEL LANCE */
+        .player-pod.ganador-lance-halo {
+            filter: drop-shadow(0 0 24px rgba(242, 201, 76, 0.8));
             transform: scale(1.06);
+            z-index: 40;
+        }
+
+        /* BOCADILLOS DE DIÁLOGO */
+        .speech-bubble {
+            position: absolute;
+            background: #ffffff;
+            color: #0d1a13;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            opacity: 0;
+            transform: scale(0.7);
+            transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
             z-index: 50;
         }
 
-        .bocadillo {
-            position: absolute;
-            background: #ffffff;
-            color: #1a1a1a;
-            padding: 3px 10px;
-            border-radius: 14px;
-            font-size: 0.74rem;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            border: 2px solid var(--madera);
-            white-space: nowrap;
-            opacity: 0;
-            transform: scale(0.6);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 30;
-            pointer-events: none;
+        .speech-bubble.activo {
+            opacity: 1;
+            transform: scale(1);
         }
 
-        .bocadillo.activo { opacity: 1; transform: scale(1); }
-        .pos-sur .bocadillo { top: -28px; }
-        .pos-norte .bocadillo { bottom: -28px; }
-        .pos-oeste .bocadillo { top: -25px; }
-        .pos-este .bocadillo { top: -25px; }
+        .pos-sur .speech-bubble { top: -28px; }
+        .pos-norte .speech-bubble { bottom: -28px; }
+        .pos-oeste .speech-bubble { top: -24px; }
+        .pos-este .speech-bubble { top: -24px; }
 
+        /* NOTIFICACIÓN DISCRETA DE SEÑA */
         .notificacion-sena {
             position: absolute;
-            top: -42px;
-            background: #f1c40f;
-            color: #102619;
-            padding: 4px 12px;
-            border-radius: 14px;
-            font-weight: 900;
-            font-size: 0.76rem;
-            border: 2px solid #2b1704;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+            top: -46px;
+            background: rgba(242, 201, 76, 0.95);
+            backdrop-filter: blur(16px);
+            color: #102418;
+            padding: 5px 14px;
+            border-radius: 980px;
+            font-weight: 800;
+            font-size: 0.74rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
             z-index: 60;
-            animation: latido 0.8s infinite alternate;
             display: none;
         }
 
-        .cartel {
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        /* BANDEJAS DE CARTAS */
+        .card-row {
             display: flex;
-            flex-direction: column;
+            gap: 6px;
+            min-height: var(--carta-h);
             align-items: center;
-            line-height: 1.15;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-            min-width: 95px;
         }
 
-        .cartel .sub-pareja {
-            font-size: 0.62rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 1px;
+        .card-row.vertical {
+            transform: scale(0.86);
         }
 
-        .cartel.mi-equipo { background: rgba(14, 46, 26, 0.95); border-color: var(--color-mi-pareja); color: #e5f9ed; }
-        .cartel.mi-equipo .sub-pareja { color: var(--color-mi-pareja); }
-        .cartel.rival-equipo { background: rgba(48, 16, 16, 0.95); border-color: var(--color-rival); color: #fde8e8; }
-        .cartel.rival-equipo .sub-pareja { color: #f1948a; }
-
-        .cartel.activo {
-            box-shadow: 0 0 14px var(--oro);
-            border-color: var(--oro) !important;
-            transform: scale(1.04);
-        }
-
-        .centro-mesa {
-            background: rgba(6, 22, 12, 0.94);
-            border: 3px solid var(--oro);
-            border-radius: 16px;
-            padding: 8px 18px;
-            text-align: center;
-            max-width: 410px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.85);
-        }
-
-        .centro-mesa h3 {
-            font-family: 'Cinzel', serif;
-            color: var(--oro);
-            font-size: 1.05rem;
-            margin-bottom: 3px;
-        }
-
-        .centro-mesa p {
-            font-size: 0.8rem;
-            color: #e6f1ec;
-            min-height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mano { display: flex; gap: 5px; min-height: 88px; align-items: center; }
-        .mano.vertical { transform: scale(0.85); }
-
-        .carta {
-            width: 60px;
-            height: 88px;
-            background: var(--carta-bg);
-            border-radius: 6px;
-            border: 2px solid var(--borde-carta);
+        /* ===== NAIPES: ACABADO MARFIL Y MICRO-RELIEVE ===== */
+        .card {
+            width: var(--carta-w);
+            height: var(--carta-h);
+            background: #ffffff;
+            border-radius: 9px;
+            border: 1px solid rgba(0,0,0,0.22);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 2px 3px;
+            padding: 3px 4px;
             cursor: pointer;
             position: relative;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.45);
-            transition: transform 0.2s ease, border-color 0.16s ease;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
         }
 
-        .carta.revelada-anim {
-            animation: flipCarta 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes flipCarta {
-            0% { transform: rotateY(90deg) scale(0.9); opacity: 0.4; }
-            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
-        }
-
-        .carta::before {
+        .card::after {
             content: "";
             position: absolute;
             inset: 2px;
-            border: 1px solid rgba(44, 26, 14, 0.2);
-            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 6px;
             pointer-events: none;
         }
 
-        .carta:hover { transform: translateY(-6px); box-shadow: 0 8px 14px rgba(0,0,0,0.6); }
-
-        .carta.seleccionada {
-            transform: translateY(-14px);
-            border-color: var(--rojo);
-            outline: 2px solid var(--rojo);
-            box-shadow: 0 10px 18px rgba(231, 76, 60, 0.6);
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
         }
 
-        .carta-corner { display: flex; flex-direction: column; align-items: center; line-height: 1; z-index: 1; }
-        .carta-corner.inf { align-self: flex-end; transform: rotate(180deg); }
-        .carta-num { font-size: 0.9rem; font-weight: 800; }
-        .carta-simbolo-mini { width: 9px; height: 9px; margin-top: 1px; }
+        .card.seleccionada {
+            transform: translateY(-16px);
+            outline: 2px solid var(--accent-gold);
+            box-shadow: 0 14px 28px rgba(242, 201, 76, 0.45);
+        }
 
-        .palo-oros .carta-num { color: #e6a100; }
-        .palo-copas .carta-num { color: var(--rojo); }
-        .palo-espadas .carta-num { color: var(--azul); }
-        .palo-bastos .carta-num { color: #27ae60; }
+        .card.revelada-anim {
+            animation: cardFlip 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
 
-        .carta-centro { display: flex; justify-content: center; align-items: center; flex-grow: 1; z-index: 1; }
-        .carta-centro svg { width: 28px; height: 38px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
+        @keyframes cardFlip {
+            0% { transform: rotateY(90deg) scale(0.85); opacity: 0.3; }
+            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+        }
 
-        .carta-reverso {
-            width: 60px;
-            height: 88px;
-            background: repeating-linear-gradient(45deg, #8e1818, #8e1818 5px, #5a0e0e 5px, #5a0e0e 10px);
-            border: 2px solid #eedcba;
-            border-radius: 6px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.45);
+        .card-corner {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
+            line-height: 1;
+            z-index: 1;
+        }
+        .card-corner.inf {
+            align-self: flex-end;
+            transform: rotate(180deg);
         }
 
-        .carta-reverso-escudo {
+        .card-num {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .card-mini-symbol {
+            width: 10px;
+            height: 10px;
+            margin-top: 1px;
+        }
+
+        .palo-oros .card-num { color: #d48b00; }
+        .palo-copas .card-num { color: #c0392b; }
+        .palo-espadas .card-num { color: #2980b9; }
+        .palo-bastos .card-num { color: #27ae60; }
+
+        .card-center-art {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            z-index: 1;
+        }
+        .card-center-art svg {
             width: 30px;
             height: 42px;
-            border: 2px solid #eedcba;
-            border-radius: 4px;
-            background: rgba(0,0,0,0.35);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+        }
+
+        /* REVERSO DEL NAIPE (GUILLOCHÉ BORGOÑA Y ORO) */
+        .card-back {
+            width: var(--carta-w);
+            height: var(--carta-h);
+            background: 
+                radial-gradient(circle at center, #961b1b 0%, #570909 100%);
+            border: 2px solid #e2d2b4;
+            border-radius: 9px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Cinzel', serif;
-            font-size: 0.75rem;
-            font-weight: 900;
-            color: #eedcba;
+            position: relative;
         }
 
-        .panel-control {
+        .card-back-pattern {
+            width: calc(100% - 6px);
+            height: calc(100% - 6px);
+            border: 1px dashed rgba(226, 210, 180, 0.4);
+            border-radius: 6px;
             display: flex;
-            gap: 8px;
-            margin-top: 4px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-back-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #f5e4c6;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        /* ===== PLACA CENTRAL DE ESTADO (ISLA DE JUEGO) ===== */
+        .table-hub {
+            background: rgba(8, 20, 14, 0.88);
+            backdrop-filter: blur(32px) saturate(200%);
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 10px 22px;
+            text-align: center;
+            max-width: 440px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.65), inset 0 1px 0 var(--glass-highlight);
+        }
+
+        .table-hub h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--accent-gold);
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .table-hub p {
+            font-size: 0.78rem;
+            color: #d8e5de;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.35;
+        }
+
+        /* ===== DOCK DE CONTROLES INFERIOR ===== */
+        .action-dock {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
             flex-wrap: wrap;
             justify-content: center;
-            min-height: 40px;
             align-items: center;
+            min-height: 44px;
         }
 
-        .panel-senas {
+        .btn-action {
+            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%), #1c2b22;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.15);
+        }
+
+        .btn-action:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-action.gold {
+            background: linear-gradient(180deg, #ffd75e 0%, #e5a910 100%);
+            color: #1a1003;
+            border: 1px solid #ffeaa7;
+            box-shadow: 0 6px 20px rgba(242, 201, 76, 0.35);
+        }
+
+        .btn-action.red {
+            background: linear-gradient(180deg, #ff6b6b 0%, #c0392b 100%);
+            border: 1px solid #ff8787;
+            box-shadow: 0 6px 20px rgba(192, 57, 43, 0.35);
+        }
+
+        .btn-action.blue {
+            background: linear-gradient(180deg, #54a0ff 0%, #2980b9 100%);
+            border: 1px solid #74b9ff;
+        }
+
+        .message-blocked {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            padding: 6px 16px;
+            border-radius: 980px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #ff9f95;
+        }
+
+        /* SUB-DOCK DE SEÑAS */
+        .senas-dock {
             display: flex;
             gap: 6px;
-            margin-top: 4px;
-            background: rgba(0,0,0,0.5);
+            margin-top: 6px;
+            background: var(--glass-surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             padding: 4px 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 980px;
         }
 
-        .panel-senas span { font-size: 0.7rem; color: var(--oro); font-weight: bold; align-self: center; }
-
-        button {
-            background: linear-gradient(180deg, #27ae60 0%, #196f3d 100%);
-            color: #fff;
-            border: 1px solid #58d68d;
-            padding: 7px 16px;
-            border-radius: 7px;
+        .senas-dock span {
+            font-size: 0.68rem;
             font-weight: 700;
-            font-size: 0.82rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            transition: all 0.16s ease;
+            letter-spacing: 0.6px;
+            color: var(--accent-gold);
+            align-self: center;
+            margin-right: 2px;
         }
 
-        button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-        button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-        button.rojo { background: linear-gradient(180deg, #c0392b 0%, #78281f 100%); border-color: #ec7063; }
-        button.oro { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border-color: #f9e79f; color: #2b1704; }
-        button.azul { background: linear-gradient(180deg, #2980b9 0%, #1a5276 100%); border-color: #7fb3d5; }
-        button.naranja { background: linear-gradient(180deg, #e67e22 0%, #a04000 100%); border-color: #f5b041; }
-        button.sena-btn { background: #34495e; border-color: #5d6d7e; padding: 4px 8px; font-size: 0.72rem; }
+        .btn-sena {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #e2ede7;
+            padding: 4px 9px;
+            border-radius: 980px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
 
-        .chat-log {
+        .btn-sena:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        /* REGISTRO DE CHAT INTEGRADO */
+        .chat-pane {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
-            width: 200px;
-            height: 90px;
-            background: rgba(0,0,0,0.75);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            padding: 5px;
-            font-size: 0.7rem;
+            bottom: 12px;
+            right: 12px;
+            width: 220px;
+            height: 94px;
+            background: rgba(10, 20, 14, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 6px 10px;
+            font-size: 0.68rem;
             overflow-y: auto;
-            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             z-index: 20;
         }
 
-        @media (max-width: 900px) {
-            .tablero-wrapper { flex-direction: column; }
-            .sidebar-desglose { width: 100%; max-width: 500px; height: 110px; }
-            .mesa { width: 100%; max-width: 500px; height: 380px; }
-            .carta, .carta-reverso { width: 44px; height: 68px; }
-            .carta-num { font-size: 0.75rem; }
-            .carta-centro svg { width: 20px; height: 28px; }
-            .chat-log { display: none; }
+        .chat-pane::-webkit-scrollbar { width: 3px; }
+        .chat-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        /* RESPONSIVE PARA DISPOSITIVOS MÓVILES */
+        @media (max-width: 960px) {
+            .workspace { flex-direction: column; align-items: center; }
+            .desglose-panel { width: 100%; max-width: 600px; height: 110px; }
+            .table-viewport { width: 100%; max-width: 600px; min-height: 390px; }
+            :root { --carta-w: 46px; --carta-h: 70px; }
+            .card-num { font-size: 0.76rem; }
+            .card-center-art svg { width: 20px; height: 30px; }
+            .chat-pane { display: none; }
         }
     </style>
 </head>
 <body>
 
+    <!-- MODAL DE SELECCIÓN DE ASIENTO (ESTILO SHEET MODAL) -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
             <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                 <input type="text" id="inputNombre" placeholder="Tu Apodo..." maxlength="14" style="flex: 2;">
-                <input type="text" id="inputSala" placeholder="Sala (opcional)..." maxlength="12" style="flex: 1;">
+                <input type="text" id="inputSala" placeholder="Sala..." maxlength="12" style="flex: 1;">
             </div>
             
-            <p style="font-size: 0.75rem; color: #bedac8; margin-bottom: 6px;">Selecciona tu silla:</p>
+            <p style="font-size: 0.75rem; color: #a4beaf; margin-bottom: 8px; text-align: left;">Elige tu asiento en la mesa:</p>
             <div class="grid-asientos" id="selectorAsientos"></div>
 
-            <button onclick="confirmarUnion()" class="oro" id="btnEntrar" style="width: 100%; padding: 8px;" disabled>Elige un asiento para sentarte</button>
+            <button onclick="confirmarUnion()" class="btn-action gold" id="btnEntrar" style="width: 100%; padding: 10px;" disabled>Selecciona una silla libre</button>
         </div>
     </div>
 
+    <!-- MODAL ADMINISTRADOR -->
     <div class="overlay-modal" id="modalAdmin" style="display: none;">
-        <div class="modal-box" style="max-width: 360px;">
-            <h2 style="color: #e74c3c;">🔑 RESET ADMIN</h2>
-            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Introduce la clave para resetear la sala:</p>
+        <div class="modal-box" style="max-width: 380px;">
+            <h2 style="color: #ff7675;">Panel Administrador</h2>
+            <p style="font-size: 0.8rem; color: #a4beaf; margin-bottom: 10px;">Introduce la clave maestra para reiniciar la mesa:</p>
             <input type="password" id="inputAdminPass" placeholder="Clave admin..." style="border-color: #e74c3c;">
             <div style="display: flex; gap: 8px; justify-content: center;">
-                <button onclick="ejecutarAdminReset()" class="rojo">Resetear Sala</button>
-                <button onclick="cerrarModalAdmin()" class="azul">Cancelar</button>
+                <button onclick="ejecutarAdminReset()" class="btn-action red">Resetear Mesa</button>
+                <button onclick="cerrarModalAdmin()" class="btn-compact">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <header>
-        <h1>EL MUS DE MARIO</h1>
+    <!-- HEADER / TOOLBAR -->
+    <header class="app-header">
+        <div class="brand-container">
+            <span class="brand-title">EL MUS DE MARIO</span>
+            <span class="brand-badge">Torneo</span>
+        </div>
+
+        <div class="header-actions">
+            <div class="capsule" id="miAsientoTexto">Conectando...</div>
+            <button onclick="socket.emit('rellenarBots')" class="btn-compact">🤖 Rellenar Bots</button>
+            <button onclick="abrirModalAdmin()" class="btn-compact danger">🔑 Admin</button>
+            <div class="capsule" id="codigoSalaTexto" style="color: var(--accent-gold);">Sala: ...</div>
+        </div>
     </header>
 
-    <div class="barra-superior">
-        <div class="info-asiento" id="miAsientoTexto">Conectando...</div>
-        <button onclick="socket.emit('rellenarBots')" class="naranja" style="font-size: 0.75rem; padding: 4px 10px;">🤖 Bots</button>
-        <button onclick="abrirModalAdmin()" style="background: #7f1d1d; border-color: #ef4444; font-size: 0.75rem; padding: 4px 8px;">🔑 Admin</button>
-        <div class="info-asiento" id="codigoSalaTexto" style="font-size: 0.72rem; color: var(--oro);">Sala: ...</div>
+    <!-- MARCADOR PRINCIPAL TIPO WIDGET -->
+    <div class="scoreboard-widget">
+        <div class="team-score team-us">
+            <div class="team-meta">
+                <div class="team-label">🛡️ Tu Pareja</div>
+                <div class="team-tourney" id="chicosNosotros">Chicos: 0 · Vacas: 0</div>
+            </div>
+            <div class="score-num us" id="puntosNosotros">0</div>
+        </div>
+
+        <div class="scoreboard-divider">
+            <span class="scoreboard-target">Objetivo 40</span>
+        </div>
+
+        <div class="team-score team-rival rival">
+            <div class="score-num rival" id="puntosRivales">0</div>
+            <div class="team-meta">
+                <div class="team-label">⚔️ Pareja Rival</div>
+                <div class="team-tourney" id="chicosRivales">Chicos: 0 · Vacas: 0</div>
+            </div>
+        </div>
     </div>
 
-    <div class="marcador-contenedor">
-        <div class="bloque-equipo">
-            <div>🛡️ Tu Pareja</div>
-            <div><span class="pts pts-nosotros" id="puntosNosotros">0</span> / 40</div>
-            <span class="torneo-tag" id="chicosNosotros">Chicos: 0 | Vacas: 0</span>
-        </div>
-        <div style="color: #a4762c; font-size: 1.4rem;">|</div>
-        <div class="bloque-equipo">
-            <div>⚔️ Pareja Rival</div>
-            <div><span class="pts pts-rivales" id="puntosRivales">0</span> / 40</div>
-            <span class="torneo-tag" id="chicosRivales">Chicos: 0 | Vacas: 0</span>
-        </div>
+    <!-- INDICADOR DE ENVIDES / STAKES -->
+    <div class="stakes-bar">
+        <div>Grande: <strong id="bote_grande">Paso (1)</strong></div>
+        <div>Chica: <strong id="bote_chica">Paso (1)</strong></div>
+        <div>Pares: <strong id="bote_pares">-</strong></div>
+        <div>Juego: <strong id="bote_juego">-</strong></div>
     </div>
 
+    <!-- BANNER DE ENLACE DE DECISIÓN TEMPORIZADA -->
     <div class="banner-decision" id="bannerDecision">
-        <div>⏱️ ¡ENVITE! Tu pareja está decidiendo conjuntamente:</div>
+        <div>⏱️ Envite en curso: Tu pareja delibera conjuntamente</div>
         <div class="reloj" id="contadorSegundos">12s</div>
     </div>
 
-    <div class="panel-botes">
-        <div class="item-lance">Grande: <strong id="bote_grande">Paso (1)</strong></div>
-        <div class="item-lance">Chica: <strong id="bote_chica">Paso (1)</strong></div>
-        <div class="item-lance">Pares: <strong id="bote_pares">-</strong></div>
-        <div class="item-lance">Juego: <strong id="bote_juego">-</strong></div>
-    </div>
-
-    <div class="tablero-wrapper">
-        <div class="sidebar-desglose">
-            <h4>📋 DESGLOSE DE PUNTOS</h4>
-            <div class="lista-desglose" id="desgloseLog">
-                <div style="color: #888; text-align: center; margin-top: 15px;">Aún no hay lances puntuados.</div>
+    <!-- WORKSPACE: DESGLOSE LATERAL + MESA DE JUEGO -->
+    <main class="workspace">
+        <aside class="desglose-panel">
+            <div class="desglose-header">
+                <span>Registro de Lances</span>
+                <span style="font-size: 0.65rem; color: var(--accent-gold);">Tanteo</span>
             </div>
-        </div>
+            <div class="desglose-list" id="desgloseLog">
+                <div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>
+            </div>
+        </aside>
 
-        <div class="mesa">
+        <section class="table-viewport">
             <div class="notificacion-sena" id="avisoSenaCompanero">👁️ Seña del Compañero</div>
 
-            <div class="jugador-box pos-norte" id="box_norte">
+            <!-- NORTE: COMPAÑERO -->
+            <div class="player-pod pos-norte" id="box_norte">
                 <div class="badge-mano" id="badge_norte">👑 MANO</div>
-                <div class="bocadillo" id="boc_norte"></div>
-                <div class="cartel mi-equipo" id="lbl_norte">
+                <div class="speech-bubble" id="boc_norte"></div>
+                <div class="player-badge mi-equipo" id="lbl_norte">
                     <span id="nom_norte">Esperando...</span>
-                    <span class="sub-pareja">🤝 Tu Compañero</span>
+                    <span class="sub-role">🤝 Tu Compañero</span>
                 </div>
-                <div class="mano" id="mano_norte"></div>
+                <div class="card-row" id="mano_norte"></div>
             </div>
 
-            <div class="jugador-box pos-oeste" id="box_oeste">
+            <!-- OESTE: RIVAL 1 -->
+            <div class="player-pod pos-oeste" id="box_oeste">
                 <div class="badge-mano" id="badge_oeste">👑 MANO</div>
-                <div class="bocadillo" id="boc_oeste"></div>
-                <div class="cartel rival-equipo" id="lbl_oeste">
+                <div class="speech-bubble" id="boc_oeste"></div>
+                <div class="player-badge rival-equipo" id="lbl_oeste">
                     <span id="nom_oeste">Esperando...</span>
-                    <span class="sub-pareja">⚔️ Rival</span>
+                    <span class="sub-role">⚔️ Rival</span>
                 </div>
-                <div class="mano vertical" id="mano_oeste"></div>
+                <div class="card-row vertical" id="mano_oeste"></div>
             </div>
 
-            <div class="pos-centro centro-mesa" id="boxCentro">
-                <h3 id="faseTxt">SALA DE ESPERA</h3>
-                <p id="msgTxt">Conectando 4 jugadores o pulsa en Bots.</p>
+            <!-- CENTRO DE MESA: ISLA DE INFORMACIÓN -->
+            <div class="table-hub pos-centro" id="boxCentro">
+                <h3 id="faseTxt">MESA PREPARADA</h3>
+                <p id="msgTxt">Conectando los 4 jugadores para iniciar la mano.</p>
             </div>
 
-            <div class="jugador-box pos-este" id="box_este">
+            <!-- ESTE: RIVAL 2 -->
+            <div class="player-pod pos-este" id="box_este">
                 <div class="badge-mano" id="badge_este">👑 MANO</div>
-                <div class="bocadillo" id="boc_este"></div>
-                <div class="cartel rival-equipo" id="lbl_este">
+                <div class="speech-bubble" id="boc_este"></div>
+                <div class="player-badge rival-equipo" id="lbl_este">
                     <span id="nom_este">Esperando...</span>
-                    <span class="sub-pareja">⚔️ Rival</span>
+                    <span class="sub-role">⚔️ Rival</span>
                 </div>
-                <div class="mano vertical" id="mano_este"></div>
+                <div class="card-row vertical" id="mano_este"></div>
             </div>
 
-            <div class="jugador-box pos-sur" id="box_sur">
+            <!-- SUR: TÚ -->
+            <div class="player-pod pos-sur" id="box_sur">
                 <div class="badge-mano" id="badge_sur">👑 MANO</div>
-                <div class="bocadillo" id="boc_sur"></div>
-                <div class="mano" id="miMano"></div>
-                <div class="cartel mi-equipo activo" id="lbl_sur">
+                <div class="speech-bubble" id="boc_sur"></div>
+                <div class="card-row" id="miMano"></div>
+                <div class="player-badge mi-equipo activo" id="lbl_sur">
                     <span id="nom_sur">Tú</span>
-                    <span class="sub-pareja">👤 Tu Asiento</span>
+                    <span class="sub-role">👤 Tu Asiento</span>
                 </div>
             </div>
 
-            <div class="chat-log" id="chatLog"></div>
-        </div>
-    </div>
+            <div class="chat-pane" id="chatLog"></div>
+        </section>
+    </main>
 
-    <div class="panel-control" id="botonesAccion"></div>
+    <!-- DOCK PRINCIPAL DE CONTROLES -->
+    <div class="action-dock" id="botonesAccion"></div>
 
-    <div class="panel-senas">
-        <span>🤫 SEÑAS A TU COMPAÑERO:</span>
-        <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="sena-btn" title="2 Reyes">👄 2 Reyes</button>
-        <button onclick="enviarSenaSecreta('2 Ases (Lengua)')" class="sena-btn" title="2 Ases">👅 2 Ases</button>
-        <button onclick="enviarSenaSecreta('Medias (Boca de lado)')" class="sena-btn" title="Medias">🥴 Medias</button>
-        <button onclick="enviarSenaSecreta('Duples (Cejas)')" class="sena-btn" title="Duples">🤨 Duples</button>
-        <button onclick="enviarSenaSecreta('31 La Una (Guiño)')" class="sena-btn" title="31">😉 31</button>
-        <button onclick="enviarSenaSecreta('Ciego / Nada')" class="sena-btn" title="Nada">🙈 Nada</button>
-    </div>
+    <!-- DOCK SECUNDARIO DE SEÑAS TRADICIONALES -->
+    <nav class="senas-dock">
+        <span>SEÑAS:</span>
+        <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="btn-sena" title="2 Reyes">👄 2 Reyes</button>
+        <button onclick="enviarSenaSecreta('2 Ases (Lengua)')" class="btn-sena" title="2 Ases">👅 2 Ases</button>
+        <button onclick="enviarSenaSecreta('Medias (Boca de lado)')" class="btn-sena" title="Medias">🥴 Medias</button>
+        <button onclick="enviarSenaSecreta('Duples (Cejas)')" class="btn-sena" title="Duples">🤨 Duples</button>
+        <button onclick="enviarSenaSecreta('31 La Una (Guiño)')" class="btn-sena" title="31">😉 31</button>
+        <button onclick="enviarSenaSecreta('Ciego / Nada')" class="btn-sena" title="Nada">🙈 Ciego</button>
+    </nav>
 
     <script>
         const socket = io();
@@ -782,9 +1028,9 @@
                 div.className = `asiento-card ${a.pareja === 0 ? 'p1' : 'p2'} ${a.ocupado ? 'ocupado' : ''}`;
                 if (asientoElegidoTemporal === a.id && !a.ocupado) div.classList.add('seleccionado');
                 div.innerHTML = `
-                    <div style="font-weight:bold; font-size:0.82rem;">${a.nombreDef}</div>
+                    <div style="font-weight:700; font-size:0.8rem;">${a.nombreDef}</div>
                     <div class="tag-p">Pareja ${a.pareja + 1}</div>
-                    <div style="font-size:0.72rem; color:#aaa;">${a.ocupado ? `👤 \${a.ocupante}` : '🟢 Libre'}</div>
+                    <div style="font-size:0.7rem; color:#8ba396;">${a.ocupado ? `👤 \${a.ocupante}` : '🟢 Libre'}</div>
                 `;
                 if (!a.ocupado) {
                     div.onclick = () => {
@@ -793,7 +1039,7 @@
                         asientoElegidoTemporal = a.id;
                         const btn = document.getElementById('btnEntrar');
                         btn.disabled = false;
-                        btn.innerText = `Sentarse en ${a.nombreDef}`;
+                        btn.innerText = `Ocupar ${a.nombreDef}`;
                     };
                 }
                 grid.appendChild(div);
@@ -820,7 +1066,7 @@
             document.getElementById('modalInicio').style.display = 'none';
             document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
             const parejaNum = info.pareja + 1;
-            document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
+            document.getElementById('miAsientoTexto').innerHTML = `Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
             socket.emit('pedirMisCartas');
         });
 
@@ -888,7 +1134,7 @@
             else if (asientoGanador === (yo + 1) % 4) targetBox = 'box_oeste';
             else if (asientoGanador === (yo + 3) % 4) targetBox = 'box_este';
 
-            document.querySelectorAll('.jugador-box').forEach(el => el.classList.remove('ganador-lance-halo'));
+            document.querySelectorAll('.player-pod').forEach(el => el.classList.remove('ganador-lance-halo'));
             const elGanador = document.getElementById(targetBox);
             if (elGanador) {
                 elGanador.classList.add('ganador-lance-halo');
@@ -899,7 +1145,7 @@
         socket.on('victoriaChico', ({ mensaje, chicosGanados, vacasGanadas }) => {
             actualizarPuntuacionesPersonalizadas({ 0: 0, 1: 0 }, chicosGanados, vacasGanadas);
             alert(mensaje);
-            document.getElementById('desgloseLog').innerHTML = `<div style="color: #888; text-align: center; margin-top: 15px;">Nuevo Chico comenzado.</div>`;
+            document.getElementById('desgloseLog').innerHTML = `<div style="color: #63776d; text-align: center; margin-top: 18px; font-size: 0.72rem;">Nuevo Chico comenzado.</div>`;
         });
 
         socket.on('estadoJuego', (estado) => {
@@ -948,19 +1194,19 @@
                 const rivalPareja = miPareja === 0 ? 1 : 0;
                 document.getElementById('puntosNosotros').innerText = puntos[miPareja];
                 document.getElementById('puntosRivales').innerText = puntos[rivalPareja];
-                document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[miPareja]} | Vacas: ${vG[miPareja]}`;
-                document.getElementById('chicosRivales').innerText = `Chicos: ${cG[rivalPareja]} | Vacas: ${vG[rivalPareja]}`;
+                document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[miPareja]} · Vacas: ${vG[miPareja]}`;
+                document.getElementById('chicosRivales').innerText = `Chicos: ${cG[rivalPareja]} · Vacas: ${vG[rivalPareja]}`;
             } else {
                 document.getElementById('puntosNosotros').innerText = puntos[0];
                 document.getElementById('puntosRivales').innerText = puntos[1];
-                document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[0]} | Vacas: ${vG[0]}`;
-                document.getElementById('chicosRivales').innerText = `Chicos: ${cG[1]} | Vacas: ${vG[1]}`;
+                document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[0]} · Vacas: ${vG[0]}`;
+                document.getElementById('chicosRivales').innerText = `Chicos: ${cG[1]} · Vacas: ${vG[1]}`;
             }
         }
 
         function actualizarTablaDesgloseLateral(lance, parejaGanadora, items) {
             const contenedor = document.getElementById('desgloseLog');
-            if (contenedor.children.length === 1 && contenedor.children[0].innerText.includes('Aún no hay')) {
+            if (contenedor.children.length === 1 && contenedor.children[0].innerText.includes('Sin lances')) {
                 contenedor.innerHTML = '';
             }
 
@@ -976,10 +1222,10 @@
             }
 
             const card = document.createElement('div');
-            card.className = `item-desglose ${colorClase}`;
+            card.className = `desglose-card ${colorClase}`;
             card.innerHTML = `
-                <div class="titulo-item">${lance} (Pareja ${parejaGanadora + 1})</div>
-                <div class="detalle-item">${itemsHTML}</div>
+                <div class="desglose-title">${lance} (Pareja ${parejaGanadora + 1})</div>
+                <div class="desglose-detail">${itemsHTML}</div>
             `;
             contenedor.prepend(card);
         }
@@ -989,21 +1235,21 @@
             const formato = (info) => {
                 if (info.resueltoEnFalso) return "Para ti (+1)";
                 if (info.querido) return `Aceptado (${info.puntos} pts)`;
-                if (info.enPaso) return "En paso (1 pt)";
+                if (info.enPaso) return "Paso (1 pt)";
                 return "-";
             };
             document.getElementById('bote_grande').innerText = formato(lances.grande);
             document.getElementById('bote_chica').innerText = formato(lances.chica);
             document.getElementById('bote_pares').innerText = lances.pares.hayPares ? formato(lances.pares) : "Sin pares";
-            document.getElementById('bote_juego').innerText = lances.juego.esAlPunto ? `Al punto (${formato(lances.juego)})` : formato(lances.juego);
+            document.getElementById('bote_juego').innerText = lances.juego.esAlPunto ? `Punto (${formato(lances.juego)})` : formato(lances.juego);
         }
 
         function generarCartaHTML(c, conAnim = false) {
             return `
-                <div class="carta palo-${c.palo} ${conAnim ? 'revelada-anim' : ''}">
-                    <div class="carta-corner"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
-                    <div class="carta-centro">${svgPalos[c.palo]}</div>
-                    <div class="carta-corner inf"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
+                <div class="card palo-${c.palo} ${conAnim ? 'revelada-anim' : ''}">
+                    <div class="card-corner"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
+                    <div class="card-center-art">${svgPalos[c.palo]}</div>
+                    <div class="card-corner inf"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
                 </div>
             `;
         }
@@ -1014,11 +1260,11 @@
             cont.innerHTML = '';
             misCartas.forEach((c) => {
                 const div = document.createElement('div');
-                div.className = `carta palo-${c.palo} ${c.seleccionada ? 'seleccionada' : ''}`;
+                div.className = `card palo-${c.palo} ${c.seleccionada ? 'seleccionada' : ''}`;
                 div.innerHTML = `
-                    <div class="carta-corner"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
-                    <div class="carta-centro">${svgPalos[c.palo]}</div>
-                    <div class="carta-corner inf"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
+                    <div class="card-corner"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
+                    <div class="card-center-art">${svgPalos[c.palo]}</div>
+                    <div class="card-corner inf"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
                 `;
                 div.onclick = () => {
                     if (estadoActual.fase === 'descartes') {
@@ -1035,10 +1281,16 @@
             huecos.forEach(id => {
                 const el = document.getElementById(id);
                 if (!mostrar) { el.innerHTML = ''; return; }
-                if (el.children.length === 0 || !el.querySelector('.carta-reverso')) {
+                if (el.children.length === 0 || !el.querySelector('.card-back')) {
                     el.innerHTML = '';
                     for (let i = 0; i < 4; i++) {
-                        el.innerHTML += `<div class="carta-reverso"><div class="carta-reverso-escudo">MUS</div></div>`;
+                        el.innerHTML += `
+                            <div class="card-back">
+                                <div class="card-back-pattern">
+                                    <div class="card-back-logo">MUS</div>
+                                </div>
+                            </div>
+                        `;
                     }
                 }
             });
@@ -1099,14 +1351,14 @@
             if (boc) {
                 boc.innerText = texto;
                 boc.classList.add('activo');
-                setTimeout(() => boc.classList.remove('activo'), 1800);
+                setTimeout(() => boc.classList.remove('activo'), 1900);
             }
         }
 
         function emitirAccionVisual(tipo, cantidad) {
             socket.emit('accionLance', { tipo, cantidad });
             const panel = document.getElementById('botonesAccion');
-            panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f; padding:6px;">✔️ Enviaremos tu voto: <strong>${tipo.toUpperCase()}</strong>...</div>`;
+            panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Emitiendo jugada: <strong>${tipo.toUpperCase()}</strong>...</div>`;
         }
 
         function actualizarControles() {
@@ -1117,22 +1369,22 @@
 
             if ((estadoActual.fase === 'declaracion_pares' || estadoActual.fase === 'declaracion_juego') && estadoActual.turno === miAsiento) {
                 panel.innerHTML = `
-                    <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="oro">¡SÍ llevo!</button>
-                    <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="rojo">NO llevo</button>
+                    <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="btn-action gold">¡Sí Llevo!</button>
+                    <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="btn-action red">No Llevo</button>
                 `;
                 return;
             }
 
             if (estadoActual.fase === 'mus' && estadoActual.turno === miAsiento) {
                 panel.innerHTML = `
-                    <button onclick="socket.emit('votoMus', { quiereMus: true })" class="oro">¡Mus!</button>
-                    <button onclick="socket.emit('votoMus', { quiereMus: false })" class="rojo">Cortar Mus</button>
+                    <button onclick="socket.emit('votoMus', { quiereMus: true })" class="btn-action gold">¡Mus!</button>
+                    <button onclick="socket.emit('votoMus', { quiereMus: false })" class="btn-action red">Cortar Mus</button>
                 `;
                 return;
             }
 
             if (estadoActual.fase === 'descartes') {
-                panel.innerHTML = `<button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>`;
+                panel.innerHTML = `<button onclick="confirmarDescartes()" class="btn-action gold">Descartar y Reponer</button>`;
                 return;
             }
 
@@ -1140,21 +1392,21 @@
                 const puedeHablar = estadoActual.permisosHabla && estadoActual.permisosHabla[miAsiento];
                 if (!puedeHablar) {
                     const motivo = estadoActual.fase === 'pares' ? 'No tienes pares' : 'No tienes juego';
-                    panel.innerHTML = `<div class="mensaje-bloqueo-lance">🔒 ${motivo}: no puedes hablar. Habla tu compañero.</div>`;
+                    panel.innerHTML = `<div class="message-blocked">🔒 ${motivo}: turno de tu compañero.</div>`;
                     return;
                 }
 
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
-                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f; padding:6px;">✔️ Has votado: <strong>${yaVoto.tipo.toUpperCase()}</strong>. Esperando decisión...</div>`;
+                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Votado: <strong>${yaVoto.tipo.toUpperCase()}</strong>. Esperando resolución...</div>`;
                     } else {
                         panel.innerHTML = `
-                            <button onclick="emitirAccionVisual('quiero')" class="oro">¡Quiero!</button>
-                            <button onclick="emitirAccionVisual('noquiero')" class="rojo">No quiero (Para ti)</button>
-                            <button onclick="emitirAccionVisual('envidar', 2)" class="azul">2 más</button>
-                            <button onclick="emitirAccionVisual('envidar', 5)" class="azul">5 más</button>
-                            <button onclick="emitirAccionVisual('ordago')" class="rojo">¡Órdago!</button>
+                            <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">¡Quiero!</button>
+                            <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">No quiero</button>
+                            <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más</button>
+                            <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más</button>
+                            <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡Órdago!</button>
                         `;
                     }
                     return;
@@ -1162,10 +1414,10 @@
 
                 if ((!estadoActual.decisionPareja || !estadoActual.decisionPareja.activa) && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
-                        <button onclick="emitirAccionVisual('paso')" class="rojo">Paso</button>
-                        <button onclick="emitirAccionVisual('envidar', 2)" class="oro">Envido 2</button>
-                        <button onclick="emitirAccionVisual('envidar', 5)" class="azul">Envido 5</button>
-                        <button onclick="emitirAccionVisual('ordago')" class="rojo">¡Órdago!</button>
+                        <button onclick="emitirAccionVisual('paso')" class="btn-action red">Paso</button>
+                        <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action gold">Envido 2</button>
+                        <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">Envido 5</button>
+                        <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡Órdago!</button>
                     `;
                     return;
                 }
@@ -1175,7 +1427,7 @@
                 const nombreTurno = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[estadoActual.turno])
                     ? estadoActual.jugadoresEnMesa[estadoActual.turno].nombre
                     : `Asiento ${estadoActual.turno + 1}`;
-                panel.innerHTML = `<div style="font-size:0.82rem; color:#f1c40f;">⏳ Turno de <strong>${nombreTurno}</strong>: pensando jugada...</div>`;
+                panel.innerHTML = `<div style="font-size:0.8rem; color:#8fa599; font-weight:600;">⏳ Turno de <strong>${nombreTurno}</strong>: deliberando...</div>`;
             }
         }
 
