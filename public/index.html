@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>El Mus de Mario - Online</title>
+    <title>El Mus de Mario - Mesa de Juego</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -648,7 +648,7 @@
 
     <div class="banner-decision" id="bannerDecision">
         <div>⏱️ ¡ENVITE! Tu pareja está decidiendo conjuntamente:</div>
-        <div class="reloj" id="contadorSegundos">10s</div>
+        <div class="reloj" id="contadorSegundos">12s</div>
     </div>
 
     <div class="panel-botes">
@@ -1103,7 +1103,6 @@
             }
         }
 
-        // RESPUESTA VISUAL INMEDIATA AL PULSAR LOS BOTONES
         function emitirAccionVisual(tipo, cantidad) {
             socket.emit('accionLance', { tipo, cantidad });
             const panel = document.getElementById('botonesAccion');
@@ -1145,7 +1144,6 @@
                     return;
                 }
 
-                // SI LA PAREJA ESTÁ VOTANDO
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
@@ -1162,7 +1160,6 @@
                     return;
                 }
 
-                // APERTURA DEL TURNO
                 if ((!estadoActual.decisionPareja || !estadoActual.decisionPareja.activa) && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
                         <button onclick="emitirAccionVisual('paso')" class="rojo">Paso</button>
@@ -1178,7 +1175,7 @@
                 const nombreTurno = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[estadoActual.turno])
                     ? estadoActual.jugadoresEnMesa[estadoActual.turno].nombre
                     : `Asiento ${estadoActual.turno + 1}`;
-                panel.innerHTML = `<div style="font-size:0.82rem; color:#f1c40f;">⏳ Turno de <strong>${nombreTurno}</strong>: esperando jugada...</div>`;
+                panel.innerHTML = `<div style="font-size:0.82rem; color:#f1c40f;">⏳ Turno de <strong>${nombreTurno}</strong>: pensando jugada...</div>`;
             }
         }
 
