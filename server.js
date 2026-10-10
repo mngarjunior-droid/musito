@@ -6,7 +6,9 @@ const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
 const publicDir = fs.existsSync(path.join(__dirname, 'public')) ? path.join(__dirname, 'public') : __dirname;
 app.use(express.static(publicDir));
@@ -179,6 +181,12 @@ function emitirActualizacionAsientos(sala) {
   io.to(sala.id).emit('asientosEstado', obtenerEstadoAsientos(sala));
 }
 
+function enviarCartasAJugador(sala, j) {
+  if (!j.esBot && j.socketId) {
+    io.to(j.socketId).emit('misCartas', sala.manos[j.asiento] || []);
+  }
+}
+
 function iniciarMano(sala) {
   limpiarTimersBots(sala);
   limpiarTimerDecision(sala);
@@ -240,10 +248,7 @@ function notificarEstado(sala, msg, forzarRevelado = false) {
   });
 
   for (let token in sala.jugadoresPorToken) {
-    const j = sala.jugadoresPorToken[token];
-    if (!j.esBot && j.socketId) {
-      io.to(j.socketId).emit('misCartas', sala.manos[j.asiento] || []);
-    }
+    enviarCartasAJugador(sala, sala.jugadoresPorToken[token]);
   }
 }
 
@@ -491,7 +496,7 @@ function finalizarDecisionPareja(sala, porTiempo) {
     decisionFinal = { tipo: 'quiero' };
   }
 
-  // RESOLUCIÓN INMEDIATA SOLO SI SE ACEPTA UN ÓRDAGO
+  // Si se acepta un Órdago, se interrumpe y se destapan todas las cartas
   if (esOrdagoActivo && decisionFinal.tipo === 'quiero') {
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: "¡QUIERO EL ÓRDAGO!" });
     resolverOrdagoInmediato(sala, sala.fase);
@@ -519,7 +524,6 @@ function finalizarDecisionPareja(sala, porTiempo) {
     notificarEstado(sala, `¡Envite de ${sala.apuestasLances[sala.fase].puntos} pts aceptado! Se cobrará en el recuento.`);
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   } else {
-    // ÓRDAGO O ENVIDE RECHAZADO: Sumar puntos normalmente y continuar la partida
     io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: `Pareja ${pareja + 1}`, texto: porTiempo ? "Tiempo: No quiero (Para ti)" : "No quiero (Para ti)" });
     let ptsGanados = 1;
     if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
@@ -529,7 +533,6 @@ function finalizarDecisionPareja(sala, porTiempo) {
     sala.apuestasLances[sala.fase].resueltoEnFalso = true;
     notificarEstado(sala, `Rechazado. +${ptsGanados} punto(s) para Pareja ${sala.apuestaActual.ultimoApostador + 1}.`);
 
-    // Solo termina si al sumar ese punto llegan realmente a 40
     if (comprobarVictoriaChico(sala)) return;
     setTimeout(() => avanzarSiguienteLance(sala), 1600);
   }
@@ -615,7 +618,6 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
   const mano = sala.manos[asiento];
   const esMano = tieneManoRelativa(asiento, sala);
 
-  // RESPUESTA DE BOTS A UN ÓRDAGO: PRUDENCIA TOTAL
   if (apuestaActual.ordago) {
     if (lance === 'grande') {
       const reyes = mano.filter(c => c.valorMus === 12).length;
@@ -653,7 +655,6 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
     return { tipo: 'noquiero' };
   }
 
-  // RESPUESTA DE BOTS A ENVIDES ORDINARIOS
   let fuerza = 0;
   if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
   else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
@@ -766,7 +767,7 @@ function ejecutarRecuentoFinalMano(sala) {
           setTimeout(() => {
             sala.asientoMano = (sala.asientoMano + 1) % 4;
             const nuevoMano = Object.values(sala.jugadoresPorToken).find(p => p.asiento === sala.asientoMano);
-            notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento \${sala.asientoMano + 1}`}.`);
+            notificarEstado(sala, `Mano terminada. Pasa la mano a: ${nuevoMano?.nombre || `Asiento ${sala.asientoMano + 1}`}.`);
             setTimeout(() => iniciarMano(sala), 3000);
           }, 3500);
         }, 3500);
@@ -779,9 +780,6 @@ function resolverLanceEnRecuento(sala, lance) {
   const info = sala.apuestasLances[lance];
   let ptsEnvite = info.puntos;
 
-  // Si el lance fue rechazado (no querido):
-  // En Grande y Chica ya no queda nada que cobrar.
-  // En Pares y Juego, el envite ya se cobró, pero los tantos propios de pares o juego sí se cobran de ley.
   if (info.resueltoEnFalso) {
     if (lance === 'grande' || lance === 'chica') return false;
     ptsEnvite = 0;
@@ -948,8 +946,6 @@ function evaluarGanadorLanceDetalle(sala, lance) {
   }
 }
 
-// CORRECCIÓN CRÍTICA: Solo se fuerza victoria si es Órdago aceptado (esOrdago=true).
-// En cualquier otro caso, es obligatorio tener 40 o más puntos.
 function comprobarVictoriaChico(sala, ganadorForzado = null, motivo = "", esOrdago = false) {
   let ganador = null;
   if (esOrdago && ganadorForzado !== null) {
@@ -1031,11 +1027,19 @@ io.on('connection', (socket) => {
         socket.emit('misCartas', sala.manos[j.asiento] || []);
       }
       emitirActualizacionAsientos(sala);
-      notificarEstado(sala, `${j.nombre} se ha reconectado a la partida.`);
+      notificarEstado(sala, `${j.nombre} reconectado a la partida.`);
       return;
     }
 
     socket.emit('asientosEstado', obtenerEstadoAsientos(sala));
+  });
+
+  socket.on('pedirMisCartas', () => {
+    const sala = obtenerOCrearSala(miSalaId);
+    if (miToken && sala.jugadoresPorToken[miToken]) {
+      const j = sala.jugadoresPorToken[miToken];
+      socket.emit('misCartas', sala.manos[j.asiento] || []);
+    }
   });
 
   socket.on('unirseAsiento', ({ nombre, asientoElegido, salaId, token }) => {
@@ -1061,6 +1065,10 @@ io.on('connection', (socket) => {
     };
 
     socket.emit('asientoAsignado', { asiento: asientoElegido, info: sala.jugadoresPorToken[miToken], salaId: sId });
+    if (sala.enPartida) {
+      socket.emit('misCartas', sala.manos[asientoElegido] || []);
+    }
+
     emitirActualizacionAsientos(sala);
     notificarEstado(sala, `${nombreFinal} se sentó en ${aInfo.nombreDef}.`);
 
@@ -1198,7 +1206,7 @@ io.on('connection', (socket) => {
     const sala = salas[miSalaId];
     if (sala && miToken && sala.jugadoresPorToken[miToken]) {
       sala.jugadoresPorToken[miToken].socketId = null;
-      notificarEstado(sala, `${sala.jugadoresPorToken[miToken].nombre} se ha desconectado momentáneamente.`);
+      notificarEstado(sala, `${sala.jugadoresPorToken[miToken].nombre} desconectado temporalmente.`);
     }
   });
 });
