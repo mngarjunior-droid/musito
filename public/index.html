@@ -17,14 +17,13 @@
             --rail-inner: #321f12;
             
             --accent-gold: #f2c94c;
-            --accent-gold-soft: rgba(242, 201, 76, 0.15);
             --team-us: #2ecc71;
             --team-us-glow: rgba(46, 204, 113, 0.35);
             --team-rival: #e74c3c;
             --team-rival-glow: rgba(231, 76, 60, 0.35);
             
-            --glass-surface: rgba(14, 26, 19, 0.72);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-surface: rgba(14, 26, 19, 0.82);
+            --glass-border: rgba(255, 255, 255, 0.1);
             --glass-highlight: rgba(255, 255, 255, 0.16);
 
             --carta-w: 64px;
@@ -56,7 +55,111 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== NAVEGACIÓN SUPERIOR ESTILO APPLE DOCK / TOOLBAR ===== */
+        /* ===== MODAL DE ENTRADA FIJO, CENTRADO Y FLOTANTE ===== */
+        .overlay-modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(3, 8, 5, 0.88) !important;
+            backdrop-filter: blur(28px) saturate(190%) !important;
+            -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            z-index: 99999 !important;
+        }
+
+        .modal-box {
+            background: rgba(14, 28, 20, 0.95);
+            border: 1px solid rgba(242, 201, 76, 0.35);
+            border-radius: 24px;
+            padding: 24px 28px;
+            max-width: 460px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-box h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--accent-gold);
+            font-size: 1.45rem;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+
+        .modal-inputs-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .modal-box input {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .modal-box input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        /* GRID DE 4 ASIENTOS SELECCIONABLES */
+        .grid-asientos {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .asiento-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            text-align: center;
+        }
+
+        .asiento-card:hover:not(.ocupado) {
+            border-color: var(--accent-gold);
+            background: rgba(242, 201, 76, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .asiento-card.seleccionado {
+            border-color: var(--accent-gold) !important;
+            background: rgba(242, 201, 76, 0.18) !important;
+            box-shadow: 0 0 16px rgba(242, 201, 76, 0.35);
+        }
+
+        .asiento-card.ocupado {
+            opacity: 0.35;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .asiento-card .tag-p {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .asiento-card.p1 .tag-p { color: var(--team-us); }
+        .asiento-card.p2 .tag-p { color: var(--team-rival); }
+
+        /* ===== TOOLBAR SUPERIOR ===== */
         .app-header {
             width: 100%;
             max-width: 1220px;
@@ -144,11 +247,8 @@
             border-color: rgba(231, 76, 60, 0.35);
             color: #ff8b80;
         }
-        .btn-compact.danger:hover {
-            background: rgba(231, 76, 60, 0.25);
-        }
 
-        /* ===== MARCADOR CENTRAL DE ALTA FIDELIDAD ===== */
+        /* ===== MARCADOR WIDGET ===== */
         .scoreboard-widget {
             display: flex;
             align-items: center;
@@ -169,12 +269,8 @@
             gap: 12px;
         }
 
-        .team-meta {
-            text-align: left;
-        }
-        .team-score.rival .team-meta {
-            text-align: right;
-        }
+        .team-meta { text-align: left; }
+        .team-score.rival .team-meta { text-align: right; }
 
         .team-label {
             font-size: 0.72rem;
@@ -196,21 +292,11 @@
         }
 
         .score-num {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             font-size: 1.7rem;
             font-weight: 800;
             letter-spacing: -0.5px;
             line-height: 1;
-        }
-
-        .score-num.us {
             color: #ffffff;
-            text-shadow: 0 0 18px var(--team-us-glow);
-        }
-
-        .score-num.rival {
-            color: #ffffff;
-            text-shadow: 0 0 18px var(--team-rival-glow);
         }
 
         .scoreboard-divider {
@@ -230,7 +316,6 @@
             text-transform: uppercase;
         }
 
-        /* BARRA DE BOTES Y ESTADO DE LANCES */
         .stakes-bar {
             display: flex;
             gap: 12px;
@@ -244,7 +329,6 @@
         }
         .stakes-bar strong { color: #f2f5f3; font-weight: 600; }
 
-        /* BANNER DE DECISIÓN TEMPORIZADA */
         .banner-decision {
             display: none;
             width: 100%;
@@ -270,7 +354,6 @@
         }
 
         .banner-decision .reloj {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             font-weight: 800;
             background: rgba(0, 0, 0, 0.35);
             padding: 2px 10px;
@@ -278,7 +361,7 @@
             color: var(--accent-gold);
         }
 
-        /* ===== CONTENEDOR PRINCIPAL: SIDEBAR + MESA ===== */
+        /* ===== CONTENEDOR WORKSPACE: DESGLOSE + MESA ===== */
         .workspace {
             display: flex;
             gap: 16px;
@@ -289,7 +372,6 @@
             flex: 1;
         }
 
-        /* SIDEBAR DESGLOSE (ESTILO SHEET TRANSLÚCIDO) */
         .desglose-panel {
             width: 240px;
             background: var(--glass-surface);
@@ -341,18 +423,10 @@
         .desglose-card.verde { border-left-color: var(--team-us); }
         .desglose-card.rojo { border-left-color: var(--team-rival); }
 
-        .desglose-title {
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 2px;
-        }
+        .desglose-title { font-weight: 700; color: #ffffff; margin-bottom: 2px; }
+        .desglose-detail { color: #b0c0b7; font-size: 0.68rem; }
 
-        .desglose-detail {
-            color: #b0c0b7;
-            font-size: 0.68rem;
-        }
-
-        /* ===== MESA OVALADA (CRAFTING PREMIUM DE CASINO) ===== */
+        /* ===== MESA DE CASINO ===== */
         .table-viewport {
             position: relative;
             flex: 1;
@@ -384,7 +458,6 @@
         .pos-este { grid-area: este; }
         .pos-centro { grid-area: centro; }
 
-        /* POD DEL JUGADOR */
         .player-pod {
             position: relative;
             display: flex;
@@ -413,14 +486,10 @@
             transition: all 0.25s ease;
         }
 
-        .player-badge.mi-equipo {
-            border-color: rgba(46, 204, 113, 0.45);
-        }
+        .player-badge.mi-equipo { border-color: rgba(46, 204, 113, 0.45); }
         .player-badge.mi-equipo .sub-role { color: var(--team-us); }
 
-        .player-badge.rival-equipo {
-            border-color: rgba(231, 76, 60, 0.45);
-        }
+        .player-badge.rival-equipo { border-color: rgba(231, 76, 60, 0.45); }
         .player-badge.rival-equipo .sub-role { color: #f1948a; }
 
         .player-badge .sub-role {
@@ -436,7 +505,6 @@
             transform: scale(1.05);
         }
 
-        /* INSIGNIA EXCLUSIVA DE LA MANO */
         .badge-mano {
             display: none;
             position: absolute;
@@ -453,14 +521,12 @@
             z-index: 10;
         }
 
-        /* HALO TRIUNFAL DEL LANCE */
         .player-pod.ganador-lance-halo {
             filter: drop-shadow(0 0 24px rgba(242, 201, 76, 0.8));
             transform: scale(1.06);
             z-index: 40;
         }
 
-        /* BOCADILLOS DE DIÁLOGO */
         .speech-bubble {
             position: absolute;
             background: #ffffff;
@@ -478,17 +544,12 @@
             z-index: 50;
         }
 
-        .speech-bubble.activo {
-            opacity: 1;
-            transform: scale(1);
-        }
-
+        .speech-bubble.activo { opacity: 1; transform: scale(1); }
         .pos-sur .speech-bubble { top: -28px; }
         .pos-norte .speech-bubble { bottom: -28px; }
         .pos-oeste .speech-bubble { top: -24px; }
         .pos-este .speech-bubble { top: -24px; }
 
-        /* NOTIFICACIÓN DISCRETA DE SEÑA */
         .notificacion-sena {
             position: absolute;
             top: -46px;
@@ -504,7 +565,6 @@
             display: none;
         }
 
-        /* BANDEJAS DE CARTAS */
         .card-row {
             display: flex;
             gap: 6px;
@@ -512,11 +572,9 @@
             align-items: center;
         }
 
-        .card-row.vertical {
-            transform: scale(0.86);
-        }
+        .card-row.vertical { transform: scale(0.86); }
 
-        /* ===== NAIPES: ACABADO MARFIL Y MICRO-RELIEVE ===== */
+        /* NAIPES */
         .card {
             width: var(--carta-w);
             height: var(--carta-h);
@@ -569,21 +627,9 @@
             line-height: 1;
             z-index: 1;
         }
-        .card-corner.inf {
-            align-self: flex-end;
-            transform: rotate(180deg);
-        }
-
-        .card-num {
-            font-size: 0.95rem;
-            font-weight: 800;
-        }
-
-        .card-mini-symbol {
-            width: 10px;
-            height: 10px;
-            margin-top: 1px;
-        }
+        .card-corner.inf { align-self: flex-end; transform: rotate(180deg); }
+        .card-num { font-size: 0.95rem; font-weight: 800; }
+        .card-mini-symbol { width: 10px; height: 10px; margin-top: 1px; }
 
         .palo-oros .card-num { color: #d48b00; }
         .palo-copas .card-num { color: #c0392b; }
@@ -603,12 +649,10 @@
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
         }
 
-        /* REVERSO DEL NAIPE (GUILLOCHÉ BORGOÑA Y ORO) */
         .card-back {
             width: var(--carta-w);
             height: var(--carta-h);
-            background: 
-                radial-gradient(circle at center, #961b1b 0%, #570909 100%);
+            background: radial-gradient(circle at center, #961b1b 0%, #570909 100%);
             border: 2px solid #e2d2b4;
             border-radius: 9px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
@@ -637,7 +681,6 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* ===== PLACA CENTRAL DE ESTADO (ISLA DE JUEGO) ===== */
         .table-hub {
             background: rgba(8, 20, 14, 0.88);
             backdrop-filter: blur(32px) saturate(200%);
@@ -669,7 +712,7 @@
             line-height: 1.35;
         }
 
-        /* ===== DOCK DE CONTROLES INFERIOR ===== */
+        /* ===== CONTROLES DOCK ===== */
         .action-dock {
             display: flex;
             gap: 10px;
@@ -698,15 +741,8 @@
             filter: brightness(1.15);
         }
 
-        .btn-action:active:not(:disabled) {
-            transform: scale(0.96);
-        }
-
-        .btn-action:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-action:active:not(:disabled) { transform: scale(0.96); }
+        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
         .btn-action.gold {
             background: linear-gradient(180deg, #ffd75e 0%, #e5a910 100%);
@@ -736,7 +772,6 @@
             color: #ff9f95;
         }
 
-        /* SUB-DOCK DE SEÑAS */
         .senas-dock {
             display: flex;
             gap: 6px;
@@ -774,7 +809,6 @@
             transform: translateY(-1px);
         }
 
-        /* REGISTRO DE CHAT INTEGRADO */
         .chat-pane {
             position: absolute;
             bottom: 12px;
@@ -798,7 +832,6 @@
         .chat-pane::-webkit-scrollbar { width: 3px; }
         .chat-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
-        /* RESPONSIVE PARA DISPOSITIVOS MÓVILES */
         @media (max-width: 960px) {
             .workspace { flex-direction: column; align-items: center; }
             .desglose-panel { width: 100%; max-width: 600px; height: 110px; }
@@ -812,28 +845,28 @@
 </head>
 <body>
 
-    <!-- MODAL DE SELECCIÓN DE ASIENTO (ESTILO SHEET MODAL) -->
+    <!-- MODAL DE ENTRADA FIJO -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <div class="modal-inputs-row">
                 <input type="text" id="inputNombre" placeholder="Tu Apodo..." maxlength="14" style="flex: 2;">
                 <input type="text" id="inputSala" placeholder="Sala..." maxlength="12" style="flex: 1;">
             </div>
             
-            <p style="font-size: 0.75rem; color: #a4beaf; margin-bottom: 8px; text-align: left;">Elige tu asiento en la mesa:</p>
+            <p style="font-size: 0.78rem; color: #a4beaf; margin-bottom: 10px; text-align: left; font-weight: 600;">Selecciona tu asiento en la mesa:</p>
             <div class="grid-asientos" id="selectorAsientos"></div>
 
-            <button onclick="confirmarUnion()" class="btn-action gold" id="btnEntrar" style="width: 100%; padding: 10px;" disabled>Selecciona una silla libre</button>
+            <button onclick="confirmarUnion()" class="btn-action gold" id="btnEntrar" style="width: 100%; padding: 12px;" disabled>Elige un asiento libre</button>
         </div>
     </div>
 
-    <!-- MODAL ADMINISTRADOR -->
+    <!-- MODAL ADMIN -->
     <div class="overlay-modal" id="modalAdmin" style="display: none;">
         <div class="modal-box" style="max-width: 380px;">
             <h2 style="color: #ff7675;">Panel Administrador</h2>
-            <p style="font-size: 0.8rem; color: #a4beaf; margin-bottom: 10px;">Introduce la clave maestra para reiniciar la mesa:</p>
-            <input type="password" id="inputAdminPass" placeholder="Clave admin..." style="border-color: #e74c3c;">
+            <p style="font-size: 0.8rem; color: #a4beaf; margin-bottom: 12px;">Introduce la clave maestra para reiniciar la mesa:</p>
+            <input type="password" id="inputAdminPass" placeholder="Clave admin..." style="border-color: #e74c3c; width: 100%; margin-bottom: 12px;">
             <div style="display: flex; gap: 8px; justify-content: center;">
                 <button onclick="ejecutarAdminReset()" class="btn-action red">Resetear Mesa</button>
                 <button onclick="cerrarModalAdmin()" class="btn-compact">Cancelar</button>
@@ -856,7 +889,7 @@
         </div>
     </header>
 
-    <!-- MARCADOR PRINCIPAL TIPO WIDGET -->
+    <!-- MARCADOR PRINCIPAL -->
     <div class="scoreboard-widget">
         <div class="team-score team-us">
             <div class="team-meta">
@@ -879,7 +912,7 @@
         </div>
     </div>
 
-    <!-- INDICADOR DE ENVIDES / STAKES -->
+    <!-- BOTES Y ESTADO -->
     <div class="stakes-bar">
         <div>Grande: <strong id="bote_grande">Paso (1)</strong></div>
         <div>Chica: <strong id="bote_chica">Paso (1)</strong></div>
@@ -887,13 +920,12 @@
         <div>Juego: <strong id="bote_juego">-</strong></div>
     </div>
 
-    <!-- BANNER DE ENLACE DE DECISIÓN TEMPORIZADA -->
     <div class="banner-decision" id="bannerDecision">
         <div>⏱️ Envite en curso: Tu pareja delibera conjuntamente</div>
         <div class="reloj" id="contadorSegundos">12s</div>
     </div>
 
-    <!-- WORKSPACE: DESGLOSE LATERAL + MESA DE JUEGO -->
+    <!-- WORKSPACE -->
     <main class="workspace">
         <aside class="desglose-panel">
             <div class="desglose-header">
@@ -930,7 +962,7 @@
                 <div class="card-row vertical" id="mano_oeste"></div>
             </div>
 
-            <!-- CENTRO DE MESA: ISLA DE INFORMACIÓN -->
+            <!-- CENTRO -->
             <div class="table-hub pos-centro" id="boxCentro">
                 <h3 id="faseTxt">MESA PREPARADA</h3>
                 <p id="msgTxt">Conectando los 4 jugadores para iniciar la mano.</p>
@@ -962,10 +994,10 @@
         </section>
     </main>
 
-    <!-- DOCK PRINCIPAL DE CONTROLES -->
+    <!-- DOCK DE ACCIONES -->
     <div class="action-dock" id="botonesAccion"></div>
 
-    <!-- DOCK SECUNDARIO DE SEÑAS TRADICIONALES -->
+    <!-- DOCK DE SEÑAS -->
     <nav class="senas-dock">
         <span>SEÑAS:</span>
         <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="btn-sena" title="2 Reyes">👄 2 Reyes</button>
