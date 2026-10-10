@@ -2158,15 +2158,16 @@
                     textoFase = esPunto ? 'RONDA AL PUNTO' : 'RONDA DE JUEGO';
                     break;
                 case 'recuento':
-                    if (textoMsg.includes('Mano terminada')) {
+                    const msgUpper = (textoMsg || '').toUpperCase();
+                    if (msgUpper.includes('MANO TERMINADA')) {
                         textoFase = '🔄 FIN DE MANO';
-                    } else if (textoMsg.includes('GRANDE')) {
+                    } else if (msgUpper.includes('GRANDE')) {
                         textoFase = '🏆 RECUENTO: GRANDE';
-                    } else if (textoMsg.includes('CHICA')) {
+                    } else if (msgUpper.includes('CHICA')) {
                         textoFase = '🏆 RECUENTO: CHICA';
-                    } else if (textoMsg.includes('PARES')) {
+                    } else if (msgUpper.includes('PARES')) {
                         textoFase = '🏆 RECUENTO: PARES';
-                    } else if (textoMsg.includes('JUEGO') || textoMsg.includes('PUNTO')) {
+                    } else if (msgUpper.includes('JUEGO') || msgUpper.includes('PUNTO')) {
                         textoFase = '🏆 RECUENTO: JUEGO / PUNTO';
                     } else {
                         textoFase = '📊 RECUENTO DE TANTOS';
@@ -2181,7 +2182,7 @@
 
             if (estado.apuestaActual && estado.apuestaActual.ordago) {
                 textoFase = '⚔️ ¡ÓRDAGO EN LA MESA!';
-            } else if (Date.now() - ultimoLanceGanadoTimestamp < 2200 && ultimoLanceGanadoTexto) {
+            } else if (estado.fase === 'recuento' && Date.now() - ultimoLanceGanadoTimestamp < 2200 && ultimoLanceGanadoTexto) {
                 textoFase = ultimoLanceGanadoTexto;
             }
 
@@ -2306,6 +2307,8 @@
             if (estado.fase === 'mus' && ultimaFaseRegistrada !== 'mus') {
                 document.getElementById('desgloseLog').innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Sin lances resueltos en esta mano.</div>`;
                 actualizarContadorLancesBadge();
+                ultimoLanceGanadoTexto = null;
+                ultimoLanceGanadoTimestamp = 0;
             }
             ultimaFaseRegistrada = estado.fase;
 
@@ -2426,6 +2429,13 @@
             }
 
             const nomParejaGanadora = (nombresParejasGlobal && nombresParejasGlobal[parejaGanadora]) ? nombresParejasGlobal[parejaGanadora] : `Pareja ${parejaGanadora + 1}`;
+            // Limpiar posibles tarjetas anteriores con sufijos obsoletos (_ENVITE_ o _CARTAS_)
+            const baseClean = lance.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '_');
+            const posibleViejaEnvite = document.getElementById(`tarjeta_lance_${baseClean}__ENVITE_`);
+            if (posibleViejaEnvite) posibleViejaEnvite.remove();
+            const posibleViejaCartas = document.getElementById(`tarjeta_lance_${baseClean}__CARTAS_`);
+            if (posibleViejaCartas) posibleViejaCartas.remove();
+
             // Si ya existe tarjeta para este lance, la actualizamos para enriquecer el desglose
             const idTarjeta = `tarjeta_lance_${lance.replace(/[^a-zA-Z0-9]/g, '_')}`;
             let card = document.getElementById(idTarjeta);
