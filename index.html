@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gran Mus Español - Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --tapete-verde: #0c4a24;
+            --tapete-centro: #156937;
+            --madera: #3e1f0c;
+            --oro: #f1c40f;
+            --rojo: #e74c3c;
+            --azul: #3498db;
+            --carta-bg: #fffdf5;
+            --borde-carta: #2c1a0e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Fredoka', sans-serif; user-select: none; }
+
+        body {
+            background: radial-gradient(circle at center, #18241d 0%, #060907 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            overflow-x: hidden;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--oro);
+            letter-spacing: 2px;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.8);
+        }
+
+        .barra-superior {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .info-asiento {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(241, 196, 15, 0.4);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #d2e4db;
+        }
+
+        .marcador {
+            display: flex;
+            gap: 25px;
+            background: rgba(12, 28, 18, 0.95);
+            border: 2px solid #a4762c;
+            padding: 6px 24px;
+            border-radius: 20px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        .marcador span {
+            font-weight: 800;
+            color: var(--oro);
+            font-size: 1.25rem;
+        }
+
+        .mesa {
+            position: relative;
+            width: 100%;
+            max-width: 980px;
+            height: 520px;
+            background: radial-gradient(ellipse at center, var(--tapete-centro) 0%, var(--tapete-verde) 70%, #062312 100%);
+            border: 12px solid var(--madera);
+            outline: 4px solid #1a0c04;
+            border-radius: 250px;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.85), 0 12px 30px rgba(0,0,0,0.85);
+            display: grid;
+            grid-template-columns: 160px 1fr 160px;
+            grid-template-rows: 120px 1fr 130px;
+            grid-template-areas:
+                ". norte ."
+                "oeste centro este"
+                ". sur .";
+            align-items: center;
+            justify-items: center;
+            padding: 8px;
+        }
+
+        .pos-norte { grid-area: norte; }
+        .pos-sur { grid-area: sur; }
+        .pos-oeste { grid-area: oeste; }
+        .pos-este { grid-area: este; }
+        .pos-centro { grid-area: centro; }
+
+        .jugador-box {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .cartel {
+            background: rgba(8, 28, 16, 0.9);
+            border: 2px solid rgba(255, 215, 94, 0.35);
+            padding: 3px 12px;
+            border-radius: 14px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #dcece3;
+            transition: all 0.2s;
+        }
+
+        .cartel.activo {
+            border-color: var(--oro);
+            color: var(--oro);
+            box-shadow: 0 0 12px rgba(241, 196, 15, 0.7);
+            transform: scale(1.05);
+        }
+
+        .centro-mesa {
+            background: rgba(6, 22, 12, 0.94);
+            border: 3px solid var(--oro);
+            border-radius: 18px;
+            padding: 10px 20px;
+            text-align: center;
+            max-width: 380px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+        }
+
+        .centro-mesa h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--oro);
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .centro-mesa p {
+            font-size: 0.82rem;
+            color: #e6f1ec;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mano {
+            display: flex;
+            gap: 6px;
+            min-height: 94px;
+            align-items: center;
+        }
+
+        .mano.vertical { transform: scale(0.88); }
+
+        .carta {
+            width: 64px;
+            height: 94px;
+            background: var(--carta-bg);
+            border-radius: 7px;
+            border: 2px solid var(--borde-carta);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3px 4px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+            transition: transform 0.16s ease, border-color 0.16s ease;
+        }
+
+        .carta::before {
+            content: "";
+            position: absolute;
+            inset: 2px;
+            border: 1px solid rgba(44, 26, 14, 0.2);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .carta:hover { transform: translateY(-8px); box-shadow: 0 10px 18px rgba(0,0,0,0.6); }
+
+        .carta.seleccionada {
+            transform: translateY(-16px);
+            border-color: var(--rojo);
+            outline: 2px solid var(--rojo);
+            box-shadow: 0 12px 22px rgba(231, 76, 60, 0.6);
+        }
+
+        .carta-corner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            z-index: 1;
+        }
+
+        .carta-corner.inf {
+            align-self: flex-end;
+            transform: rotate(180deg);
+        }
+
+        .carta-num { font-size: 0.95rem; font-weight: 800; }
+        .carta-simbolo-mini { width: 10px; height: 10px; margin-top: 1px; }
+
+        .palo-oros .carta-num { color: #e6a100; }
+        .palo-copas .carta-num { color: var(--rojo); }
+        .palo-espadas .carta-num { color: var(--azul); }
+        .palo-bastos .carta-num { color: #27ae60; }
+
+        .carta-centro {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            z-index: 1;
+        }
+
+        .carta-centro svg {
+            width: 30px;
+            height: 42px;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+        }
+
+        .carta-reverso {
+            width: 64px;
+            height: 94px;
+            background: repeating-linear-gradient(45deg, #8e1818, #8e1818 5px, #5a0e0e 5px, #5a0e0e 10px);
+            border: 2px solid #eedcba;
+            border-radius: 7px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carta-reverso-escudo {
+            width: 32px;
+            height: 46px;
+            border: 2px solid #eedcba;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: #eedcba;
+            letter-spacing: 1px;
+        }
+
+        .panel-control {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            min-height: 44px;
+        }
+
+        button {
+            background: linear-gradient(180deg, #27ae60 0%, #196f3d 100%);
+            color: #fff;
+            border: 1px solid #58d68d;
+            padding: 8px 18px;
+            border-radius: 7px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: all 0.16s ease;
+        }
+
+        button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+        button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+        button.rojo { background: linear-gradient(180deg, #c0392b 0%, #78281f 100%); border-color: #ec7063; }
+        button.oro { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border-color: #f9e79f; color: #2b1704; }
+        button.azul { background: linear-gradient(180deg, #2980b9 0%, #1a5276 100%); border-color: #7fb3d5; }
+        button.naranja { background: linear-gradient(180deg, #e67e22 0%, #a04000 100%); border-color: #f5b041; }
+
+        .chat-log {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 220px;
+            height: 95px;
+            background: rgba(0,0,0,0.75);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 0.72rem;
+            overflow-y: auto;
+            text-align: left;
+            z-index: 20;
+        }
+
+        .chat-log div { margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>EL GRAN MUS ESPAÑOL ONLINE</h1>
+    </header>
+
+    <div class="barra-superior">
+        <div class="info-asiento" id="miAsientoTexto">Conectando al servidor...</div>
+        <button onclick="socket.emit('rellenarBots')" class="naranja">🤖 Rellenar huecos con Bots</button>
+    </div>
+
+    <div class="marcador">
+        <div>Nuestra Pareja (P1): <span id="puntosP1">0</span> / 40 pts</div>
+        <div>Pareja Rival (P2): <span id="puntosP2">0</span> / 40 pts</div>
+    </div>
+
+    <div class="mesa">
+        <div class="jugador-box pos-norte">
+            <div class="cartel" id="lbl_norte">Esperando...</div>
+            <div class="mano" id="mano_norte"></div>
+        </div>
+
+        <div class="jugador-box pos-oeste">
+            <div class="cartel" id="lbl_oeste">Esperando...</div>
+            <div class="mano vertical" id="mano_oeste"></div>
+        </div>
+
+        <div class="pos-centro centro-mesa">
+            <h3 id="faseTxt">SALA DE ESPERA</h3>
+            <p id="msgTxt">Esperando a 4 jugadores o pulsa "Rellenar huecos con Bots".</p>
+        </div>
+
+        <div class="jugador-box pos-este">
+            <div class="cartel" id="lbl_este">Esperando...</div>
+            <div class="mano vertical" id="mano_este"></div>
+        </div>
+
+        <div class="jugador-box pos-sur">
+            <div class="mano" id="miMano"></div>
+            <div class="cartel activo" id="lbl_sur">Tú</div>
+        </div>
+
+        <div class="chat-log" id="chatLog"></div>
+    </div>
+
+    <div class="panel-control" id="botonesAccion"></div>
+
+    <script>
+        const socket = io();
+
+        const svgPalos = {
+            oros: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#e5a910" stroke="#7d5506" stroke-width="5"/><circle cx="50" cy="50" r="32" fill="#ffd452" stroke="#a07008" stroke-width="4"/><circle cx="50" cy="50" r="16" fill="#e5a910" stroke="#7d5506" stroke-width="3"/><path d="M50 6 L50 18 M50 82 L50 94 M6 50 L18 50 M82 50 L94 50" stroke="#7d5506" stroke-width="5" stroke-linecap="round"/></svg>`,
+            copas: `<svg viewBox="0 0 100 100"><path d="M22 14 L78 14 L70 56 C67 74 33 74 30 56 Z" fill="#c0392b" stroke="#641e16" stroke-width="5"/><ellipse cx="50" cy="18" rx="26" ry="8" fill="#f39c12"/><path d="M42 68 L42 84 L26 88 L26 95 L74 95 L74 88 L58 84 L58 68" fill="#e5a910" stroke="#7d5506" stroke-width="4"/></svg>`,
+            espadas: `<svg viewBox="0 0 100 100"><path d="M48 6 L52 6 L56 66 L44 66 Z" fill="#bdc3c7" stroke="#2c3e50" stroke-width="4"/><path d="M20 70 Q50 62 80 70 L78 76 Q50 70 22 76 Z" fill="#e5a910" stroke="#7d5506" stroke-width="3"/><path d="M46 75 L54 75 L53 93 L47 93 Z" fill="#6d4c41"/><circle cx="50" cy="95" r="4" fill="#e5a910"/></svg>`,
+            bastos: `<svg viewBox="0 0 100 100"><path d="M42 94 L44 64 Q36 50 46 18 Q48 8 52 8 Q56 8 58 18 Q66 50 56 64 L58 94 Z" fill="#27ae60" stroke="#145a32" stroke-width="5"/><ellipse cx="47" cy="30" rx="9" ry="5" fill="#a9dfbf"/><ellipse cx="53" cy="52" rx="9" ry="5" fill="#a9dfbf"/></svg>`
+        };
+
+        let miAsiento = null;
+        let misCartas = [];
+        let estadoActual = {};
+
+        socket.on('asientoAsignado', ({ asiento, info }) => {
+            miAsiento = asiento;
+            document.getElementById('miAsientoTexto').innerText = `Tu Asiento: ${info.nombre} (Pareja ${info.pareja + 1})`;
+            document.getElementById('lbl_sur').innerText = `👤 ${info.nombre} (Tú)`;
+        });
+
+        socket.on('mesaLlena', () => {
+            alert("La mesa ya tiene 4 jugadores. Entraste como espectador.");
+            document.getElementById('miAsientoTexto').innerText = "Modo Espectador";
+        });
+
+        socket.on('misCartas', (cartas) => {
+            misCartas = cartas.map(c => ({ ...c, seleccionada: false }));
+            renderizarMiMano();
+        });
+
+        socket.on('mensajeChat', ({ jugador, texto }) => {
+            const chat = document.getElementById('chatLog');
+            chat.innerHTML += `<div><strong>${jugador}:</strong> ${texto}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        });
+
+        socket.on('estadoJuego', (estado) => {
+            estadoActual = estado;
+            document.getElementById('faseTxt').innerText = estado.fase.toUpperCase();
+            document.getElementById('msgTxt').innerText = estado.mensaje;
+            document.getElementById('puntosP1').innerText = estado.puntos[0];
+            document.getElementById('puntosP2').innerText = estado.puntos[1];
+
+            actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno);
+            actualizarReversosOtrosJugadores(estado.fase !== 'espera');
+            actualizarControles();
+        });
+
+        function renderizarMiMano() {
+            const cont = document.getElementById('miMano');
+            cont.innerHTML = '';
+            misCartas.forEach((c) => {
+                const div = document.createElement('div');
+                div.className = `carta palo-${c.palo} ${c.seleccionada ? 'seleccionada' : ''}`;
+                div.innerHTML = `
+                    <div class="carta-corner">
+                        <span class="carta-num">${c.numero}</span>
+                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
+                    </div>
+                    <div class="carta-centro">${svgPalos[c.palo]}</div>
+                    <div class="carta-corner inf">
+                        <span class="carta-num">${c.numero}</span>
+                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
+                    </div>
+                `;
+                div.onclick = () => {
+                    if (estadoActual.fase === 'descartes') {
+                        c.seleccionada = !c.seleccionada;
+                        renderizarMiMano();
+                    }
+                };
+                cont.appendChild(div);
+            });
+        }
+
+        function actualizarReversosOtrosJugadores(mostrar) {
+            const huecos = ['mano_norte', 'mano_este', 'mano_oeste'];
+            huecos.forEach(id => {
+                const el = document.getElementById(id);
+                if (!mostrar) {
+                    el.innerHTML = '';
+                    return;
+                }
+                if (el.children.length === 0) {
+                    el.innerHTML = '';
+                    for (let i = 0; i < 4; i++) {
+                        el.innerHTML += `
+                            <div class="carta-reverso">
+                                <div class="carta-reverso-escudo">MUS</div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+        }
+
+        function actualizarCartelesMesa(jugadoresEnMesa, turnoActivo) {
+            const mapaPosiciones = {
+                0: { sur: 0, oeste: 1, norte: 2, este: 3 },
+                1: { sur: 1, oeste: 2, norte: 3, este: 0 },
+                2: { sur: 2, oeste: 3, norte: 0, este: 1 },
+                3: { sur: 3, oeste: 0, norte: 1, este: 2 }
+            };
+
+            const ref = miAsiento !== null ? mapaPosiciones[miAsiento] : mapaPosiciones[0];
+
+            function obtenerTexto(asientoIdx) {
+                const j = Object.values(jugadoresEnMesa).find(p => p.asiento === asientoIdx);
+                return j ? j.nombre : "Libre";
+            }
+
+            document.getElementById('lbl_norte').innerText = obtenerTexto(ref.norte);
+            document.getElementById('lbl_este').innerText = obtenerTexto(ref.este);
+            document.getElementById('lbl_oeste').innerText = obtenerTexto(ref.oeste);
+
+            ['norte', 'este', 'oeste', 'sur'].forEach(pos => {
+                const el = document.getElementById(`lbl_${pos}`);
+                if (ref[pos] === turnoActivo) {
+                    el.classList.add('activo');
+                } else {
+                    el.classList.remove('activo');
+                }
+            });
+        }
+
+        function actualizarControles() {
+            const panel = document.getElementById('botonesAccion');
+            panel.innerHTML = '';
+
+            if (miAsiento === null) return;
+            const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
+
+            if (estadoActual.fase === 'mus' && estadoActual.turno === miAsiento) {
+                panel.innerHTML = `
+                    <button onclick="socket.emit('votoMus', { quiereMus: true })" class="oro">¡Mus!</button>
+                    <button onclick="socket.emit('votoMus', { quiereMus: false })" class="rojo">Cortar Mus</button>
+                `;
+            } else if (estadoActual.fase === 'descartes') {
+                panel.innerHTML = `
+                    <button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>
+                `;
+            } else if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
+                if (estadoActual.esperandoRespuestaDe === miPareja) {
+                    panel.innerHTML = `
+                        <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'noquiero' })" class="rojo">No quiero</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="azul">2 más</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">5 más</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
+                    `;
+                } else if (estadoActual.esperandoRespuestaDe === null && estadoActual.turno === miAsiento) {
+                    panel.innerHTML = `
+                        <button onclick="socket.emit('accionLance', { tipo: 'paso' })" class="rojo">Paso</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="oro">Envido 2</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">Envido 5</button>
+                        <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
+                    `;
+                }
+            }
+        }
+
+        function confirmarDescartes() {
+            let seleccionados = [];
+            misCartas.forEach((c, idx) => {
+                if (c.seleccionada) seleccionados.push(idx);
+            });
+            socket.emit('descartarCartas', seleccionados);
+        }
+    </script>
+</body>
+</html>
