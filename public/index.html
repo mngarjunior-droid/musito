@@ -1804,7 +1804,20 @@
                 return;
             }
 
+            if (estadoActual.fase === 'recuento') {
+                panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">📊 Recuento de tantos en curso... ¡A ver las cartas!</div>`;
+                return;
+            }
+
             if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
+                // 1. Si el lance actual ya está resuelto (querido, rechazado en falso o cerrado en paso)
+                const infoLance = estadoActual.apuestasLances && estadoActual.apuestasLances[estadoActual.fase];
+                if (infoLance && (infoLance.querido || infoLance.resueltoEnFalso || infoLance.enPaso)) {
+                    panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ Lance de ${estadoActual.fase.toUpperCase()} resuelto. Pasando al siguiente...</div>`;
+                    return;
+                }
+
+                // 2. Comprobar si el jugador puede hablar en este lance
                 const puedeHablar = estadoActual.permisosHabla && estadoActual.permisosHabla[miAsiento];
                 if (!puedeHablar) {
                     const motivo = estadoActual.fase === 'pares' ? 'No tienes pares' : 'No tienes juego';
@@ -1812,42 +1825,52 @@
                     return;
                 }
 
-                // CÁLCULO PRECISO DE PUNTOS PARA LOS BOTONES
-                const ap = estadoActual.apuestaActual || { total: 0, ultimoAumento: 0, ordago: false };
-                const totalBote = ap.total;
-                const ultimoAumento = ap.ultimoAumento;
-                
-                // Si rechazas, das los puntos que ya había antes del último aumento (o 1 pt si es la primera apuesta)
-                let ptsRechazo = 1;
-                if (totalBote > ultimoAumento) {
-                    ptsRechazo = totalBote - ultimoAumento;
-                }
+                // 3. Deliberación de pareja en curso (envite en la mesa)
+                if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa) {
+                    if (estadoActual.decisionPareja.parejaVotante === miPareja) {
+                        const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
+                        if (yaVoto) {
+                            panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Has votado: <strong>${yaVoto.tipo.toUpperCase()}</strong>. Esperando resolución...</div>`;
+                        } else {
+                            const ap = estadoActual.apuestaActual || { total: 0, ultimoAumento: 0, ordago: false };
+                            const totalBote = ap.total;
+                            const ultimoAumento = ap.ultimoAumento;
+                            let ptsRechazo = 1;
+                            if (totalBote > ultimoAumento) {
+                                ptsRechazo = totalBote - ultimoAumento;
+                            }
 
-                const textoQuiero = ap.ordago 
-                    ? `¡QUIERO EL ÓRDAGO!` 
-                    : `¡QUIERO! (${totalBote} pts)`;
+                            const textoQuiero = ap.ordago 
+                                ? `¡QUIERO EL ÓRDAGO!` 
+                                : `¡QUIERO! (${totalBote} pts)`;
 
-                const textoNoQuiero = ap.ordago
-                    ? `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`
-                    : `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`;
+                            const textoNoQuiero = ap.ordago
+                                ? `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`
+                                : `NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})`;
 
-                if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
-                    const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
-                    if (yaVoto) {
-                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">✔️ Has votado: <strong>${yaVoto.tipo.toUpperCase()}</strong>. Esperando resolución...</div>`;
+                            panel.innerHTML = `
+                                <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">${textoQuiero}</button>
+                                <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">${textoNoQuiero}</button>
+                                <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más (Bote: ${totalBote + 2})</button>
+                                <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más (Bote: ${totalBote + 5})</button>
+                                <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
+                            `;
+                        }
                     } else {
-                        panel.innerHTML = `
-                            <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">${textoQuiero}</button>
-                            <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">${textoNoQuiero}</button>
-                            <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más (Bote: ${totalBote + 2})</button>
-                            <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más (Bote: ${totalBote + 5})</button>
-                            <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
-                        `;
+                        panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ Envite en la mesa: esperando respuesta de la Pareja ${estadoActual.decisionPareja.parejaVotante + 1}...</div>`;
                     }
                     return;
                 }
 
-                if ((!estadoActual.decisionPareja || !estadoActual.decisionPareja.activa) && estadoActual.turno === miAsiento) {
+                // 4. Si nuestro equipo fue el último en apostar, debemos esperar respuesta rival
+                const apActual = estadoActual.apuestaActual;
+                if (apActual && apActual.ultimoApostador === miPareja && !apActual.enPaso) {
+                    panel.innerHTML = `<div style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">⏳ Vuestro equipo ya ha apostado: esperando respuesta rival...</div>`;
+                    return;
+                }
+
+                // 5. Turno normal de apertura o paso
+                if (estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
                         <button onclick="emitirAccionVisual('paso')" class="btn-action red">Paso</button>
                         <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action gold">Envido 2</button>
