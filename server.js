@@ -2,18 +2,21 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Sirve desde /public o desde la raíz para evitar errores de despliegue
+const publicDir = fs.existsSync(path.join(__dirname, 'public')) ? path.join(__dirname, 'public') : __dirname;
+app.use(express.static(publicDir));
 
-const ASIENTOS = [
-  { id: 0, nombre: "Jugador 1 (Mano)", pareja: 0 },
-  { id: 1, nombre: "Jugador 2", pareja: 1 },
-  { id: 2, nombre: "Jugador 3", pareja: 0 },
-  { id: 3, nombre: "Jugador 4 (Postre)", pareja: 1 }
+const ASIENTOS_INFO = [
+  { id: 0, rol: "Mano", pareja: 0 },
+  { id: 1, rol: "Segundo", pareja: 1 },
+  { id: 2, rol: "Tercero", pareja: 0 },
+  { id: 3, rol: "Postre", pareja: 1 }
 ];
 
 let sala = {
@@ -23,11 +26,25 @@ let sala = {
   descartes: [],
   manos: { 0: [], 1: [], 2: [], 3: [] },
   puntos: { 0: 0, 1: 0 },
-  fase: 'espera',
+  fase: 'espera', // 'espera', 'mus', 'descartes', 'grande', 'chica', 'pares', 'juego', 'recuento', 'fin'
   turno: 0,
   ordenMusVotos: {},
-  apuesta: { valor: 0, ultimoApostador: null, ultimoAumento: 2, ordago: false },
-  esperandoRespuestaDe: null
+  // Estado de apuestas del lance actual
+  apuestaActual: {
+    total: 0,
+    ultimoAumento: 0,
+    ultimoApostador: null, // 0 o 1 (pareja)
+    ordago: false,
+    enPaso: true
+  },
+  esperandoRespuestaDe: null, // pareja (0 o 1)
+  // Bote de puntos diferidos para el recuento final
+  apuestasLances: {
+    grande: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
+    chica: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
+    pares: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, hayPares: false },
+    juego: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, esAlPunto: false }
+  }
 };
 
 function crearMazo() {
@@ -78,7 +95,13 @@ function iniciarMano() {
   sala.turno = 0;
   sala.ordenMusVotos = {};
   sala.enPartida = true;
-  notificarEstado("Nueva mano repartida. Ronda de Mus iniciada.");
+  sala.apuestasLances = {
+    grande: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
+    chica: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false },
+    pares: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, hayPares: false },
+    juego: { querido: false, puntos: 1, ordago: false, resueltoEnFalso: false, esAlPunto: false }
+  };
+  notificarEstado("Mano repartida. Empieza la ronda de Mus.");
   comprobarTurnoBot();
 }
 
@@ -87,10 +110,12 @@ function notificarEstado(msg) {
     fase: sala.fase,
     turno: sala.turno,
     puntos: sala.puntos,
-    apuesta: sala.apuesta,
+    apuestaActual: sala.apuestaActual,
+    apuestasLances: sala.apuestasLances,
     esperandoRespuestaDe: sala.esperandoRespuestaDe,
     mensaje: msg,
-    jugadoresEnMesa: sala.jugadores
+    jugadoresEnMesa: sala.jugadores,
+    enPartida: sala.enPartida
   });
 
   for (let socketId in sala.jugadores) {
@@ -109,17 +134,36 @@ function siguienteTurnoMus() {
     procesarDescartesBots();
   } else {
     sala.turno = votos.length;
-    notificarEstado(`Turno de ${ASIENTOS[sala.turno].nombre}: ¿Mus o Cortar?`);
+    const j = Object.values(sala.jugadores).find(p => p.asiento === sala.turno);
+    notificarEstado(`Turno de ${j?.nombre || 'Jugador'}: ¿Mus o Cortar?`);
     comprobarTurnoBot();
   }
 }
 
-function iniciarRonda(nombreRonda) {
-  sala.fase = nombreRonda;
+function iniciarLance(nombreLance) {
+  sala.fase = nombreLance;
   sala.turno = 0;
-  sala.apuesta = { valor: 0, ultimoApostador: null, ultimoAumento: 2, ordago: false };
+  sala.apuestaActual = { total: 0, ultimoAumento: 0, ultimoApostador: null, ordago: false, enPaso: true };
   sala.esperandoRespuestaDe = null;
-  notificarEstado(`Comienza ${nombreRonda.toUpperCase()}. Habla el mano.`);
+
+  // Verificaciones de Pares y Juego
+  if (nombreLance === 'pares') {
+    let p0 = Math.max(evaluarPares(sala.manos[0]), evaluarPares(sala.manos[2]));
+    let p1 = Math.max(evaluarPares(sala.manos[1]), evaluarPares(sala.manos[3]));
+    if (p0 === 0 && p1 === 0) {
+      sala.apuestasLances.pares.hayPares = false;
+      notificarEstado("Nadie tiene pares. Se pasa al siguiente lance.");
+      setTimeout(() => avanzarSiguienteLance(), 1500);
+      return;
+    }
+    sala.apuestasLances.pares.hayPares = true;
+  } else if (nombreLance === 'juego') {
+    let j0 = Math.max(evaluarJuego(sala.manos[0]), evaluarJuego(sala.manos[2]));
+    let j1 = Math.max(evaluarJuego(sala.manos[1]), evaluarJuego(sala.manos[3]));
+    sala.apuestasLances.juego.esAlPunto = (j0 === 0 && j1 === 0);
+  }
+
+  notificarEstado(`Ronda de ${nombreLance.toUpperCase()}. Habla el mano.`);
   comprobarTurnoBot();
 }
 
@@ -136,25 +180,26 @@ function comprobarTurnoBot() {
           io.emit('mensajeChat', { jugador: jActual.nombre, texto: "¡Mus!" });
           siguienteTurnoMus();
         } else {
-          io.emit('mensajeChat', { jugador: jActual.nombre, texto: "¡No hay Mus!" });
-          iniciarRonda('grande');
+          io.emit('mensajeChat', { jugador: jActual.nombre, texto: "¡Corto! No hay mus" });
+          iniciarLance('grande');
         }
       }
     } else if (['grande', 'chica', 'pares', 'juego'].includes(sala.fase)) {
       if (sala.esperandoRespuestaDe !== null) {
-        const botRespondiendo = Object.values(sala.jugadores).find(j => j.esBot && ASIENTOS[j.asiento].pareja === sala.esperandoRespuestaDe);
+        const botRespondiendo = Object.values(sala.jugadores).find(j => j.esBot && ASIENTOS_INFO[j.asiento].pareja === sala.esperandoRespuestaDe);
         if (botRespondiendo) {
-          ejecutarAccionLance(botRespondiendo, { tipo: Math.random() > 0.5 ? 'quiero' : 'noquiero' });
+          const accion = Math.random() > 0.4 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
+          ejecutarAccionLance(botRespondiendo, accion);
         }
       } else {
         const jActual = Object.values(sala.jugadores).find(j => j.asiento === sala.turno);
         if (jActual && jActual.esBot) {
-          const accion = Math.random() > 0.6 ? { tipo: 'envidar', cantidad: 2 } : { tipo: 'paso' };
+          const accion = Math.random() > 0.65 ? { tipo: 'envidar', cantidad: 2 } : { tipo: 'paso' };
           ejecutarAccionLance(jActual, accion);
         }
       }
     }
-  }, 1000);
+  }, 1200);
 }
 
 function procesarDescartesBots() {
@@ -177,117 +222,241 @@ function comprobarFinDescartes() {
     sala.ordenMusVotos = {};
     sala.fase = 'mus';
     sala.turno = 0;
-    notificarEstado("Todos descartados. Se vuelve a preguntar Mus.");
+    notificarEstado("Todos descartados. Se vuelve a preguntar si hay Mus.");
     comprobarTurnoBot();
   }
 }
 
 function ejecutarAccionLance(jugador, { tipo, cantidad }) {
-  const pareja = ASIENTOS[jugador.asiento].pareja;
+  const pareja = ASIENTOS_INFO[jugador.asiento].pareja;
   const parejaRival = pareja === 0 ? 1 : 0;
 
   if (tipo === 'paso') {
     io.emit('mensajeChat', { jugador: jugador.nombre, texto: "Paso" });
     sala.turno = (sala.turno + 1) % 4;
     if (sala.turno === 0) {
-      resolverPasoLance();
+      // Los cuatro han pasado sin envidar
+      sala.apuestasLances[sala.fase].enPaso = true;
+      sala.apuestasLances[sala.fase].puntos = 1;
+      notificarEstado(`Ronda de ${sala.fase.toUpperCase()} queda en paso.`);
+      setTimeout(() => avanzarSiguienteLance(), 1500);
     } else {
-      notificarEstado(`Turno de ${ASIENTOS[sala.turno].nombre}`);
+      const sig = Object.values(sala.jugadores).find(j => j.asiento === sala.turno);
+      notificarEstado(`Turno de ${sig?.nombre || 'Jugador'}`);
       comprobarTurnoBot();
     }
   } else if (tipo === 'envidar') {
     const aumento = parseInt(cantidad) || 2;
-    sala.apuesta.valor += aumento;
-    sala.apuesta.ultimoAumento = aumento;
-    sala.apuesta.ultimoApostador = pareja;
+    sala.apuestaActual.total += aumento;
+    sala.apuestaActual.ultimoAumento = aumento;
+    sala.apuestaActual.ultimoApostador = pareja;
+    sala.apuestaActual.enPaso = false;
     sala.esperandoRespuestaDe = parejaRival;
-    io.emit('mensajeChat', { jugador: jugador.nombre, texto: `¡Envido ${aumento}! (Bote: ${sala.apuesta.valor})` });
-    notificarEstado(`Envite de ${aumento}. Responde Pareja ${parejaRival + 1}`);
+
+    io.emit('mensajeChat', { jugador: jugador.nombre, texto: `¡Envido ${aumento}! (Bote acumulado: ${sala.apuestaActual.total})` });
+    notificarEstado(`Envite de ${aumento}. Responde la Pareja ${parejaRival + 1}`);
     comprobarTurnoBot();
   } else if (tipo === 'ordago') {
-    sala.apuesta.ordago = true;
-    sala.apuesta.ultimoApostador = pareja;
+    sala.apuestaActual.ordago = true;
+    sala.apuestaActual.ultimoApostador = pareja;
+    sala.apuestaActual.enPaso = false;
     sala.esperandoRespuestaDe = parejaRival;
+
     io.emit('mensajeChat', { jugador: jugador.nombre, texto: "¡ÓRDAGO!" });
-    notificarEstado(`¡ÓRDAGO de ${jugador.nombre}!`);
+    notificarEstado(`¡ÓRDAGO lanzado por ${jugador.nombre}!`);
     comprobarTurnoBot();
   } else if (tipo === 'quiero') {
     io.emit('mensajeChat', { jugador: jugador.nombre, texto: "¡QUIERO!" });
-    resolverLanceDisputado(true);
+    sala.apuestasLances[sala.fase].querido = true;
+    sala.apuestasLances[sala.fase].puntos = sala.apuestaActual.ordago ? 40 : sala.apuestaActual.total;
+    sala.apuestasLances[sala.fase].ordago = sala.apuestaActual.ordago;
+
+    notificarEstado(`¡Envite aceptado de ${sala.apuestasLances[sala.fase].puntos} puntos! Se resolverá al final.`);
+    setTimeout(() => avanzarSiguienteLance(), 1600);
   } else if (tipo === 'noquiero') {
-    io.emit('mensajeChat', { jugador: jugador.nombre, texto: "No quiero" });
-    const pts = sala.apuesta.valor > sala.apuesta.ultimoAumento ? (sala.apuesta.valor - sala.apuesta.ultimoAumento) : 1;
-    sala.puntos[sala.apuesta.ultimoApostador] += pts;
-    avanzarSiguienteRonda();
+    io.emit('mensajeChat', { jugador: jugador.nombre, texto: "No quiero (Para ti)" });
+    // REGLA OFICIAL: Si es el primer envite y dicen no quiero -> 1 punto al apostador.
+    // Si ya hubo subidas (ej: 2 a 4) -> se lleva la apuesta anterior sin el último aumento.
+    let ptsGanados = 1;
+    if (sala.apuestaActual.total > sala.apuestaActual.ultimoAumento) {
+      ptsGanados = sala.apuestaActual.total - sala.apuestaActual.ultimoAumento;
+    }
+    sala.puntos[sala.apuestaActual.ultimoApostador] += ptsGanados;
+    sala.apuestasLances[sala.fase].resueltoEnFalso = true;
+
+    notificarEstado(`No querido. +${ptsGanados} punto(s) para Pareja ${sala.apuestaActual.ultimoApostador + 1}.`);
+    if (comprobarFinPartida()) return;
+    setTimeout(() => avanzarSiguienteLance(), 1600);
   }
 }
 
-function resolverPasoLance() {
-  resolverLanceDisputado(false);
+function avanzarSiguienteLance() {
+  const lances = ['grande', 'chica', 'pares', 'juego'];
+  let idx = lances.indexOf(sala.fase);
+  if (idx !== -1 && idx < lances.length - 1) {
+    iniciarLance(lances[idx + 1]);
+  } else {
+    ejecutarRecuentoFinalMano();
+  }
 }
 
-function resolverLanceDisputado(conApuesta) {
-  let pts = conApuesta ? (sala.apuesta.ordago ? 40 : sala.apuesta.valor) : 1;
-  let ganadorPareja = evaluarGanador(sala.fase);
-  sala.puntos[ganadorPareja] += pts;
-  notificarEstado(`Pareja ${ganadorPareja + 1} se lleva ${pts} punto(s) en ${sala.fase.toUpperCase()}`);
-  avanzarSiguienteRonda();
+// TANTEO FINAL ORDENADO LANCE POR LANCE
+function ejecutarRecuentoFinalMano() {
+  sala.fase = 'recuento';
+  notificarEstado("¡A enseñar cartas! Resolviendo el tanteo reglamentario...");
+
+  setTimeout(() => {
+    // 1. Grande
+    resolverLanceEnRecuento('grande');
+    if (comprobarFinPartida()) return;
+
+    setTimeout(() => {
+      // 2. Chica
+      resolverLanceEnRecuento('chica');
+      if (comprobarFinPartida()) return;
+
+      setTimeout(() => {
+        // 3. Pares
+        if (sala.apuestasLances.pares.hayPares) {
+          resolverLanceEnRecuento('pares');
+          if (comprobarFinPartida()) return;
+        }
+
+        setTimeout(() => {
+          // 4. Juego / Punto
+          resolverLanceEnRecuento('juego');
+          if (comprobarFinPartida()) return;
+
+          setTimeout(() => {
+            notificarEstado("Fin de la mano. Repartiendo siguiente...");
+            setTimeout(iniciarMano, 2000);
+          }, 2000);
+        }, 1500);
+      }, 1500);
+    }, 1500);
+  }, 1500);
 }
 
-function evaluarGanador(fase) {
+function resolverLanceEnRecuento(lance) {
+  const info = sala.apuestasLances[lance];
+  if (info.resueltoEnFalso) return; // Ya se cobró durante el envite
+
+  let ganador = evaluarGanadorLance(lance);
+  let pts = info.puntos;
+
+  // Si fue en paso en pares o juego, se cobran los tantos propios
+  if (info.enPaso && lance === 'pares') {
+    let pPar = Math.max(evaluarPares(sala.manos[0]), evaluarPares(sala.manos[2]), evaluarPares(sala.manos[1]), evaluarPares(sala.manos[3]));
+    pts = pPar >= 3 ? 3 : (pPar === 2 ? 2 : 1);
+  } else if (info.enPaso && lance === 'juego') {
+    pts = info.esAlPunto ? 1 : 2;
+  }
+
+  sala.puntos[ganador] += pts;
+  notificarEstado(`Pareja ${ganador + 1} se lleva ${pts} punto(s) en ${lance.toUpperCase()}`);
+}
+
+function evaluarGanadorLance(lance) {
   const mayorCarta = (m) => Math.max(...m.map(c => c.valorMus));
   const menorCarta = (m) => Math.min(...m.map(c => c.valorMus));
+
   let p0 = Math.max(mayorCarta(sala.manos[0]), mayorCarta(sala.manos[2]));
   let p1 = Math.max(mayorCarta(sala.manos[1]), mayorCarta(sala.manos[3]));
-  if (fase === 'chica') {
+
+  if (lance === 'chica') {
     p0 = Math.min(menorCarta(sala.manos[0]), menorCarta(sala.manos[2]));
     p1 = Math.min(menorCarta(sala.manos[1]), menorCarta(sala.manos[3]));
     return p0 <= p1 ? 0 : 1;
+  } else if (lance === 'pares') {
+    p0 = Math.max(evaluarPares(sala.manos[0]), evaluarPares(sala.manos[2]));
+    p1 = Math.max(evaluarPares(sala.manos[1]), evaluarPares(sala.manos[3]));
+    return p0 >= p1 ? 0 : 1;
+  } else if (lance === 'juego') {
+    let j0 = Math.max(evaluarJuego(sala.manos[0]), evaluarJuego(sala.manos[2]));
+    let j1 = Math.max(evaluarJuego(sala.manos[1]), evaluarJuego(sala.manos[3]));
+    if (j0 > 0 || j1 > 0) {
+      if (j0 === 31) return 0;
+      if (j1 === 31) return 1;
+      return j0 >= j1 ? 0 : 1;
+    }
+    // Al punto
+    let sumaP0 = Math.max(sumaPunto(sala.manos[0]), sumaPunto(sala.manos[2]));
+    let sumaP1 = Math.max(sumaPunto(sala.manos[1]), sumaPunto(sala.manos[3]));
+    return sumaP0 >= sumaP1 ? 0 : 1;
   }
   return p0 >= p1 ? 0 : 1;
 }
 
-function avanzarSiguienteRonda() {
+function evaluarPares(m) {
+  let cnt = {};
+  m.forEach(c => cnt[c.valorMus] = (cnt[c.valorMus] || 0) + 1);
+  let vals = Object.values(cnt);
+  if (vals.includes(4)) return 4;
+  if (vals.filter(v => v === 2).length === 2) return 3;
+  if (vals.includes(3)) return 2;
+  if (vals.includes(2)) return 1;
+  return 0;
+}
+
+function evaluarJuego(m) {
+  let s = m.reduce((acc, c) => acc + c.valorJuego, 0);
+  return s >= 31 ? s : 0;
+}
+
+function sumaPunto(m) {
+  return m.reduce((acc, c) => acc + c.valorJuego, 0);
+}
+
+function comprobarFinPartida() {
   if (sala.puntos[0] >= 40 || sala.puntos[1] >= 40) {
     sala.fase = 'fin';
-    notificarEstado(`¡FIN DE PARTIDA! Ganó Pareja ${sala.puntos[0] >= 40 ? 1 : 2}`);
-    return;
+    sala.enPartida = false;
+    notificarEstado(`¡VICTORIA! Pareja ${sala.puntos[0] >= 40 ? 1 : 2} ha ganado la partida con 40 puntos.`);
+    return true;
   }
-  const orden = ['grande', 'chica', 'pares', 'juego'];
-  let idx = orden.indexOf(sala.fase);
-  if (idx !== -1 && idx < orden.length - 1) {
-    iniciarRonda(orden[idx + 1]);
-  } else {
-    iniciarMano();
-  }
+  return false;
 }
 
 io.on('connection', (socket) => {
-  const ocupados = Object.values(sala.jugadores).map(j => j.asiento);
-  let asientoLibre = [0, 1, 2, 3].find(a => !ocupados.includes(a));
+  socket.on('unirse', ({ nombre }) => {
+    const ocupados = Object.values(sala.jugadores).map(j => j.asiento);
+    let asientoLibre = [0, 1, 2, 3].find(a => !ocupados.includes(a));
 
-  if (asientoLibre !== undefined) {
-    sala.jugadores[socket.id] = { asiento: asientoLibre, nombre: ASIENTOS[asientoLibre].nombre, esBot: false };
-    socket.emit('asientoAsignado', { asiento: asientoLibre, info: ASIENTOS[asientoLibre] });
-  } else {
-    socket.emit('mesaLlena');
-  }
+    if (asientoLibre !== undefined) {
+      const nombreFinal = (nombre && nombre.trim() !== '') ? nombre.trim() : `Jugador ${asientoLibre + 1}`;
+      sala.jugadores[socket.id] = {
+        asiento: asientoLibre,
+        nombre: nombreFinal,
+        rol: ASIENTOS_INFO[asientoLibre].rol,
+        pareja: ASIENTOS_INFO[asientoLibre].pareja,
+        esBot: false
+      };
+      socket.emit('asientoAsignado', { asiento: asientoLibre, info: sala.jugadores[socket.id] });
+      notificarEstado(`${nombreFinal} se ha unido a la mesa.`);
+    } else {
+      socket.emit('mesaLlena');
+    }
 
-  notificarEstado(`${sala.jugadores[socket.id]?.nombre || 'Espectador'} conectado.`);
-
-  if (Object.keys(sala.jugadores).length === 4 && !sala.enPartida) {
-    iniciarMano();
-  }
+    if (Object.keys(sala.jugadores).length === 4 && !sala.enPartida) {
+      iniciarMano();
+    }
+  });
 
   socket.on('rellenarBots', () => {
-    const ocupadosAhora = Object.values(sala.jugadores).map(j => j.asiento);
+    const ocupados = Object.values(sala.jugadores).map(j => j.asiento);
     [0, 1, 2, 3].forEach(a => {
-      if (!ocupadosAhora.includes(a)) {
+      if (!ocupados.includes(a)) {
         const idBot = `bot_${a}`;
-        sala.jugadores[idBot] = { asiento: a, nombre: `🤖 Bot ${a + 1}`, esBot: true };
+        sala.jugadores[idBot] = {
+          asiento: a,
+          nombre: `🤖 Bot ${a + 1}`,
+          rol: ASIENTOS_INFO[a].rol,
+          pareja: ASIENTOS_INFO[a].pareja,
+          esBot: true
+        };
       }
     });
-    notificarEstado("Huecos rellenados con Bots.");
+    notificarEstado("Huecos de la mesa rellenados con Bots.");
     if (!sala.enPartida) iniciarMano();
   });
 
@@ -300,7 +469,7 @@ io.on('connection', (socket) => {
       siguienteTurnoMus();
     } else {
       io.emit('mensajeChat', { jugador: j.nombre, texto: "¡No hay Mus!" });
-      iniciarRonda('grande');
+      iniciarLance('grande');
     }
   });
 
@@ -323,11 +492,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    delete sala.jugadores[socket.id];
-    sala.enPartida = false;
-    notificarEstado("Un jugador salió.");
+    if (sala.jugadores[socket.id]) {
+      const nombreSaliendo = sala.jugadores[socket.id].nombre;
+      delete sala.jugadores[socket.id];
+      sala.enPartida = false;
+      sala.fase = 'espera';
+      notificarEstado(`${nombreSaliendo} se desconectó. Mesa pausada.`);
+    }
   });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+server.listen(PORT, () => console.log(`El Mus de Mario corriendo en http://localhost:${PORT}`));
