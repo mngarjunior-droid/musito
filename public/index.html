@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>El Mus de Mario - Salas, Torneo y Señas</title>
+    <title>El Mus de Mario - Online</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -66,7 +66,6 @@
         }
         .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
 
-        /* MODALES */
         .overlay-modal {
             position: fixed;
             inset: 0;
@@ -149,7 +148,6 @@
         .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
         .asiento-card.p2 .tag-p { color: var(--color-rival); }
 
-        /* MARCADOR CON TORNEO A CHICOS Y VACAS */
         .marcador-contenedor {
             display: flex;
             gap: 16px;
@@ -221,7 +219,6 @@
         .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
         .panel-botes .item-lance strong { color: var(--oro); }
 
-        /* ESTRUCTURA DEL TAPETE CON BARRA LATERAL */
         .tablero-wrapper {
             position: relative;
             display: flex;
@@ -232,7 +229,6 @@
             align-items: center;
         }
 
-        /* SIDEBAR DESGLOSE */
         .sidebar-desglose {
             width: 220px;
             height: 490px;
@@ -275,7 +271,6 @@
         .item-desglose .titulo-item { font-weight: bold; color: #fff; margin-bottom: 1px; }
         .item-desglose .detalle-item { color: #ccc; font-size: 0.68rem; }
 
-        /* MESA OVALADA */
         .mesa {
             position: relative;
             width: 960px;
@@ -366,7 +361,6 @@
         .pos-oeste .bocadillo { top: -25px; }
         .pos-este .bocadillo { top: -25px; }
 
-        /* NOTIFICACIÓN PRIVADA DE SEÑA */
         .notificacion-sena {
             position: absolute;
             top: -42px;
@@ -528,7 +522,6 @@
             color: #eedcba;
         }
 
-        /* BARRA INFERIOR DE ACCIONES Y SEÑAS */
         .panel-control {
             display: flex;
             gap: 8px;
@@ -587,7 +580,6 @@
             z-index: 20;
         }
 
-        /* RESPONSIVE MÓVIL */
         @media (max-width: 900px) {
             .tablero-wrapper { flex-direction: column; }
             .sidebar-desglose { width: 100%; max-width: 500px; height: 110px; }
@@ -601,7 +593,6 @@
 </head>
 <body>
 
-    <!-- MODAL INICIAL (CON SALA Y SELECCIÓN DE ASIENTO) -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
@@ -617,7 +608,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE RESET ADMINISTRADOR -->
     <div class="overlay-modal" id="modalAdmin" style="display: none;">
         <div class="modal-box" style="max-width: 360px;">
             <h2 style="color: #e74c3c;">🔑 RESET ADMIN</h2>
@@ -641,7 +631,6 @@
         <div class="info-asiento" id="codigoSalaTexto" style="font-size: 0.72rem; color: var(--oro);">Sala: ...</div>
     </div>
 
-    <!-- MARCADOR COMPLETO CON CHICOS Y VACAS -->
     <div class="marcador-contenedor">
         <div class="bloque-equipo">
             <div>🛡️ Tu Pareja</div>
@@ -677,7 +666,6 @@
         </div>
 
         <div class="mesa">
-            <!-- NOTIFICACIÓN SECRETA DE SEÑA RECIBIDA DEL COMPAÑERO -->
             <div class="notificacion-sena" id="avisoSenaCompanero">👁️ Seña del Compañero</div>
 
             <!-- NORTE: COMPAÑERO -->
@@ -734,10 +722,8 @@
         </div>
     </div>
 
-    <!-- BOTONES DE JUEGO -->
     <div class="panel-control" id="botonesAccion"></div>
 
-    <!-- PANEL DE SEÑAS SECRETAS -->
     <div class="panel-senas">
         <span>🤫 SEÑAS A TU COMPAÑERO:</span>
         <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="sena-btn" title="2 Reyes">👄 2 Reyes</button>
@@ -758,7 +744,6 @@
             bastos: `<svg viewBox="0 0 100 100"><path d="M42 94 L44 64 Q36 50 46 18 Q48 8 52 8 Q56 8 58 18 Q66 50 56 64 L58 94 Z" fill="#27ae60" stroke="#145a32" stroke-width="5"/><ellipse cx="47" cy="30" rx="9" ry="5" fill="#a9dfbf"/><ellipse cx="53" cy="52" rx="9" ry="5" fill="#a9dfbf"/></svg>`
         };
 
-        // GESTIÓN DE TOKEN Y SALA URL
         const urlParams = new URLSearchParams(window.location.search);
         let salaActualId = urlParams.get('sala') || localStorage.getItem('mus_sala') || "principal";
         let miToken = localStorage.getItem('mus_token');
@@ -773,11 +758,9 @@
         let estadoActual = {};
         let reveladoEjecutado = false;
 
-        // Entrar a la sala
         socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
         document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
 
-        // ASIENTOS EN TIEMPO REAL
         socket.on('asientosEstado', (asientos) => {
             renderizarSelectorAsientos(asientos);
         });
@@ -831,8 +814,7 @@
 
         socket.on('errorAsiento', (msg) => alert(msg));
 
-        // RECIBIR SEÑA PRIVADA
-        socket.on('senaRecibida', ({ deAsiento, deNombre, sena }) => {
+        socket.on('senaRecibida', ({ deNombre, sena }) => {
             const aviso = document.getElementById('avisoSenaCompanero');
             aviso.innerText = `👁️ ${deNombre} te hace la seña: ${sena}`;
             aviso.style.display = 'block';
@@ -845,7 +827,6 @@
             mostrarBocadilloPorAsiento(miAsiento, `(Seña enviada)`);
         }
 
-        // ADMIN RESET
         function abrirModalAdmin() { document.getElementById('modalAdmin').style.display = 'flex'; }
         function cerrarModalAdmin() { document.getElementById('modalAdmin').style.display = 'none'; }
         function ejecutarAdminReset() {
@@ -882,7 +863,7 @@
             if (reloj) reloj.innerText = `${tiempo}s`;
         });
 
-        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados }) => {
+        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados, esOrdagoDirecto }) => {
             document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
             document.getElementById('msgTxt').innerText = desglose;
 
@@ -1111,7 +1092,6 @@
             if (miAsiento === null) return;
             const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
 
-            // 1. Declaración obligatoria de Pares o Juego
             if ((estadoActual.fase === 'declaracion_pares' || estadoActual.fase === 'declaracion_juego') && estadoActual.turno === miAsiento) {
                 panel.innerHTML = `
                     <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="oro">¡SÍ llevo!</button>
@@ -1120,7 +1100,6 @@
                 return;
             }
 
-            // 2. Ronda de Mus
             if (estadoActual.fase === 'mus' && estadoActual.turno === miAsiento) {
                 panel.innerHTML = `
                     <button onclick="socket.emit('votoMus', { quiereMus: true })" class="oro">¡Mus!</button>
@@ -1129,13 +1108,11 @@
                 return;
             }
 
-            // 3. Descartes
             if (estadoActual.fase === 'descartes') {
                 panel.innerHTML = `<button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>`;
                 return;
             }
 
-            // 4. Lances
             if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
                 const puedeHablar = estadoActual.permisosHabla && estadoActual.permisosHabla[miAsiento];
                 if (!puedeHablar) {
