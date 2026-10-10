@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mus de Mario - Órdago, Desglose y Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Mus de Mario - Salas, Torneo y Señas</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -31,7 +31,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 12px;
+            padding: 4px 8px;
             overflow-x: hidden;
             transform: scale(var(--escala-hud));
             transform-origin: top center;
@@ -41,7 +41,7 @@
         header { text-align: center; margin-bottom: 2px; }
         header h1 {
             font-family: 'Cinzel', serif;
-            font-size: 1.55rem;
+            font-size: 1.45rem;
             color: var(--oro);
             letter-spacing: 2px;
             text-shadow: 0 3px 8px rgba(0,0,0,0.8);
@@ -49,7 +49,7 @@
 
         .barra-superior {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
             margin-bottom: 4px;
             flex-wrap: wrap;
@@ -59,9 +59,9 @@
         .info-asiento {
             background: rgba(0,0,0,0.65);
             border: 1px solid rgba(241, 196, 15, 0.5);
-            padding: 4px 14px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: #d2e4db;
         }
         .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
@@ -81,9 +81,9 @@
             background: #102619;
             border: 3px solid var(--oro);
             border-radius: 20px;
-            padding: 22px 28px;
+            padding: 18px 22px;
             max-width: 480px;
-            width: 92%;
+            width: 94%;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.9);
         }
@@ -92,18 +92,18 @@
             font-family: 'Cinzel', serif;
             color: var(--oro);
             font-size: 1.35rem;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .modal-box input {
             width: 100%;
-            padding: 9px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             border: 2px solid #58d68d;
             background: #06150c;
             color: #fff;
-            font-size: 0.95rem;
-            margin-bottom: 12px;
+            font-size: 0.92rem;
+            margin-bottom: 10px;
             outline: none;
             text-align: center;
         }
@@ -111,14 +111,14 @@
         .grid-asientos {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 14px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .asiento-card {
             background: rgba(0,0,0,0.5);
             border: 2px solid #444;
-            padding: 10px 8px;
+            padding: 8px 6px;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
@@ -145,19 +145,19 @@
             border-color: #666;
         }
 
-        .asiento-card .tag-p { font-size: 0.72rem; font-weight: bold; }
+        .asiento-card .tag-p { font-size: 0.7rem; font-weight: bold; }
         .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
         .asiento-card.p2 .tag-p { color: var(--color-rival); }
 
-        /* MARCADOR CON JUEGOS Y PIEDRAS */
+        /* MARCADOR CON TORNEO A CHICOS Y VACAS */
         .marcador-contenedor {
             display: flex;
             gap: 16px;
             background: rgba(12, 28, 18, 0.95);
             border: 2px solid #a4762c;
-            padding: 6px 18px;
-            border-radius: 20px;
-            font-size: 0.92rem;
+            padding: 4px 16px;
+            border-radius: 18px;
+            font-size: 0.88rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             align-items: center;
         }
@@ -166,27 +166,28 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-width: 90px;
         }
 
-        .marcador-contenedor span.pts { font-weight: 800; font-size: 1.3rem; }
-        .marcador-contenedor span.juegos-tag { font-size: 0.75rem; font-weight: 900; color: var(--oro); }
+        .marcador-contenedor span.pts { font-weight: 800; font-size: 1.25rem; }
+        .marcador-contenedor span.torneo-tag { font-size: 0.72rem; font-weight: 800; color: var(--oro); }
         .pts-nosotros { color: var(--color-mi-pareja); }
         .pts-rivales { color: var(--color-rival); }
 
         .banner-decision {
             display: none;
             width: 100%;
-            max-width: 900px;
+            max-width: 980px;
             background: linear-gradient(90deg, #b03a2e 0%, #78281f 100%);
             border: 2px solid #f5b041;
-            border-radius: 12px;
-            padding: 6px 14px;
-            font-size: 0.85rem;
+            border-radius: 10px;
+            padding: 4px 12px;
+            font-size: 0.82rem;
             font-weight: bold;
             color: #fff;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             animation: latido 1s infinite alternate;
         }
@@ -198,47 +199,47 @@
 
         .banner-decision .reloj {
             font-family: 'Cinzel', serif;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: var(--oro);
             background: rgba(0,0,0,0.4);
-            padding: 2px 10px;
+            padding: 1px 8px;
             border-radius: 8px;
             border: 1px solid var(--oro);
         }
 
         .panel-botes {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             background: rgba(0,0,0,0.55);
-            padding: 4px 14px;
+            padding: 3px 12px;
             border-radius: 12px;
-            font-size: 0.74rem;
-            margin-bottom: 4px;
+            font-size: 0.72rem;
+            margin-bottom: 3px;
             border: 1px solid rgba(255,255,255,0.1);
         }
 
         .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
         .panel-botes .item-lance strong { color: var(--oro); }
 
-        /* TABLERO GENERAL (CON BARRA LATERAL IZQUIERDA) */
+        /* ESTRUCTURA DEL TAPETE CON BARRA LATERAL */
         .tablero-wrapper {
             position: relative;
             display: flex;
-            gap: 14px;
+            gap: 12px;
             width: 100%;
             max-width: 1240px;
             justify-content: center;
             align-items: center;
         }
 
-        /* TABLA DE DESGLOSE A LA IZQUIERDA */
+        /* SIDEBAR DESGLOSE */
         .sidebar-desglose {
-            width: 230px;
-            height: 520px;
+            width: 220px;
+            height: 490px;
             background: rgba(10, 24, 16, 0.92);
             border: 2px solid #a4762c;
-            border-radius: 18px;
-            padding: 10px;
+            border-radius: 16px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             box-shadow: 0 6px 18px rgba(0,0,0,0.7);
@@ -247,11 +248,11 @@
         .sidebar-desglose h4 {
             font-family: 'Cinzel', serif;
             color: var(--oro);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             border-bottom: 1px solid rgba(241, 196, 15, 0.3);
-            padding-bottom: 4px;
+            padding-bottom: 3px;
         }
 
         .lista-desglose {
@@ -260,42 +261,40 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            font-size: 0.73rem;
+            font-size: 0.72rem;
         }
 
         .item-desglose {
             background: rgba(0,0,0,0.45);
             border-left: 3px solid var(--oro);
-            padding: 5px 8px;
+            padding: 4px 6px;
             border-radius: 4px;
         }
-
         .item-desglose.verde { border-left-color: var(--color-mi-pareja); }
         .item-desglose.rojo { border-left-color: var(--color-rival); }
-
-        .item-desglose .titulo-item { font-weight: bold; color: #fff; margin-bottom: 2px; }
-        .item-desglose .detalle-item { color: #ccc; }
+        .item-desglose .titulo-item { font-weight: bold; color: #fff; margin-bottom: 1px; }
+        .item-desglose .detalle-item { color: #ccc; font-size: 0.68rem; }
 
         /* MESA OVALADA */
         .mesa {
             position: relative;
-            width: 980px;
-            height: 520px;
+            width: 960px;
+            height: 490px;
             background: radial-gradient(ellipse at center, var(--tapete-centro) 0%, var(--tapete-verde) 70%, #051d0f 100%);
             border: 12px solid var(--madera);
             outline: 4px solid #1a0c04;
             border-radius: 250px;
             box-shadow: inset 0 0 60px rgba(0,0,0,0.85), 0 12px 30px rgba(0,0,0,0.85);
             display: grid;
-            grid-template-columns: 160px 1fr 160px;
-            grid-template-rows: 120px 1fr 130px;
+            grid-template-columns: 150px 1fr 150px;
+            grid-template-rows: 110px 1fr 125px;
             grid-template-areas:
                 ". norte ."
                 "oeste centro este"
                 ". sur .";
             align-items: center;
             justify-items: center;
-            padding: 8px;
+            padding: 6px;
         }
 
         .pos-norte { grid-area: norte; }
@@ -309,25 +308,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            border-radius: 16px;
-            padding: 4px;
-            transition: all 0.4s ease;
+            gap: 3px;
+            border-radius: 14px;
+            padding: 3px;
+            transition: all 0.3s ease;
         }
 
         .badge-mano {
             display: none;
             position: absolute;
-            top: -14px;
+            top: -12px;
             background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%);
             color: #2b1704;
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             font-weight: 900;
-            padding: 2px 8px;
+            padding: 1px 7px;
             border-radius: 10px;
             border: 1px solid #fff;
             box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-            letter-spacing: 0.5px;
             z-index: 25;
             animation: bounceMano 1s infinite alternate;
         }
@@ -340,7 +338,7 @@
         .jugador-box.ganador-lance-halo {
             box-shadow: 0 0 25px 8px #ffd700, inset 0 0 15px #ffd700;
             background: rgba(241, 196, 15, 0.25);
-            transform: scale(1.08);
+            transform: scale(1.06);
             z-index: 50;
         }
 
@@ -348,30 +346,47 @@
             position: absolute;
             background: #ffffff;
             color: #1a1a1a;
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.74rem;
             font-weight: 700;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             border: 2px solid var(--madera);
             white-space: nowrap;
             opacity: 0;
             transform: scale(0.6);
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 30;
             pointer-events: none;
         }
 
         .bocadillo.activo { opacity: 1; transform: scale(1); }
-        .pos-sur .bocadillo { top: -30px; }
-        .pos-norte .bocadillo { bottom: -30px; }
-        .pos-oeste .bocadillo { top: -28px; }
-        .pos-este .bocadillo { top: -28px; }
+        .pos-sur .bocadillo { top: -28px; }
+        .pos-norte .bocadillo { bottom: -28px; }
+        .pos-oeste .bocadillo { top: -25px; }
+        .pos-este .bocadillo { top: -25px; }
 
-        .cartel {
+        /* NOTIFICACIÓN PRIVADA DE SEÑA */
+        .notificacion-sena {
+            position: absolute;
+            top: -42px;
+            background: #f1c40f;
+            color: #102619;
             padding: 4px 12px;
             border-radius: 14px;
-            font-size: 0.74rem;
+            font-weight: 900;
+            font-size: 0.76rem;
+            border: 2px solid #2b1704;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+            z-index: 60;
+            animation: latido 0.8s infinite alternate;
+            display: none;
+        }
+
+        .cartel {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
             font-weight: 700;
             box-shadow: 0 2px 6px rgba(0,0,0,0.5);
             display: flex;
@@ -380,81 +395,70 @@
             line-height: 1.15;
             transition: all 0.2s;
             border: 2px solid transparent;
-            min-width: 105px;
+            min-width: 95px;
         }
 
         .cartel .sub-pareja {
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 1px;
         }
 
-        .cartel.mi-equipo {
-            background: rgba(14, 46, 26, 0.95);
-            border-color: var(--color-mi-pareja);
-            color: #e5f9ed;
-        }
+        .cartel.mi-equipo { background: rgba(14, 46, 26, 0.95); border-color: var(--color-mi-pareja); color: #e5f9ed; }
         .cartel.mi-equipo .sub-pareja { color: var(--color-mi-pareja); }
-
-        .cartel.rival-equipo {
-            background: rgba(48, 16, 16, 0.95);
-            border-color: var(--color-rival);
-            color: #fde8e8;
-        }
+        .cartel.rival-equipo { background: rgba(48, 16, 16, 0.95); border-color: var(--color-rival); color: #fde8e8; }
         .cartel.rival-equipo .sub-pareja { color: #f1948a; }
 
         .cartel.activo {
             box-shadow: 0 0 14px var(--oro);
             border-color: var(--oro) !important;
-            transform: scale(1.05);
+            transform: scale(1.04);
         }
 
         .centro-mesa {
             background: rgba(6, 22, 12, 0.94);
             border: 3px solid var(--oro);
-            border-radius: 18px;
-            padding: 10px 20px;
+            border-radius: 16px;
+            padding: 8px 18px;
             text-align: center;
-            max-width: 420px;
+            max-width: 410px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.85);
-            transition: all 0.3s ease;
         }
 
         .centro-mesa h3 {
             font-family: 'Cinzel', serif;
             color: var(--oro);
-            font-size: 1.1rem;
-            margin-bottom: 4px;
+            font-size: 1.05rem;
+            margin-bottom: 3px;
         }
 
         .centro-mesa p {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: #e6f1ec;
-            min-height: 42px;
+            min-height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .mano { display: flex; gap: 6px; min-height: 94px; align-items: center; }
-        .mano.vertical { transform: scale(0.88); }
+        .mano { display: flex; gap: 5px; min-height: 88px; align-items: center; }
+        .mano.vertical { transform: scale(0.85); }
 
         .carta {
-            width: 64px;
-            height: 94px;
+            width: 60px;
+            height: 88px;
             background: var(--carta-bg);
-            border-radius: 7px;
+            border-radius: 6px;
             border: 2px solid var(--borde-carta);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 3px 4px;
+            padding: 2px 3px;
             cursor: pointer;
             position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.45);
-            transition: transform 0.25s ease, border-color 0.16s ease;
-            backface-visibility: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.45);
+            transition: transform 0.2s ease, border-color 0.16s ease;
         }
 
         .carta.revelada-anim {
@@ -475,19 +479,19 @@
             pointer-events: none;
         }
 
-        .carta:hover { transform: translateY(-8px); box-shadow: 0 10px 18px rgba(0,0,0,0.6); }
+        .carta:hover { transform: translateY(-6px); box-shadow: 0 8px 14px rgba(0,0,0,0.6); }
 
         .carta.seleccionada {
-            transform: translateY(-16px);
+            transform: translateY(-14px);
             border-color: var(--rojo);
             outline: 2px solid var(--rojo);
-            box-shadow: 0 12px 22px rgba(231, 76, 60, 0.6);
+            box-shadow: 0 10px 18px rgba(231, 76, 60, 0.6);
         }
 
         .carta-corner { display: flex; flex-direction: column; align-items: center; line-height: 1; z-index: 1; }
         .carta-corner.inf { align-self: flex-end; transform: rotate(180deg); }
-        .carta-num { font-size: 0.95rem; font-weight: 800; }
-        .carta-simbolo-mini { width: 10px; height: 10px; margin-top: 1px; }
+        .carta-num { font-size: 0.9rem; font-weight: 800; }
+        .carta-simbolo-mini { width: 9px; height: 9px; margin-top: 1px; }
 
         .palo-oros .carta-num { color: #e6a100; }
         .palo-copas .carta-num { color: var(--rojo); }
@@ -495,65 +499,65 @@
         .palo-bastos .carta-num { color: #27ae60; }
 
         .carta-centro { display: flex; justify-content: center; align-items: center; flex-grow: 1; z-index: 1; }
-        .carta-centro svg { width: 30px; height: 42px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
+        .carta-centro svg { width: 28px; height: 38px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
 
         .carta-reverso {
-            width: 64px;
-            height: 94px;
+            width: 60px;
+            height: 88px;
             background: repeating-linear-gradient(45deg, #8e1818, #8e1818 5px, #5a0e0e 5px, #5a0e0e 10px);
             border: 2px solid #eedcba;
-            border-radius: 7px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.45);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.3s ease;
         }
 
         .carta-reverso-escudo {
-            width: 32px;
-            height: 46px;
+            width: 30px;
+            height: 42px;
             border: 2px solid #eedcba;
-            border-radius: 5px;
+            border-radius: 4px;
             background: rgba(0,0,0,0.35);
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Cinzel', serif;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 900;
             color: #eedcba;
-            letter-spacing: 1px;
         }
 
+        /* BARRA INFERIOR DE ACCIONES Y SEÑAS */
         .panel-control {
             display: flex;
-            gap: 10px;
-            margin-top: 6px;
+            gap: 8px;
+            margin-top: 4px;
             flex-wrap: wrap;
             justify-content: center;
-            min-height: 44px;
+            min-height: 40px;
         }
 
-        .mensaje-bloqueo-lance {
-            background: rgba(192, 57, 43, 0.85);
-            border: 1px solid #f1948a;
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            font-weight: bold;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        .panel-senas {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
+
+        .panel-senas span { font-size: 0.7rem; color: var(--oro); font-weight: bold; align-self: center; }
 
         button {
             background: linear-gradient(180deg, #27ae60 0%, #196f3d 100%);
             color: #fff;
             border: 1px solid #58d68d;
-            padding: 8px 18px;
+            padding: 7px 16px;
             border-radius: 7px;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
             transition: all 0.16s ease;
@@ -565,60 +569,62 @@
         button.oro { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border-color: #f9e79f; color: #2b1704; }
         button.azul { background: linear-gradient(180deg, #2980b9 0%, #1a5276 100%); border-color: #7fb3d5; }
         button.naranja { background: linear-gradient(180deg, #e67e22 0%, #a04000 100%); border-color: #f5b041; }
-
-        .panel-ajustes {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
+        button.sena-btn { background: #34495e; border-color: #5d6d7e; padding: 4px 8px; font-size: 0.72rem; }
 
         .chat-log {
             position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 220px;
-            height: 95px;
+            bottom: 10px;
+            right: 10px;
+            width: 200px;
+            height: 90px;
             background: rgba(0,0,0,0.75);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px;
-            padding: 6px;
-            font-size: 0.72rem;
+            padding: 5px;
+            font-size: 0.7rem;
             overflow-y: auto;
             text-align: left;
             z-index: 20;
         }
 
-        .chat-log div { margin-bottom: 2px; }
+        /* RESPONSIVE MÓVIL */
+        @media (max-width: 900px) {
+            .tablero-wrapper { flex-direction: column; }
+            .sidebar-desglose { width: 100%; max-width: 500px; height: 110px; }
+            .mesa { width: 100%; max-width: 500px; height: 380px; }
+            .carta, .carta-reverso { width: 44px; height: 68px; }
+            .carta-num { font-size: 0.75rem; }
+            .carta-centro svg { width: 20px; height: 28px; }
+            .chat-log { display: none; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- MODAL DE SELECCIÓN DE ASIENTO Y NOMBRE -->
+    <!-- MODAL INICIAL (CON SALA Y SELECCIÓN DE ASIENTO) -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
-            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Introduce tu apodo:</p>
-            <input type="text" id="inputNombre" placeholder="Tu nombre..." maxlength="15">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="inputNombre" placeholder="Tu Apodo..." maxlength="14" style="flex: 2;">
+                <input type="text" id="inputSala" placeholder="Sala (opcional)..." maxlength="12" style="flex: 1;">
+            </div>
             
-            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Elige tu asiento (se actualiza en directo):</p>
+            <p style="font-size: 0.75rem; color: #bedac8; margin-bottom: 6px;">Selecciona tu silla:</p>
             <div class="grid-asientos" id="selectorAsientos"></div>
 
-            <button onclick="confirmarUnion()" class="oro" id="btnEntrar" style="width: 100%; padding: 10px;" disabled>Elige un asiento para entrar</button>
+            <button onclick="confirmarUnion()" class="oro" id="btnEntrar" style="width: 100%; padding: 8px;" disabled>Elige un asiento para sentarte</button>
         </div>
     </div>
 
     <!-- MODAL DE RESET ADMINISTRADOR -->
     <div class="overlay-modal" id="modalAdmin" style="display: none;">
-        <div class="modal-box" style="max-width: 380px;">
-            <h2 style="color: #e74c3c;">🔑 ACCESO ADMINISTRADOR</h2>
-            <p style="font-size: 0.85rem; color: #bedac8; margin-bottom: 10px;">Introduce la contraseña para reiniciar la partida y los asientos por completo:</p>
-            <input type="password" id="inputAdminPass" placeholder="Contraseña admin..." style="border-color: #e74c3c;">
+        <div class="modal-box" style="max-width: 360px;">
+            <h2 style="color: #e74c3c;">🔑 RESET ADMIN</h2>
+            <p style="font-size: 0.8rem; color: #bedac8; margin-bottom: 8px;">Introduce la clave para resetear la sala:</p>
+            <input type="password" id="inputAdminPass" placeholder="Clave admin..." style="border-color: #e74c3c;">
             <div style="display: flex; gap: 8px; justify-content: center;">
-                <button onclick="ejecutarAdminReset()" class="rojo">Resetear Todo</button>
+                <button onclick="ejecutarAdminReset()" class="rojo">Resetear Sala</button>
                 <button onclick="cerrarModalAdmin()" class="azul">Cancelar</button>
             </div>
         </div>
@@ -630,35 +636,28 @@
 
     <div class="barra-superior">
         <div class="info-asiento" id="miAsientoTexto">Conectando...</div>
-        <button onclick="socket.emit('rellenarBots')" class="naranja">🤖 Rellenar huecos con Bots</button>
-        <button onclick="abrirModalAdmin()" style="background: #7f1d1d; border-color: #ef4444; font-size: 0.75rem;">🔑 Reset Admin</button>
-        
-        <div class="panel-ajustes">
-            <span>Zoom:</span>
-            <button onclick="ajustarEscala(0.85)" style="padding: 2px 6px; font-size: 0.7rem;">-</button>
-            <button onclick="ajustarEscala(1.0)" style="padding: 2px 6px; font-size: 0.7rem;">100%</button>
-            <button onclick="ajustarEscala(1.15)" style="padding: 2px 6px; font-size: 0.7rem;">+</button>
-            <button onclick="toggleSonido()" id="btnSonido" style="padding: 2px 6px; font-size: 0.7rem; background:#34495e;">🔊 Sonido</button>
-        </div>
+        <button onclick="socket.emit('rellenarBots')" class="naranja" style="font-size: 0.75rem; padding: 4px 10px;">🤖 Bots</button>
+        <button onclick="abrirModalAdmin()" style="background: #7f1d1d; border-color: #ef4444; font-size: 0.75rem; padding: 4px 8px;">🔑 Admin</button>
+        <div class="info-asiento" id="codigoSalaTexto" style="font-size: 0.72rem; color: var(--oro);">Sala: ...</div>
     </div>
 
-    <!-- MARCADOR CON JUEGOS Y PIEDRAS -->
+    <!-- MARCADOR COMPLETO CON CHICOS Y VACAS -->
     <div class="marcador-contenedor">
         <div class="bloque-equipo">
             <div>🛡️ Tu Pareja</div>
             <div><span class="pts pts-nosotros" id="puntosNosotros">0</span> / 40</div>
-            <span class="juegos-tag" id="juegosNosotros">Juegos: 0</span>
+            <span class="torneo-tag" id="chicosNosotros">Chicos: 0 | Vacas: 0</span>
         </div>
-        <div style="color: #a4762c; font-size: 1.5rem;">|</div>
+        <div style="color: #a4762c; font-size: 1.4rem;">|</div>
         <div class="bloque-equipo">
             <div>⚔️ Pareja Rival</div>
             <div><span class="pts pts-rivales" id="puntosRivales">0</span> / 40</div>
-            <span class="juegos-tag" id="juegosRivales">Juegos: 0</span>
+            <span class="torneo-tag" id="chicosRivales">Chicos: 0 | Vacas: 0</span>
         </div>
     </div>
 
     <div class="banner-decision" id="bannerDecision">
-        <div>⏱️ ¡ENVITE EN LA MESA! Tu pareja está decidiendo conjuntamente:</div>
+        <div>⏱️ ¡ENVITE! Tu pareja está decidiendo conjuntamente:</div>
         <div class="reloj" id="contadorSegundos">10s</div>
     </div>
 
@@ -670,15 +669,17 @@
     </div>
 
     <div class="tablero-wrapper">
-        <!-- BARRA LATERAL IZQUIERDA: DESGLOSE DE PUNTOS -->
         <div class="sidebar-desglose">
             <h4>📋 DESGLOSE DE PUNTOS</h4>
             <div class="lista-desglose" id="desgloseLog">
-                <div style="color: #888; text-align: center; margin-top: 15px;">Aún no hay lances puntuados en esta mano.</div>
+                <div style="color: #888; text-align: center; margin-top: 15px;">Aún no hay lances puntuados.</div>
             </div>
         </div>
 
         <div class="mesa">
+            <!-- NOTIFICACIÓN SECRETA DE SEÑA RECIBIDA DEL COMPAÑERO -->
+            <div class="notificacion-sena" id="avisoSenaCompanero">👁️ Seña del Compañero</div>
+
             <!-- NORTE: COMPAÑERO -->
             <div class="jugador-box pos-norte" id="box_norte">
                 <div class="badge-mano" id="badge_norte">👑 MANO</div>
@@ -704,7 +705,7 @@
             <!-- CENTRO -->
             <div class="pos-centro centro-mesa" id="boxCentro">
                 <h3 id="faseTxt">SALA DE ESPERA</h3>
-                <p id="msgTxt">Esperando a que se unan 4 jugadores o pulsa en rellenar con Bots.</p>
+                <p id="msgTxt">Conectando 4 jugadores o pulsa en Bots.</p>
             </div>
 
             <!-- ESTE: RIVAL 2 -->
@@ -733,7 +734,19 @@
         </div>
     </div>
 
+    <!-- BOTONES DE JUEGO -->
     <div class="panel-control" id="botonesAccion"></div>
+
+    <!-- PANEL DE SEÑAS SECRETAS -->
+    <div class="panel-senas">
+        <span>🤫 SEÑAS A TU COMPAÑERO:</span>
+        <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="sena-btn" title="2 Reyes">👄 2 Reyes</button>
+        <button onclick="enviarSenaSecreta('2 Ases (Lengua)')" class="sena-btn" title="2 Ases">👅 2 Ases</button>
+        <button onclick="enviarSenaSecreta('Medias (Boca de lado)')" class="sena-btn" title="Medias">🥴 Medias</button>
+        <button onclick="enviarSenaSecreta('Duples (Cejas)')" class="sena-btn" title="Duples">🤨 Duples</button>
+        <button onclick="enviarSenaSecreta('31 La Una (Guiño)')" class="sena-btn" title="31">😉 31</button>
+        <button onclick="enviarSenaSecreta('Ciego / Nada')" class="sena-btn" title="Nada">🙈 Nada</button>
+    </div>
 
     <script>
         const socket = io();
@@ -745,39 +758,26 @@
             bastos: `<svg viewBox="0 0 100 100"><path d="M42 94 L44 64 Q36 50 46 18 Q48 8 52 8 Q56 8 58 18 Q66 50 56 64 L58 94 Z" fill="#27ae60" stroke="#145a32" stroke-width="5"/><ellipse cx="47" cy="30" rx="9" ry="5" fill="#a9dfbf"/><ellipse cx="53" cy="52" rx="9" ry="5" fill="#a9dfbf"/></svg>`
         };
 
+        // GESTIÓN DE TOKEN Y SALA URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let salaActualId = urlParams.get('sala') || localStorage.getItem('mus_sala') || "principal";
+        let miToken = localStorage.getItem('mus_token');
+        if (!miToken) {
+            miToken = 'usr_' + Math.random().toString(36).substring(2, 10);
+            localStorage.setItem('mus_token', miToken);
+        }
+
         let miAsiento = null;
         let asientoElegidoTemporal = null;
         let misCartas = [];
         let estadoActual = {};
-        let sonidoActivado = true;
-        let audioCtx = null;
         let reveladoEjecutado = false;
 
-        function reproducirTono(freq, dur) {
-            if (!sonidoActivado) return;
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-                osc.start();
-                osc.stop(audioCtx.currentTime + dur);
-            } catch(e) {}
-        }
+        // Entrar a la sala
+        socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
+        document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
 
-        function toggleSonido() {
-            sonidoActivado = !sonidoActivado;
-            document.getElementById('btnSonido').innerText = sonidoActivado ? "🔊 Sonido" : "🔇 Mudo";
-        }
-
-        function ajustarEscala(val) {
-            document.documentElement.style.setProperty('--escala-hud', val);
-        }
-
+        // ASIENTOS EN TIEMPO REAL
         socket.on('asientosEstado', (asientos) => {
             renderizarSelectorAsientos(asientos);
         });
@@ -789,11 +789,10 @@
                 const div = document.createElement('div');
                 div.className = `asiento-card ${a.pareja === 0 ? 'p1' : 'p2'} ${a.ocupado ? 'ocupado' : ''}`;
                 if (asientoElegidoTemporal === a.id && !a.ocupado) div.classList.add('seleccionado');
-                div.id = `card_asiento_${a.id}`;
                 div.innerHTML = `
-                    <div style="font-weight:bold; font-size:0.85rem;">${a.nombreDef}</div>
+                    <div style="font-weight:bold; font-size:0.82rem;">${a.nombreDef}</div>
                     <div class="tag-p">Pareja ${a.pareja + 1}</div>
-                    <div style="font-size:0.75rem; color:#aaa;">${a.ocupado ? `👤 \${a.ocupante}` : '🟢 Libre'}</div>
+                    <div style="font-size:0.72rem; color:#aaa;">${a.ocupado ? `👤 \${a.ocupante}` : '🟢 Libre'}</div>
                 `;
                 if (!a.ocupado) {
                     div.onclick = () => {
@@ -812,62 +811,68 @@
         function confirmarUnion() {
             if (asientoElegidoTemporal === null) return;
             const nom = document.getElementById('inputNombre').value;
-            socket.emit('unirseAsiento', { nombre: nom, asientoElegido: asientoElegidoTemporal });
+            const customSala = document.getElementById('inputSala').value;
+            if (customSala && customSala.trim() !== "") {
+                salaActualId = customSala.trim().toLowerCase();
+                localStorage.setItem('mus_sala', salaActualId);
+            }
+            socket.emit('unirseAsiento', { nombre: nom, asientoElegido: asientoElegidoTemporal, salaId: salaActualId, token: miToken });
         }
 
-        socket.on('asientoAsignado', ({ asiento, info }) => {
+        socket.on('asientoAsignado', ({ asiento, info, salaId }) => {
             miAsiento = asiento;
+            salaActualId = salaId;
+            localStorage.setItem('mus_sala', salaActualId);
             document.getElementById('modalInicio').style.display = 'none';
+            document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
             const parejaNum = info.pareja + 1;
             document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong>)`;
-            reproducirTono(523, 0.2);
         });
 
-        socket.on('errorAsiento', (msg) => {
-            alert(msg);
+        socket.on('errorAsiento', (msg) => alert(msg));
+
+        // RECIBIR SEÑA PRIVADA
+        socket.on('senaRecibida', ({ deAsiento, deNombre, sena }) => {
+            const aviso = document.getElementById('avisoSenaCompanero');
+            aviso.innerText = `👁️ ${deNombre} te hace la seña: ${sena}`;
+            aviso.style.display = 'block';
+            setTimeout(() => { aviso.style.display = 'none'; }, 4000);
         });
+
+        function enviarSenaSecreta(sena) {
+            if (miAsiento === null) return;
+            socket.emit('enviarSena', { sena });
+            mostrarBocadilloPorAsiento(miAsiento, `(Seña enviada)`);
+        }
 
         // ADMIN RESET
-        function abrirModalAdmin() {
-            document.getElementById('modalAdmin').style.display = 'flex';
-        }
-        function cerrarModalAdmin() {
-            document.getElementById('modalAdmin').style.display = 'none';
-        }
+        function abrirModalAdmin() { document.getElementById('modalAdmin').style.display = 'flex'; }
+        function cerrarModalAdmin() { document.getElementById('modalAdmin').style.display = 'none'; }
         function ejecutarAdminReset() {
             const pass = document.getElementById('inputAdminPass').value;
             socket.emit('solicitarResetAdmin', { password: pass });
         }
-        socket.on('errorAdminPassword', (msg) => {
-            alert(msg);
-        });
+        socket.on('errorAdminPassword', (msg) => alert(msg));
         socket.on('resetCompleto', () => {
-            alert("El administrador ha reiniciado la sala y la partida por completo.");
+            alert("Sala reiniciada por el administrador.");
             location.reload();
         });
 
         socket.on('misCartas', (cartas) => {
             misCartas = cartas.map(c => ({ ...c, seleccionada: false }));
             renderizarMiMano();
-            reproducirTono(440, 0.15);
         });
 
-        socket.on('avisoNoPuedeHablar', ({ motivo }) => {
-            alert(`No puedes hablar en esta ronda: ${motivo}`);
-        });
+        socket.on('avisoNoPuedeHablar', ({ motivo }) => alert(`No puedes hablar: ${motivo}`));
 
         socket.on('mensajeChat', ({ asiento, jugador, texto }) => {
             const chat = document.getElementById('chatLog');
             chat.innerHTML += `<div><strong>${jugador}:</strong> ${texto}</div>`;
             chat.scrollTop = chat.scrollHeight;
-
-            if (asiento !== undefined && asiento !== -1) {
-                mostrarBocadilloPorAsiento(asiento, texto);
-            }
-            reproducirTono(330, 0.12);
+            if (asiento !== undefined && asiento !== -1) mostrarBocadilloPorAsiento(asiento, texto);
         });
 
-        socket.on('votoParejaEmitido', ({ asiento, nombre, accion }) => {
+        socket.on('votoParejaEmitido', ({ asiento, accion }) => {
             const desc = accion.tipo === 'envidar' ? `+${accion.cantidad}` : accion.tipo;
             mostrarBocadilloPorAsiento(asiento, `Vota: ${desc.toUpperCase()}`);
         });
@@ -875,14 +880,13 @@
         socket.on('tickTimer', ({ tiempo }) => {
             const reloj = document.getElementById('contadorSegundos');
             if (reloj) reloj.innerText = `${tiempo}s`;
-            if (tiempo <= 3) reproducirTono(700, 0.05);
         });
 
-        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados, esOrdagoDirecto }) => {
+        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados }) => {
             document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
             document.getElementById('msgTxt').innerText = desglose;
 
-            actualizarPuntuacionesPersonalizadas(puntosActualizados, estadoActual.juegosGanados);
+            actualizarPuntuacionesPersonalizadas(puntosActualizados, estadoActual.chicosGanados, estadoActual.vacasGanadas);
             actualizarTablaDesgloseLateral(lance, parejaGanadora, desgloseItems);
 
             const yo = miAsiento !== null ? miAsiento : 0;
@@ -895,26 +899,24 @@
             const elGanador = document.getElementById(targetBox);
             if (elGanador) {
                 elGanador.classList.add('ganador-lance-halo');
-                reproducirTono(587, 0.3);
                 setTimeout(() => elGanador.classList.remove('ganador-lance-halo'), 3200);
             }
         });
 
-        socket.on('victoriaChico', ({ ganadorPareja, mensaje, juegosGanados }) => {
-            actualizarPuntuacionesPersonalizadas(estadoActual.puntos || {0:0, 1:0}, juegosGanados);
+        socket.on('victoriaChico', ({ mensaje, chicosGanados, vacasGanadas }) => {
+            actualizarPuntuacionesPersonalizadas({ 0: 0, 1: 0 }, chicosGanados, vacasGanadas);
             alert(mensaje);
-            // Limpiar log desglose para el nuevo chico
-            document.getElementById('desgloseLog').innerHTML = `<div style="color: #888; text-align: center; margin-top: 15px;">Nuevo juego/chico iniciado.</div>`;
+            document.getElementById('desgloseLog').innerHTML = `<div style="color: #888; text-align: center; margin-top: 15px;">Nuevo Chico comenzado.</div>`;
         });
 
         socket.on('estadoJuego', (estado) => {
             estadoActual = estado;
             if (estado.fase !== 'recuento') {
-                document.getElementById('faseTxt').innerText = estado.fase.toUpperCase();
+                document.getElementById('faseTxt').innerText = estado.fase.toUpperCase().replace('DECLARACION_', '¿LLEVAS ');
                 document.getElementById('msgTxt').innerText = estado.mensaje;
             }
 
-            actualizarPuntuacionesPersonalizadas(estado.puntos, estado.juegosGanados);
+            actualizarPuntuacionesPersonalizadas(estado.puntos, estado.chicosGanados, estado.vacasGanadas);
 
             const banner = document.getElementById('bannerDecision');
             if (estado.decisionPareja && estado.decisionPareja.activa) {
@@ -940,21 +942,22 @@
             actualizarControles();
         });
 
-        function actualizarPuntuacionesPersonalizadas(puntos, juegosGanados) {
+        function actualizarPuntuacionesPersonalizadas(puntos, chicosGanados, vacasGanadas) {
             if (!puntos) return;
-            const jG = juegosGanados || { 0: 0, 1: 0 };
+            const cG = chicosGanados || { 0: 0, 1: 0 };
+            const vG = vacasGanadas || { 0: 0, 1: 0 };
             if (miAsiento !== null) {
                 const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
                 const rivalPareja = miPareja === 0 ? 1 : 0;
                 document.getElementById('puntosNosotros').innerText = puntos[miPareja];
                 document.getElementById('puntosRivales').innerText = puntos[rivalPareja];
-                document.getElementById('juegosNosotros').innerText = `Juegos: ${jG[miPareja]}`;
-                document.getElementById('juegosRivales').innerText = `Juegos: ${jG[rivalPareja]}`;
+                document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[miPareja]} | Vacas: ${vG[miPareja]}`;
+                document.getElementById('chicosRivales').innerText = `Chicos: ${cG[rivalPareja]} | Vacas: ${vG[rivalPareja]}`;
             } else {
                 document.getElementById('puntosNosotros').innerText = puntos[0];
                 document.getElementById('puntosRivales').innerText = puntos[1];
-                document.getElementById('juegosNosotros').innerText = `Juegos: ${jG[0]}`;
-                document.getElementById('juegosRivales').innerText = `Juegos: ${jG[1]}`;
+                document.getElementById('chicosNosotros').innerText = `Chicos: ${cG[0]} | Vacas: ${vG[0]}`;
+                document.getElementById('chicosRivales').innerText = `Chicos: ${cG[1]} | Vacas: ${vG[1]}`;
             }
         }
 
@@ -1001,15 +1004,9 @@
         function generarCartaHTML(c, conAnim = false) {
             return `
                 <div class="carta palo-${c.palo} ${conAnim ? 'revelada-anim' : ''}">
-                    <div class="carta-corner">
-                        <span class="carta-num">${c.numero}</span>
-                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
-                    </div>
+                    <div class="carta-corner"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
                     <div class="carta-centro">${svgPalos[c.palo]}</div>
-                    <div class="carta-corner inf">
-                        <span class="carta-num">${c.numero}</span>
-                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
-                    </div>
+                    <div class="carta-corner inf"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
                 </div>
             `;
         }
@@ -1021,21 +1018,14 @@
                 const div = document.createElement('div');
                 div.className = `carta palo-${c.palo} ${c.seleccionada ? 'seleccionada' : ''}`;
                 div.innerHTML = `
-                    <div class="carta-corner">
-                        <span class="carta-num">${c.numero}</span>
-                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
-                    </div>
+                    <div class="carta-corner"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
                     <div class="carta-centro">${svgPalos[c.palo]}</div>
-                    <div class="carta-corner inf">
-                        <span class="carta-num">${c.numero}</span>
-                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
-                    </div>
+                    <div class="carta-corner inf"><span class="carta-num">${c.numero}</span><div class="carta-simbolo-mini">${svgPalos[c.palo]}</div></div>
                 `;
                 div.onclick = () => {
                     if (estadoActual.fase === 'descartes') {
                         c.seleccionada = !c.seleccionada;
                         renderizarMiMano();
-                        reproducirTono(600, 0.08);
                     }
                 };
                 cont.appendChild(div);
@@ -1058,12 +1048,7 @@
 
         function revelarTodasLasCartasConAnimacion(todasLasManos) {
             const yo = miAsiento !== null ? miAsiento : 0;
-            const ref = {
-                norte: (yo + 2) % 4,
-                oeste: (yo + 1) % 4,
-                este: (yo + 3) % 4
-            };
-
+            const ref = { norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
             const mapeoContenedores = [
                 { id: 'mano_norte', asiento: ref.norte },
                 { id: 'mano_oeste', asiento: ref.oeste },
@@ -1074,49 +1059,34 @@
                 const cont = document.getElementById(item.id);
                 const mano = todasLasManos[item.asiento] || [];
                 cont.innerHTML = '';
-
                 mano.forEach((c, idxCarta) => {
                     setTimeout(() => {
                         cont.innerHTML += generarCartaHTML(c, true);
-                        reproducirTono(400 + (idxCarta * 50), 0.08);
-                    }, (idxJugador * 200) + (idxCarta * 80));
+                    }, (idxJugador * 180) + (idxCarta * 70));
                 });
             });
         }
 
         function actualizarCartelesMesa(jugadoresEnMesa, turnoActivo, asientoMano) {
             const yo = miAsiento !== null ? miAsiento : 0;
-            const ref = {
-                sur: yo,
-                norte: (yo + 2) % 4,
-                oeste: (yo + 1) % 4,
-                este: (yo + 3) % 4
-            };
+            const ref = { sur: yo, norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
 
-            function obtenerNombreJugador(asientoIdx) {
-                const j = Object.values(jugadoresEnMesa).find(p => p.asiento === asientoIdx);
-                return j ? j.nombre : "Esperando...";
+            function obtenerNombre(asientoIdx) {
+                return jugadoresEnMesa && jugadoresEnMesa[asientoIdx] ? jugadoresEnMesa[asientoIdx].nombre : "Esperando...";
             }
 
-            document.getElementById('nom_sur').innerText = obtenerNombreJugador(ref.sur) + (ref.sur === miAsiento ? ' (Tú)' : '');
-            document.getElementById('nom_norte').innerText = obtenerNombreJugador(ref.norte);
-            document.getElementById('nom_oeste').innerText = obtenerNombreJugador(ref.oeste);
-            document.getElementById('nom_este').innerText = obtenerNombreJugador(ref.este);
+            document.getElementById('nom_sur').innerText = obtenerNombre(ref.sur) + (ref.sur === miAsiento ? ' (Tú)' : '');
+            document.getElementById('nom_norte').innerText = obtenerNombre(ref.norte);
+            document.getElementById('nom_oeste').innerText = obtenerNombre(ref.oeste);
+            document.getElementById('nom_este').innerText = obtenerNombre(ref.este);
 
             ['norte', 'este', 'oeste', 'sur'].forEach(pos => {
                 const el = document.getElementById(`lbl_${pos}`);
                 const badge = document.getElementById(`badge_${pos}`);
-                const esLaMano = (ref[pos] === asientoMano);
-
-                if (badge) {
-                    badge.style.display = esLaMano ? 'block' : 'none';
-                }
-
-                if (ref[pos] === turnoActivo) {
-                    el.classList.add('activo');
-                } else {
-                    el.classList.remove('activo');
-                }
+                const esMano = (ref[pos] === asientoMano);
+                if (badge) badge.style.display = esMano ? 'block' : 'none';
+                if (ref[pos] === turnoActivo) el.classList.add('activo');
+                else el.classList.remove('activo');
             });
         }
 
@@ -1138,10 +1108,19 @@
         function actualizarControles() {
             const panel = document.getElementById('botonesAccion');
             panel.innerHTML = '';
-
             if (miAsiento === null) return;
             const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
 
+            // 1. Declaración obligatoria de Pares o Juego
+            if ((estadoActual.fase === 'declaracion_pares' || estadoActual.fase === 'declaracion_juego') && estadoActual.turno === miAsiento) {
+                panel.innerHTML = `
+                    <button onclick="socket.emit('responderDeclaracion', { lleva: true })" class="oro">¡SÍ llevo!</button>
+                    <button onclick="socket.emit('responderDeclaracion', { lleva: false })" class="rojo">NO llevo</button>
+                `;
+                return;
+            }
+
+            // 2. Ronda de Mus
             if (estadoActual.fase === 'mus' && estadoActual.turno === miAsiento) {
                 panel.innerHTML = `
                     <button onclick="socket.emit('votoMus', { quiereMus: true })" class="oro">¡Mus!</button>
@@ -1150,26 +1129,25 @@
                 return;
             }
 
+            // 3. Descartes
             if (estadoActual.fase === 'descartes') {
-                panel.innerHTML = `
-                    <button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>
-                `;
+                panel.innerHTML = `<button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>`;
                 return;
             }
 
+            // 4. Lances
             if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
                 const puedeHablar = estadoActual.permisosHabla && estadoActual.permisosHabla[miAsiento];
-
                 if (!puedeHablar) {
                     const motivo = estadoActual.fase === 'pares' ? 'No tienes pares' : 'No tienes juego';
-                    panel.innerHTML = `<div class="mensaje-bloqueo-lance">🔒 ${motivo}: no puedes hablar en esta ronda. Habla tu compañero si lleva.</div>`;
+                    panel.innerHTML = `<div class="mensaje-bloqueo-lance">🔒 ${motivo}: no puedes hablar. Habla tu compañero.</div>`;
                     return;
                 }
 
                 if (estadoActual.decisionPareja && estadoActual.decisionPareja.activa && estadoActual.decisionPareja.parejaVotante === miPareja) {
                     const yaVoto = estadoActual.decisionPareja.votos && estadoActual.decisionPareja.votos[miAsiento];
                     if (yaVoto) {
-                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f;">✔️ Has votado (${yaVoto.tipo.toUpperCase()}). Esperando decisión final...</div>`;
+                        panel.innerHTML = `<div style="font-size:0.85rem; color:#f1c40f;">✔️ Votado (${yaVoto.tipo.toUpperCase()}). Esperando decisión final...</div>`;
                     } else {
                         panel.innerHTML = `
                             <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
