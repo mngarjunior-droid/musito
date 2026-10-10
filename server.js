@@ -836,6 +836,10 @@ function comprobarTurnoBot(sala) {
         }
       }
     } else if (['grande', 'chica', 'pares', 'juego'].includes(sala.fase)) {
+      const infoLance = sala.apuestasLances[sala.fase];
+      if (infoLance && (infoLance.querido || infoLance.resueltoEnFalso || infoLance.enPaso)) {
+        return;
+      }
       if (!sala.decisionPareja || !sala.decisionPareja.activa) {
         const jActual = Object.values(sala.jugadoresPorToken).find(j => j.asiento === sala.turno);
         if (jActual && jActual.esBot) {
@@ -1369,16 +1373,43 @@ io.on('connection', (socket) => {
     const j = sala.jugadoresPorToken[miToken];
     j.socketId = socket.id;
 
+    if (!['grande', 'chica', 'pares', 'juego'].includes(sala.fase)) {
+      return;
+    }
+
+    const infoLance = sala.apuestasLances[sala.fase];
+    if (infoLance && (infoLance.querido || infoLance.resueltoEnFalso || infoLance.enPaso)) {
+      socket.emit('avisoNoPuedeHablar', { motivo: `El lance de ${sala.fase.toUpperCase()} ya está resuelto.` });
+      return;
+    }
+
     if (!jugadorPuedeHablarEnLance(sala, j.asiento, sala.fase)) {
       socket.emit('avisoNoPuedeHablar', { motivo: sala.fase === 'pares' ? "No tienes pares" : "No tienes juego" });
       return;
     }
 
-    if (sala.decisionPareja && sala.decisionPareja.activa && ASIENTOS_INFO[j.asiento].pareja === sala.decisionPareja.parejaVotante) {
-      registrarVotoPareja(sala, j.asiento, accion);
-    } else {
-      ejecutarAccionLance(sala, j, accion);
+    const miPareja = ASIENTOS_INFO[j.asiento].pareja;
+
+    if (sala.decisionPareja && sala.decisionPareja.activa) {
+      if (miPareja === sala.decisionPareja.parejaVotante) {
+        registrarVotoPareja(sala, j.asiento, accion);
+      } else {
+        socket.emit('avisoNoPuedeHablar', { motivo: "Debes esperar a que la pareja rival responda a la apuesta." });
+      }
+      return;
     }
+
+    if (sala.turno !== j.asiento) {
+      socket.emit('avisoNoPuedeHablar', { motivo: "No es tu turno de hablar." });
+      return;
+    }
+
+    if (sala.apuestaActual.ultimoApostador === miPareja && !sala.apuestaActual.enPaso) {
+      socket.emit('avisoNoPuedeHablar', { motivo: "Vuestro equipo ya ha apostado; debe responder la pareja rival." });
+      return;
+    }
+
+    ejecutarAccionLance(sala, j, accion);
   });
 
   socket.on('disconnect', () => {
