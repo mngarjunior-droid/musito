@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mus de Mario - Online</title>
+    <title>El Mus de Mario - Con Animación de Revelado</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -14,6 +14,8 @@
             --oro: #f1c40f;
             --rojo: #e74c3c;
             --azul: #3498db;
+            --color-mi-pareja: #2ecc71;
+            --color-rival: #e74c3c;
             --carta-bg: #fffdf5;
             --borde-carta: #2c1a0e;
             --escala-hud: 1;
@@ -29,18 +31,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 6px 12px;
             overflow-x: hidden;
             transform: scale(var(--escala-hud));
             transform-origin: top center;
             transition: transform 0.2s ease;
         }
 
-        /* CABECERA */
         header { text-align: center; margin-bottom: 2px; }
         header h1 {
             font-family: 'Cinzel', serif;
-            font-size: 1.6rem;
+            font-size: 1.55rem;
             color: var(--oro);
             letter-spacing: 2px;
             text-shadow: 0 3px 8px rgba(0,0,0,0.8);
@@ -56,19 +57,19 @@
         }
 
         .info-asiento {
-            background: rgba(0,0,0,0.6);
-            border: 1px solid rgba(241, 196, 15, 0.4);
+            background: rgba(0,0,0,0.65);
+            border: 1px solid rgba(241, 196, 15, 0.5);
             padding: 4px 14px;
             border-radius: 20px;
             font-size: 0.8rem;
             color: #d2e4db;
         }
+        .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
 
-        /* MODAL SALA DE ESPERA / NOMBRE */
         .overlay-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.88);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -106,7 +107,6 @@
             text-align: center;
         }
 
-        /* MARCADOR GLOBAL CON BARRA A 40 */
         .marcador-contenedor {
             display: flex;
             gap: 20px;
@@ -119,35 +119,24 @@
             align-items: center;
         }
 
-        .marcador-contenedor span.pts {
-            font-weight: 800;
-            color: var(--oro);
-            font-size: 1.3rem;
-        }
+        .marcador-contenedor span.pts { font-weight: 800; font-size: 1.3rem; }
+        .pts-nosotros { color: var(--color-mi-pareja); }
+        .pts-rivales { color: var(--color-rival); }
 
-        /* RESUMEN DEL BOTE / CONTADOR DE LANCES */
         .panel-botes {
             display: flex;
-            gap: 10px;
-            background: rgba(0,0,0,0.5);
+            gap: 12px;
+            background: rgba(0,0,0,0.55);
             padding: 4px 14px;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             margin-bottom: 4px;
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .panel-botes .item-lance {
-            display: flex;
-            gap: 4px;
-            color: #cadfd4;
-        }
+        .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
+        .panel-botes .item-lance strong { color: var(--oro); }
 
-        .panel-botes .item-lance strong {
-            color: var(--oro);
-        }
-
-        /* MESA OVALADA ESPACIOSA */
         .mesa {
             position: relative;
             width: 100%;
@@ -184,7 +173,6 @@
             gap: 4px;
         }
 
-        /* BOCADILLOS DE DIÁLOGO */
         .bocadillo {
             position: absolute;
             background: #ffffff;
@@ -210,20 +198,43 @@
         .pos-este .bocadillo { top: -28px; }
 
         .cartel {
-            background: rgba(8, 28, 16, 0.9);
-            border: 2px solid rgba(255, 215, 94, 0.35);
-            padding: 3px 12px;
+            padding: 4px 12px;
             border-radius: 14px;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             font-weight: 700;
-            color: #dcece3;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.15;
             transition: all 0.2s;
+            border: 2px solid transparent;
         }
 
+        .cartel .sub-pareja {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+        }
+
+        .cartel.mi-equipo {
+            background: rgba(14, 46, 26, 0.95);
+            border-color: var(--color-mi-pareja);
+            color: #e5f9ed;
+        }
+        .cartel.mi-equipo .sub-pareja { color: var(--color-mi-pareja); }
+
+        .cartel.rival-equipo {
+            background: rgba(48, 16, 16, 0.95);
+            border-color: var(--color-rival);
+            color: #fde8e8;
+        }
+        .cartel.rival-equipo .sub-pareja { color: #f1948a; }
+
         .cartel.activo {
-            border-color: var(--oro);
-            color: var(--oro);
-            box-shadow: 0 0 12px rgba(241, 196, 15, 0.7);
+            box-shadow: 0 0 14px var(--oro);
+            border-color: var(--oro) !important;
             transform: scale(1.05);
         }
 
@@ -253,16 +264,10 @@
             justify-content: center;
         }
 
-        .mano {
-            display: flex;
-            gap: 6px;
-            min-height: 94px;
-            align-items: center;
-        }
-
+        .mano { display: flex; gap: 6px; min-height: 94px; align-items: center; }
         .mano.vertical { transform: scale(0.88); }
 
-        /* NAIPES ESPAÑOLES */
+        /* NAIPES Y ANIMACIÓN 3D FLIP */
         .carta {
             width: 64px;
             height: 94px;
@@ -276,7 +281,17 @@
             cursor: pointer;
             position: relative;
             box-shadow: 0 4px 10px rgba(0,0,0,0.45);
-            transition: transform 0.16s ease, border-color 0.16s ease;
+            transition: transform 0.25s ease, border-color 0.16s ease;
+            backface-visibility: hidden;
+        }
+
+        .carta.revelada-anim {
+            animation: flipCarta 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes flipCarta {
+            0% { transform: rotateY(90deg) scale(0.9); opacity: 0.4; }
+            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
         }
 
         .carta::before {
@@ -297,14 +312,7 @@
             box-shadow: 0 12px 22px rgba(231, 76, 60, 0.6);
         }
 
-        .carta-corner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1;
-            z-index: 1;
-        }
-
+        .carta-corner { display: flex; flex-direction: column; align-items: center; line-height: 1; z-index: 1; }
         .carta-corner.inf { align-self: flex-end; transform: rotate(180deg); }
         .carta-num { font-size: 0.95rem; font-weight: 800; }
         .carta-simbolo-mini { width: 10px; height: 10px; margin-top: 1px; }
@@ -314,19 +322,8 @@
         .palo-espadas .carta-num { color: var(--azul); }
         .palo-bastos .carta-num { color: #27ae60; }
 
-        .carta-centro {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-grow: 1;
-            z-index: 1;
-        }
-
-        .carta-centro svg {
-            width: 30px;
-            height: 42px;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
-        }
+        .carta-centro { display: flex; justify-content: center; align-items: center; flex-grow: 1; z-index: 1; }
+        .carta-centro svg { width: 30px; height: 42px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
 
         .carta-reverso {
             width: 64px;
@@ -338,6 +335,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.3s ease;
         }
 
         .carta-reverso-escudo {
@@ -356,7 +354,6 @@
             letter-spacing: 1px;
         }
 
-        /* BOTONERA */
         .panel-control {
             display: flex;
             gap: 10px;
@@ -364,6 +361,17 @@
             flex-wrap: wrap;
             justify-content: center;
             min-height: 44px;
+        }
+
+        .mensaje-bloqueo-lance {
+            background: rgba(192, 57, 43, 0.85);
+            border: 1px solid #f1948a;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
         button {
@@ -386,7 +394,6 @@
         button.azul { background: linear-gradient(180deg, #2980b9 0%, #1a5276 100%); border-color: #7fb3d5; }
         button.naranja { background: linear-gradient(180deg, #e67e22 0%, #a04000 100%); border-color: #f5b041; }
 
-        /* PANEL DE AJUSTES HUD */
         .panel-ajustes {
             display: flex;
             gap: 8px;
@@ -418,13 +425,12 @@
 </head>
 <body>
 
-    <!-- MODAL INICIAL PARA INTRODUCIR NOMBRE -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
-            <p style="font-size: 0.85rem; color: #bedac8; margin-bottom: 12px;">Introduce tu apodo para ocupar un asiento en la mesa:</p>
-            <input type="text" id="inputNombre" placeholder="Tu nombre o alias..." maxlength="15">
-            <button onclick="confirmarNombre()" class="oro" style="width: 100%; padding: 10px;">¡Sentarse a la Mesa!</button>
+            <p style="font-size: 0.85rem; color: #bedac8; margin-bottom: 12px;">Introduce tu nombre para sentarte a la mesa:</p>
+            <input type="text" id="inputNombre" placeholder="Tu nombre..." maxlength="15">
+            <button onclick="confirmarNombre()" class="oro" style="width: 100%; padding: 10px;">¡Entrar a la Partida!</button>
         </div>
     </div>
 
@@ -436,7 +442,6 @@
         <div class="info-asiento" id="miAsientoTexto">Conectando...</div>
         <button onclick="socket.emit('rellenarBots')" class="naranja">🤖 Rellenar huecos con Bots</button>
         
-        <!-- AJUSTES DE HUD -->
         <div class="panel-ajustes">
             <span>Zoom:</span>
             <button onclick="ajustarEscala(0.85)" style="padding: 2px 6px; font-size: 0.7rem;">-</button>
@@ -446,14 +451,12 @@
         </div>
     </div>
 
-    <!-- MARCADOR GLOBAL DIRECTO A 40 -->
     <div class="marcador-contenedor">
-        <div>Nuestra Pareja (P1): <span class="pts" id="puntosP1">0</span> / 40</div>
+        <div>🛡️ Tu Pareja: <span class="pts pts-nosotros" id="puntosP1">0</span> / 40</div>
         <div style="color: #a4762c;">|</div>
-        <div>Pareja Rival (P2): <span class="pts" id="puntosP2">0</span> / 40</div>
+        <div>⚔️ Pareja Rival: <span class="pts pts-rivales" id="puntosP2">0</span> / 40</div>
     </div>
 
-    <!-- CONTADOR DE APUESTAS / BOTES POR LANCE -->
     <div class="panel-botes">
         <div class="item-lance">Grande: <strong id="bote_grande">Paso (1)</strong></div>
         <div class="item-lance">Chica: <strong id="bote_chica">Paso (1)</strong></div>
@@ -461,40 +464,51 @@
         <div class="item-lance">Juego: <strong id="bote_juego">-</strong></div>
     </div>
 
-    <!-- MESA OVALADA -->
     <div class="mesa">
-        <!-- RIVAL 2 (Norte) -->
+        <!-- NORTE: COMPAÑERO -->
         <div class="jugador-box pos-norte">
             <div class="bocadillo" id="boc_norte"></div>
-            <div class="cartel" id="lbl_norte">Esperando...</div>
+            <div class="cartel mi-equipo" id="lbl_norte">
+                <span id="nom_norte">Esperando...</span>
+                <span class="sub-pareja">🤝 Tu Compañero</span>
+            </div>
             <div class="mano" id="mano_norte"></div>
         </div>
 
-        <!-- RIVAL 1 (Oeste) -->
+        <!-- OESTE: RIVAL 1 -->
         <div class="jugador-box pos-oeste">
             <div class="bocadillo" id="boc_oeste"></div>
-            <div class="cartel" id="lbl_oeste">Esperando...</div>
+            <div class="cartel rival-equipo" id="lbl_oeste">
+                <span id="nom_oeste">Esperando...</span>
+                <span class="sub-pareja">⚔️ Rival</span>
+            </div>
             <div class="mano vertical" id="mano_oeste"></div>
         </div>
 
-        <!-- CENTRO DE MESA -->
+        <!-- CENTRO -->
         <div class="pos-centro centro-mesa">
             <h3 id="faseTxt">SALA DE ESPERA</h3>
-            <p id="msgTxt">Esperando a que se unan 4 amigos o pulsa en rellenar con Bots.</p>
+            <p id="msgTxt">Esperando a que se unan 4 jugadores o pulsa en rellenar con Bots.</p>
         </div>
 
-        <!-- COMPAÑERO (Este) -->
+        <!-- ESTE: RIVAL 2 -->
         <div class="jugador-box pos-este">
             <div class="bocadillo" id="boc_este"></div>
-            <div class="cartel" id="lbl_este">Esperando...</div>
+            <div class="cartel rival-equipo" id="lbl_este">
+                <span id="nom_este">Esperando...</span>
+                <span class="sub-pareja">⚔️ Rival</span>
+            </div>
             <div class="mano vertical" id="mano_este"></div>
         </div>
 
-        <!-- TÚ (Sur) -->
+        <!-- SUR: TÚ -->
         <div class="jugador-box pos-sur">
             <div class="bocadillo" id="boc_sur"></div>
             <div class="mano" id="miMano"></div>
-            <div class="cartel activo" id="lbl_sur">Tú</div>
+            <div class="cartel mi-equipo activo" id="lbl_sur">
+                <span id="nom_sur">Tú</span>
+                <span class="sub-pareja">👤 Tu Asiento</span>
+            </div>
         </div>
 
         <div class="chat-log" id="chatLog"></div>
@@ -517,6 +531,7 @@
         let estadoActual = {};
         let sonidoActivado = true;
         let audioCtx = null;
+        let reveladoEjecutado = false;
 
         function reproducirTono(freq, dur) {
             if (!sonidoActivado) return;
@@ -551,13 +566,14 @@
 
         socket.on('asientoAsignado', ({ asiento, info }) => {
             miAsiento = asiento;
-            document.getElementById('miAsientoTexto').innerText = `Tu Asiento: ${info.nombre} (Pareja ${info.pareja + 1} - ${info.rol})`;
-            document.getElementById('lbl_sur').innerText = `👤 ${info.nombre} (Tú)`;
+            const parejaNum = info.pareja + 1;
+            document.getElementById('miAsientoTexto').innerHTML = `Tu Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">Pareja ${parejaNum}</strong> - ${info.rol})`;
+            document.getElementById('nom_sur').innerText = `${info.nombre} (Tú)`;
             reproducirTono(523, 0.2);
         });
 
         socket.on('mesaLlena', () => {
-            alert("La mesa ya tiene 4 jugadores. Estás en modo espectador.");
+            alert("La mesa ya tiene 4 jugadores. Estás como espectador.");
             document.getElementById('miAsientoTexto').innerText = "Modo Espectador";
             document.getElementById('modalInicio').style.display = 'none';
         });
@@ -568,12 +584,15 @@
             reproducirTono(440, 0.15);
         });
 
+        socket.on('avisoNoPuedeHablar', ({ motivo }) => {
+            alert(`No puedes hablar en esta ronda: ${motivo}`);
+        });
+
         socket.on('mensajeChat', ({ jugador, texto }) => {
             const chat = document.getElementById('chatLog');
             chat.innerHTML += `<div><strong>${jugador}:</strong> ${texto}</div>`;
             chat.scrollTop = chat.scrollHeight;
 
-            // Mostrar bocadillo sobre el asiento correspondiente
             mostrarBocadilloPorNombre(jugador, texto);
             reproducirTono(330, 0.12);
         });
@@ -582,12 +601,31 @@
             estadoActual = estado;
             document.getElementById('faseTxt').innerText = estado.fase.toUpperCase();
             document.getElementById('msgTxt').innerText = estado.mensaje;
-            document.getElementById('puntosP1').innerText = estado.puntos[0];
-            document.getElementById('puntosP2').innerText = estado.puntos[1];
+
+            if (miAsiento !== null) {
+                const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
+                const rivalPareja = miPareja === 0 ? 1 : 0;
+                document.getElementById('puntosP1').innerText = estado.puntos[miPareja];
+                document.getElementById('puntosP2').innerText = estado.puntos[rivalPareja];
+            } else {
+                document.getElementById('puntosP1').innerText = estado.puntos[0];
+                document.getElementById('puntosP2').innerText = estado.puntos[1];
+            }
 
             actualizarBotesLances(estado.apuestasLances);
             actualizarCartelesMesa(estado.jugadoresEnMesa, estado.turno);
-            actualizarReversosOtrosJugadores(estado.fase !== 'espera');
+
+            // GESTIÓN DEL REVELADO Y ANIMACIÓN FINAL
+            if ((estado.fase === 'recuento' || estado.fase === 'fin') && estado.todasLasManos) {
+                if (!reveladoEjecutado) {
+                    revelarTodasLasCartasConAnimacion(estado.todasLasManos);
+                    reveladoEjecutado = true;
+                }
+            } else {
+                reveladoEjecutado = false;
+                actualizarReversosOtrosJugadores(estado.fase !== 'espera');
+            }
+
             actualizarControles();
         });
 
@@ -603,6 +641,22 @@
             document.getElementById('bote_chica').innerText = formato(lances.chica);
             document.getElementById('bote_pares').innerText = lances.pares.hayPares ? formato(lances.pares) : "Sin pares";
             document.getElementById('bote_juego').innerText = lances.juego.esAlPunto ? `Al punto (${formato(lances.juego)})` : formato(lances.juego);
+        }
+
+        function generarCartaHTML(c, conAnim = false) {
+            return `
+                <div class="carta palo-${c.palo} ${conAnim ? 'revelada-anim' : ''}">
+                    <div class="carta-corner">
+                        <span class="carta-num">${c.numero}</span>
+                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
+                    </div>
+                    <div class="carta-centro">${svgPalos[c.palo]}</div>
+                    <div class="carta-corner inf">
+                        <span class="carta-num">${c.numero}</span>
+                        <div class="carta-simbolo-mini">${svgPalos[c.palo]}</div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderizarMiMano() {
@@ -638,7 +692,7 @@
             huecos.forEach(id => {
                 const el = document.getElementById(id);
                 if (!mostrar) { el.innerHTML = ''; return; }
-                if (el.children.length === 0) {
+                if (el.children.length === 0 || !el.querySelector('.carta-reverso')) {
                     el.innerHTML = '';
                     for (let i = 0; i < 4; i++) {
                         el.innerHTML += `<div class="carta-reverso"><div class="carta-reverso-escudo">MUS</div></div>`;
@@ -647,24 +701,52 @@
             });
         }
 
-        function actualizarCartelesMesa(jugadoresEnMesa, turnoActivo) {
-            const mapaPosiciones = {
-                0: { sur: 0, oeste: 1, norte: 2, este: 3 },
-                1: { sur: 1, oeste: 2, norte: 3, este: 0 },
-                2: { sur: 2, oeste: 3, norte: 0, este: 1 },
-                3: { sur: 3, oeste: 0, norte: 1, este: 2 }
+        // ANIMACIÓN FLIP 3D EN CASCADA
+        function revelarTodasLasCartasConAnimacion(todasLasManos) {
+            const yo = miAsiento !== null ? miAsiento : 0;
+            const ref = {
+                norte: (yo + 2) % 4,
+                oeste: (yo + 1) % 4,
+                este: (yo + 3) % 4
             };
 
-            const ref = miAsiento !== null ? mapaPosiciones[miAsiento] : mapaPosiciones[0];
+            const mapeoContenedores = [
+                { id: 'mano_norte', asiento: ref.norte },
+                { id: 'mano_oeste', asiento: ref.oeste },
+                { id: 'mano_este', asiento: ref.este }
+            ];
 
-            function obtenerTexto(asientoIdx) {
+            mapeoContenedores.forEach((item, idxJugador) => {
+                const cont = document.getElementById(item.id);
+                const mano = todasLasManos[item.asiento] || [];
+                cont.innerHTML = '';
+
+                mano.forEach((c, idxCarta) => {
+                    setTimeout(() => {
+                        cont.innerHTML += generarCartaHTML(c, true);
+                        reproducirTono(400 + (idxCarta * 50), 0.08);
+                    }, (idxJugador * 250) + (idxCarta * 100));
+                });
+            });
+        }
+
+        function actualizarCartelesMesa(jugadoresEnMesa, turnoActivo) {
+            const yo = miAsiento !== null ? miAsiento : 0;
+            const ref = {
+                sur: yo,
+                norte: (yo + 2) % 4,
+                oeste: (yo + 1) % 4,
+                este: (yo + 3) % 4
+            };
+
+            function obtenerNombreJugador(asientoIdx) {
                 const j = Object.values(jugadoresEnMesa).find(p => p.asiento === asientoIdx);
-                return j ? j.nombre : "Libre";
+                return j ? j.nombre : "Esperando...";
             }
 
-            document.getElementById('lbl_norte').innerText = obtenerTexto(ref.norte);
-            document.getElementById('lbl_este').innerText = obtenerTexto(ref.este);
-            document.getElementById('lbl_oeste').innerText = obtenerTexto(ref.oeste);
+            document.getElementById('nom_norte').innerText = obtenerNombreJugador(ref.norte);
+            document.getElementById('nom_oeste').innerText = obtenerNombreJugador(ref.oeste);
+            document.getElementById('nom_este').innerText = obtenerNombreJugador(ref.este);
 
             ['norte', 'este', 'oeste', 'sur'].forEach(pos => {
                 const el = document.getElementById(`lbl_${pos}`);
@@ -679,7 +761,7 @@
         function mostrarBocadilloPorNombre(nombre, texto) {
             const pos = ['sur', 'norte', 'este', 'oeste'];
             for (let p of pos) {
-                let lbl = document.getElementById(`lbl_${p}`);
+                let lbl = document.getElementById(`nom_${p}`);
                 if (lbl && lbl.innerText.includes(nombre)) {
                     let boc = document.getElementById(`boc_${p}`);
                     if (boc) {
@@ -704,12 +786,25 @@
                     <button onclick="socket.emit('votoMus', { quiereMus: true })" class="oro">¡Mus!</button>
                     <button onclick="socket.emit('votoMus', { quiereMus: false })" class="rojo">Cortar Mus</button>
                 `;
-            } else if (estadoActual.fase === 'descartes') {
+                return;
+            }
+
+            if (estadoActual.fase === 'descartes') {
                 panel.innerHTML = `
                     <button onclick="confirmarDescartes()" class="oro">Confirmar Descarte</button>
                 `;
-            } else if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
-                // Caso A: Hay envite activo esperando respuesta de mi pareja
+                return;
+            }
+
+            if (['grande', 'chica', 'pares', 'juego'].includes(estadoActual.fase)) {
+                const puedeHablar = estadoActual.permisosHabla && estadoActual.permisosHabla[miAsiento];
+
+                if (!puedeHablar) {
+                    const motivo = estadoActual.fase === 'pares' ? 'No tienes pares' : 'No tienes juego';
+                    panel.innerHTML = `<div class="mensaje-bloqueo-lance">🔒 ${motivo}: no puedes hablar en esta ronda. Habla tu compañero si lleva.</div>`;
+                    return;
+                }
+
                 if (estadoActual.esperandoRespuestaDe === miPareja) {
                     panel.innerHTML = `
                         <button onclick="socket.emit('accionLance', { tipo: 'quiero' })" class="oro">¡Quiero!</button>
@@ -718,9 +813,7 @@
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 5 })" class="azul">5 más</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'ordago' })" class="rojo">¡Órdago!</button>
                     `;
-                }
-                // Caso B: Nadie ha envidado aún y es mi turno
-                else if (estadoActual.esperandoRespuestaDe === null && estadoActual.turno === miAsiento) {
+                } else if (estadoActual.esperandoRespuestaDe === null && estadoActual.turno === miAsiento) {
                     panel.innerHTML = `
                         <button onclick="socket.emit('accionLance', { tipo: 'paso' })" class="rojo">Paso</button>
                         <button onclick="socket.emit('accionLance', { tipo: 'envidar', cantidad: 2 })" class="oro">Envido 2</button>
