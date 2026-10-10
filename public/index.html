@@ -50,9 +50,11 @@
             --card-back-core: #8e1818;
             --card-back-edge: #520909;
 
-            --carta-w: clamp(52px, 6.4vw, 72px);
-            --carta-h: clamp(78px, 9.6vw, 108px);
-            --table-max-w: 960px;
+            --carta-w: clamp(58px, 7.2vw, 82px);
+            --carta-h: clamp(86px, 10.6vw, 120px);
+            --carta-opp-w: clamp(34px, 4.2vw, 46px);
+            --carta-opp-h: clamp(50px, 6.2vw, 66px);
+            --table-max-w: 1200px;
         }
 
         /* TEMA CLARO */
@@ -657,19 +659,19 @@
         .table-viewport {
             position: relative;
             flex: 1;
-            min-height: 470px;
+            min-height: clamp(480px, 62vh, 600px);
             width: 100%;
-            background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 78%, var(--tapete-bottom) 100%);
-            border: 14px solid var(--rail-inner);
-            outline: 4px solid var(--rail-outer);
-            border-radius: 260px;
+            background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 76%, var(--tapete-bottom) 100%);
+            border: clamp(8px, 1.3vw, 14px) solid var(--rail-inner);
+            outline: clamp(2px, 0.35vw, 4px) solid var(--rail-outer);
+            border-radius: clamp(100px, 20vw, 260px);
             box-shadow: 
                 inset 0 0 80px rgba(0,0,0,0.85),
-                inset 0 0 20px rgba(0,0,0,0.6),
+                inset 0 0 25px rgba(0,0,0,0.6),
                 0 0 0 2px var(--rail-gold),
                 0 25px 60px rgba(0,0,0,0.8);
             display: grid;
-            grid-template-columns: minmax(80px, 160px) 1fr minmax(80px, 160px);
+            grid-template-columns: minmax(105px, 18%) 1fr minmax(105px, 18%);
             grid-template-rows: auto 1fr auto;
             grid-template-areas:
                 ". norte ."
@@ -677,7 +679,7 @@
                 ". sur .";
             align-items: center;
             justify-items: center;
-            padding: 8px 12px;
+            padding: clamp(8px, 1.5vw, 16px);
         }
 
         .pos-norte { grid-area: norte; }
@@ -693,6 +695,7 @@
             align-items: center;
             gap: 4px;
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10;
         }
 
         .player-badge {
@@ -700,16 +703,16 @@
             background: var(--glass-surface);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            padding: 4px 14px;
+            padding: 3px 12px;
             border-radius: 980px;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 800;
             display: flex;
             flex-direction: column;
             align-items: center;
-            line-height: 1.2;
-            min-width: 100px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            line-height: 1.15;
+            min-width: 86px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
             transition: all 0.25s ease;
         }
 
@@ -779,10 +782,10 @@
         }
 
         .speech-bubble.activo { opacity: 1; transform: scale(1); }
-        .pos-sur .speech-bubble { top: -28px; }
-        .pos-norte .speech-bubble { bottom: -28px; }
-        .pos-oeste .speech-bubble { top: -24px; }
-        .pos-este .speech-bubble { top: -24px; }
+        .pos-sur .speech-bubble { top: -32px; }
+        .pos-norte .speech-bubble { bottom: -30px; }
+        .pos-oeste .speech-bubble { top: -26px; }
+        .pos-este .speech-bubble { top: -26px; }
 
         .notificacion-sena {
             position: absolute;
@@ -806,10 +809,14 @@
 
         .card-row {
             display: flex;
-            gap: 6px;
-            min-height: var(--carta-h);
+            gap: 4px;
+            min-height: var(--carta-opp-h);
             align-items: center;
             justify-content: center;
+        }
+
+        #miMano.card-row {
+            min-height: var(--carta-h);
         }
 
         /* Cartas fanning para Este y Oeste para que quepan holgadamente */
@@ -820,7 +827,7 @@
         }
         .card-row.fanned-horizontal .card,
         .card-row.fanned-horizontal .card-back {
-            margin-left: -18px;
+            margin-left: -20px;
             transition: margin 0.2s ease, transform 0.2s ease;
         }
         .card-row.fanned-horizontal .card:first-child,
@@ -834,6 +841,39 @@
             transform-origin: 50% 120%;
         }
         .card-row.mi-mano-fanned .card:first-child { margin-left: 0; }
+
+        /* Cartas de rivales y compañero (más compactas para no apretar la mesa) */
+        #mano_norte .card, #mano_norte .card-back,
+        #mano_oeste .card, #mano_oeste .card-back,
+        #mano_este .card, #mano_este .card-back {
+            width: var(--carta-opp-w) !important;
+            height: var(--carta-opp-h) !important;
+            border-radius: 6px;
+            padding: 2px 3px;
+        }
+        #mano_norte .card .card-num,
+        #mano_oeste .card .card-num,
+        #mano_este .card .card-num {
+            font-size: 0.65rem;
+        }
+        #mano_norte .card .card-mini-symbol,
+        #mano_oeste .card .card-mini-symbol,
+        #mano_este .card .card-mini-symbol {
+            width: 8px;
+            height: 8px;
+        }
+        #mano_norte .card-center-art svg,
+        #mano_oeste .card-center-art svg,
+        #mano_este .card-center-art svg {
+            width: clamp(14px, 2vw, 20px);
+            height: clamp(18px, 2.6vw, 26px);
+        }
+        #mano_norte .card-back-logo,
+        #mano_oeste .card-back-logo,
+        #mano_este .card-back-logo {
+            font-size: 0.46rem;
+            letter-spacing: 0.8px;
+        }
 
         /* NAIPES ESPAÑOLES REALISTAS CON PROFUNDIDAD 3D */
         .card {
@@ -950,26 +990,32 @@
         .table-hub {
             position: relative;
             background: var(--glass-surface);
-            backdrop-filter: blur(32px) saturate(200%);
+            backdrop-filter: blur(28px) saturate(180%);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 10px 20px;
+            border-radius: 980px;
+            padding: 6px 18px;
             text-align: center;
-            max-width: 420px;
-            width: 90%;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.55), inset 0 1px 0 var(--glass-highlight);
+            max-width: 280px;
+            width: auto;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 1px 0 var(--glass-highlight);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            z-index: 5;
         }
 
         .mazo-central {
             position: absolute;
-            top: -18px;
-            left: -48px;
-            width: 40px;
-            height: 58px;
+            top: -14px;
+            left: -22px;
+            width: 32px;
+            height: 46px;
             background: radial-gradient(circle at center, var(--card-back-core) 0%, var(--card-back-edge) 100%);
             border: 1.5px solid #e8dbbe;
-            border-radius: 6px;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.65);
+            border-radius: 5px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.6);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -984,7 +1030,7 @@
             left: -2px;
             width: 100%;
             height: 100%;
-            border-radius: 6px;
+            border-radius: 5px;
             background: inherit;
             border: inherit;
             z-index: -1;
@@ -993,26 +1039,26 @@
 
         .mazo-central span {
             font-family: 'Cinzel', serif;
-            font-size: 0.5rem;
+            font-size: 0.44rem;
             font-weight: 900;
             color: #f7edd6;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.6px;
         }
 
         /* Píldora de bote de fichas animado */
         .fichas-bote-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             background: var(--accent-gold-glow);
             border: 1px solid var(--accent-gold);
-            padding: 2px 10px;
+            padding: 1px 9px;
             border-radius: 980px;
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 800;
             color: var(--accent-gold);
-            margin-bottom: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            margin-bottom: 2px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
             animation: chipToss 0.3s ease;
         }
 
@@ -1025,8 +1071,8 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 42px;
-            height: 60px;
+            width: 36px;
+            height: 52px;
             background: radial-gradient(circle at center, var(--card-back-core) 0%, var(--card-back-edge) 100%);
             border: 1.5px solid #e8dbbe;
             border-radius: 6px;
@@ -1039,20 +1085,23 @@
         .table-hub h3 {
             font-family: 'Cinzel', serif;
             color: var(--accent-gold);
-            font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+            font-size: clamp(0.82rem, 1.3vw, 0.98rem);
             font-weight: 800;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
+            letter-spacing: 0.8px;
+            margin: 0;
+            line-height: 1.15;
         }
 
         .table-hub p {
-            font-size: clamp(0.72rem, 1.3vw, 0.8rem);
+            font-size: clamp(0.66rem, 1.05vw, 0.74rem);
             color: var(--text-sub);
-            min-height: 32px;
+            min-height: auto;
+            max-width: 240px;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            line-height: 1.35;
+            line-height: 1.25;
         }
 
         /* ===== CONTROLES DOCK TÁCTILES Y ERGONÓMICOS ===== */
@@ -1222,35 +1271,71 @@
 
             .table-viewport {
                 width: 100%;
-                min-height: 410px;
-                padding: 6px 8px;
+                min-height: clamp(420px, 60vh, 500px);
+                padding: 6px 10px;
                 border-width: 10px;
                 outline-width: 3px;
-                border-radius: 160px;
+                border-radius: clamp(80px, 16vw, 180px);
+                grid-template-columns: minmax(88px, 18%) 1fr minmax(88px, 18%);
             }
 
-            .mazo-central { left: -36px; top: -14px; width: 32px; height: 46px; }
+            .table-hub {
+                max-width: 240px;
+                padding: 5px 14px;
+            }
+
+            .mazo-central { left: -18px; top: -12px; width: 28px; height: 40px; }
             .chat-pane { display: none; }
         }
 
         @media (max-width: 640px) {
-            body { padding: 4px 6px; }
+            body { padding: 4px 6px 10px 6px; }
             .brand-badge { display: none; }
-            .scoreboard-widget { padding: 4px 12px; gap: 8px; }
+            .scoreboard-widget { padding: 3px 10px; gap: 6px; border-radius: 12px; margin-bottom: 4px; }
+            .score-num { font-size: 1.35rem; }
+            .team-tourney { font-size: 0.6rem; }
+            .scoreboard-target { font-size: 0.58rem; }
+            .stakes-bar-advanced { gap: 3px; margin-bottom: 4px; }
+            .lance-node { padding: 2px 4px; border-radius: 8px; }
+            .lance-node .lance-name { font-size: 0.56rem; }
+            .lance-node .lance-status { font-size: 0.62rem; }
+
             .table-viewport {
-                min-height: 360px;
-                border-radius: 130px;
-                grid-template-columns: 68px 1fr 68px;
-                border-width: 8px;
+                min-height: clamp(370px, 56vh, 440px);
+                border-radius: clamp(40px, 10vw, 90px);
+                grid-template-columns: minmax(72px, 20%) 1fr minmax(72px, 20%);
+                border-width: 7px;
+                outline-width: 2px;
+                padding: 4px 6px;
             }
-            .player-badge { min-width: 82px; padding: 3px 8px; font-size: 0.67rem; }
-            .player-badge .sub-role { font-size: 0.55rem; }
-            .action-dock { gap: 6px; }
-            .btn-action { padding: 8px 14px; font-size: 0.78rem; }
+
+            .player-badge { min-width: 76px; padding: 2px 8px; font-size: 0.64rem; }
+            .player-badge .sub-role { font-size: 0.52rem; }
+            .action-dock { gap: 5px; margin-top: 4px; min-height: 40px; }
+            .btn-action { padding: 7px 12px; font-size: 0.74rem; border-radius: 10px; }
+
             .card-row.fanned-horizontal .card,
             .card-row.fanned-horizontal .card-back {
-                margin-left: -24px;
+                margin-left: -20px;
             }
+
+            .table-hub {
+                max-width: 190px;
+                padding: 4px 10px;
+            }
+            .table-hub h3 { font-size: 0.74rem; }
+            .table-hub p { font-size: 0.62rem; max-width: 170px; }
+            .mazo-central { left: -14px; top: -10px; width: 24px; height: 34px; }
+        }
+
+        @media (max-width: 420px) {
+            .table-viewport {
+                grid-template-columns: minmax(64px, 20%) 1fr minmax(64px, 20%);
+                min-height: 350px;
+            }
+            .player-badge { min-width: 66px; padding: 2px 5px; font-size: 0.6rem; }
+            .action-dock { gap: 4px; }
+            .btn-action { padding: 6px 10px; font-size: 0.7rem; }
         }
     </style>
 </head>
