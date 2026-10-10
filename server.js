@@ -431,6 +431,10 @@ function comprobarTurnoDeclaracionBot(sala) {
 }
 
 function procesarDeclaracionPares(sala, asiento, lleva) {
+  const tieneReal = evaluarDetallePares(sala.manos[asiento]).tipo > 0;
+  if (lleva && !tieneReal) {
+    lleva = false;
+  }
   sala.declaraciones.pares[asiento] = lleva;
   const j = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
   io.to(sala.id).emit('mensajeChat', { asiento, jugador: j?.nombre || 'Jugador', texto: lleva ? "¡Sí, llevo pares!" : "No llevo" });
@@ -468,6 +472,10 @@ function procesarDeclaracionPares(sala, asiento, lleva) {
 }
 
 function procesarDeclaracionJuego(sala, asiento, lleva) {
+  const tieneReal = evaluarDetalleJuego(sala.manos[asiento]).tiene;
+  if (lleva && !tieneReal) {
+    lleva = false;
+  }
   sala.declaraciones.juego[asiento] = lleva;
   const j = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
   io.to(sala.id).emit('mensajeChat', { asiento, jugador: j?.nombre || 'Jugador', texto: lleva ? "¡Sí, tengo juego!" : "No tengo" });
@@ -1267,8 +1275,18 @@ io.on('connection', (socket) => {
     if (sala.turno !== j.asiento) return;
 
     if (sala.fase === 'declaracion_pares') {
+      const tienePares = evaluarDetallePares(sala.manos[j.asiento]).tipo > 0;
+      if (lleva && !tienePares) {
+        socket.emit('avisoNoPuedeHablar', { motivo: "No tienes pares en tu mano." });
+        return;
+      }
       procesarDeclaracionPares(sala, j.asiento, lleva);
     } else if (sala.fase === 'declaracion_juego') {
+      const tieneJuego = evaluarDetalleJuego(sala.manos[j.asiento]).tiene;
+      if (lleva && !tieneJuego) {
+        socket.emit('avisoNoPuedeHablar', { motivo: "No tienes juego en tu mano." });
+        return;
+      }
       procesarDeclaracionJuego(sala, j.asiento, lleva);
     }
   });
