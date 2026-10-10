@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mus de Mario - Online</title>
+    <title>El Mus de Mario - Órdago, Desglose y Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -66,11 +66,11 @@
         }
         .info-asiento strong.pareja-tag { color: var(--color-mi-pareja); }
 
-        /* MODAL SALA DE ESPERA */
+        /* MODALES */
         .overlay-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -149,20 +149,27 @@
         .asiento-card.p1 .tag-p { color: var(--color-mi-pareja); }
         .asiento-card.p2 .tag-p { color: var(--color-rival); }
 
-        /* MARCADOR RELATIVO PERSONALIZADO */
+        /* MARCADOR CON JUEGOS Y PIEDRAS */
         .marcador-contenedor {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             background: rgba(12, 28, 18, 0.95);
             border: 2px solid #a4762c;
-            padding: 6px 20px;
+            padding: 6px 18px;
             border-radius: 20px;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             align-items: center;
         }
 
+        .marcador-contenedor .bloque-equipo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .marcador-contenedor span.pts { font-weight: 800; font-size: 1.3rem; }
+        .marcador-contenedor span.juegos-tag { font-size: 0.75rem; font-weight: 900; color: var(--oro); }
         .pts-nosotros { color: var(--color-mi-pareja); }
         .pts-rivales { color: var(--color-rival); }
 
@@ -213,11 +220,66 @@
         .panel-botes .item-lance { display: flex; gap: 4px; color: #cadfd4; }
         .panel-botes .item-lance strong { color: var(--oro); }
 
+        /* TABLERO GENERAL (CON BARRA LATERAL IZQUIERDA) */
+        .tablero-wrapper {
+            position: relative;
+            display: flex;
+            gap: 14px;
+            width: 100%;
+            max-width: 1240px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* TABLA DE DESGLOSE A LA IZQUIERDA */
+        .sidebar-desglose {
+            width: 230px;
+            height: 520px;
+            background: rgba(10, 24, 16, 0.92);
+            border: 2px solid #a4762c;
+            border-radius: 18px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+        }
+
+        .sidebar-desglose h4 {
+            font-family: 'Cinzel', serif;
+            color: var(--oro);
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(241, 196, 15, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .lista-desglose {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.73rem;
+        }
+
+        .item-desglose {
+            background: rgba(0,0,0,0.45);
+            border-left: 3px solid var(--oro);
+            padding: 5px 8px;
+            border-radius: 4px;
+        }
+
+        .item-desglose.verde { border-left-color: var(--color-mi-pareja); }
+        .item-desglose.rojo { border-left-color: var(--color-rival); }
+
+        .item-desglose .titulo-item { font-weight: bold; color: #fff; margin-bottom: 2px; }
+        .item-desglose .detalle-item { color: #ccc; }
+
         /* MESA OVALADA */
         .mesa {
             position: relative;
-            width: 100%;
-            max-width: 980px;
+            width: 980px;
             height: 520px;
             background: radial-gradient(ellipse at center, var(--tapete-centro) 0%, var(--tapete-verde) 70%, #051d0f 100%);
             border: 12px solid var(--madera);
@@ -253,7 +315,6 @@
             transition: all 0.4s ease;
         }
 
-        /* INSIGNIA DESTACADA DE LA MANO */
         .badge-mano {
             display: none;
             position: absolute;
@@ -276,7 +337,6 @@
             to { transform: translateY(-3px); }
         }
 
-        /* HALO DE ILUMINACIÓN DECORATIVO AL GANADOR */
         .jugador-box.ganador-lance-halo {
             box-shadow: 0 0 25px 8px #ffd700, inset 0 0 15px #ffd700;
             background: rgba(241, 196, 15, 0.25);
@@ -537,6 +597,7 @@
 </head>
 <body>
 
+    <!-- MODAL DE SELECCIÓN DE ASIENTO Y NOMBRE -->
     <div class="overlay-modal" id="modalInicio">
         <div class="modal-box">
             <h2>EL MUS DE MARIO</h2>
@@ -550,6 +611,19 @@
         </div>
     </div>
 
+    <!-- MODAL DE RESET ADMINISTRADOR -->
+    <div class="overlay-modal" id="modalAdmin" style="display: none;">
+        <div class="modal-box" style="max-width: 380px;">
+            <h2 style="color: #e74c3c;">🔑 ACCESO ADMINISTRADOR</h2>
+            <p style="font-size: 0.85rem; color: #bedac8; margin-bottom: 10px;">Introduce la contraseña para reiniciar la partida y los asientos por completo:</p>
+            <input type="password" id="inputAdminPass" placeholder="Contraseña admin..." style="border-color: #e74c3c;">
+            <div style="display: flex; gap: 8px; justify-content: center;">
+                <button onclick="ejecutarAdminReset()" class="rojo">Resetear Todo</button>
+                <button onclick="cerrarModalAdmin()" class="azul">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <header>
         <h1>EL MUS DE MARIO</h1>
     </header>
@@ -557,6 +631,7 @@
     <div class="barra-superior">
         <div class="info-asiento" id="miAsientoTexto">Conectando...</div>
         <button onclick="socket.emit('rellenarBots')" class="naranja">🤖 Rellenar huecos con Bots</button>
+        <button onclick="abrirModalAdmin()" style="background: #7f1d1d; border-color: #ef4444; font-size: 0.75rem;">🔑 Reset Admin</button>
         
         <div class="panel-ajustes">
             <span>Zoom:</span>
@@ -567,10 +642,19 @@
         </div>
     </div>
 
+    <!-- MARCADOR CON JUEGOS Y PIEDRAS -->
     <div class="marcador-contenedor">
-        <div>🛡️ Tu Pareja: <span class="pts pts-nosotros" id="puntosNosotros">0</span> / 40</div>
-        <div style="color: #a4762c;">|</div>
-        <div>⚔️ Pareja Rival: <span class="pts pts-rivales" id="puntosRivales">0</span> / 40</div>
+        <div class="bloque-equipo">
+            <div>🛡️ Tu Pareja</div>
+            <div><span class="pts pts-nosotros" id="puntosNosotros">0</span> / 40</div>
+            <span class="juegos-tag" id="juegosNosotros">Juegos: 0</span>
+        </div>
+        <div style="color: #a4762c; font-size: 1.5rem;">|</div>
+        <div class="bloque-equipo">
+            <div>⚔️ Pareja Rival</div>
+            <div><span class="pts pts-rivales" id="puntosRivales">0</span> / 40</div>
+            <span class="juegos-tag" id="juegosRivales">Juegos: 0</span>
+        </div>
     </div>
 
     <div class="banner-decision" id="bannerDecision">
@@ -585,58 +669,68 @@
         <div class="item-lance">Juego: <strong id="bote_juego">-</strong></div>
     </div>
 
-    <div class="mesa">
-        <!-- NORTE: COMPAÑERO -->
-        <div class="jugador-box pos-norte" id="box_norte">
-            <div class="badge-mano" id="badge_norte">👑 MANO</div>
-            <div class="bocadillo" id="boc_norte"></div>
-            <div class="cartel mi-equipo" id="lbl_norte">
-                <span id="nom_norte">Esperando...</span>
-                <span class="sub-pareja">🤝 Tu Compañero</span>
-            </div>
-            <div class="mano" id="mano_norte"></div>
-        </div>
-
-        <!-- OESTE: RIVAL 1 -->
-        <div class="jugador-box pos-oeste" id="box_oeste">
-            <div class="badge-mano" id="badge_oeste">👑 MANO</div>
-            <div class="bocadillo" id="boc_oeste"></div>
-            <div class="cartel rival-equipo" id="lbl_oeste">
-                <span id="nom_oeste">Esperando...</span>
-                <span class="sub-pareja">⚔️ Rival</span>
-            </div>
-            <div class="mano vertical" id="mano_oeste"></div>
-        </div>
-
-        <!-- CENTRO -->
-        <div class="pos-centro centro-mesa" id="boxCentro">
-            <h3 id="faseTxt">SALA DE ESPERA</h3>
-            <p id="msgTxt">Esperando a que se unan 4 jugadores o pulsa en rellenar con Bots.</p>
-        </div>
-
-        <!-- ESTE: RIVAL 2 -->
-        <div class="jugador-box pos-este" id="box_este">
-            <div class="badge-mano" id="badge_este">👑 MANO</div>
-            <div class="bocadillo" id="boc_este"></div>
-            <div class="cartel rival-equipo" id="lbl_este">
-                <span id="nom_este">Esperando...</span>
-                <span class="sub-pareja">⚔️ Rival</span>
-            </div>
-            <div class="mano vertical" id="mano_este"></div>
-        </div>
-
-        <!-- SUR: TÚ -->
-        <div class="jugador-box pos-sur" id="box_sur">
-            <div class="badge-mano" id="badge_sur">👑 MANO</div>
-            <div class="bocadillo" id="boc_sur"></div>
-            <div class="mano" id="miMano"></div>
-            <div class="cartel mi-equipo activo" id="lbl_sur">
-                <span id="nom_sur">Tú</span>
-                <span class="sub-pareja">👤 Tu Asiento</span>
+    <div class="tablero-wrapper">
+        <!-- BARRA LATERAL IZQUIERDA: DESGLOSE DE PUNTOS -->
+        <div class="sidebar-desglose">
+            <h4>📋 DESGLOSE DE PUNTOS</h4>
+            <div class="lista-desglose" id="desgloseLog">
+                <div style="color: #888; text-align: center; margin-top: 15px;">Aún no hay lances puntuados en esta mano.</div>
             </div>
         </div>
 
-        <div class="chat-log" id="chatLog"></div>
+        <div class="mesa">
+            <!-- NORTE: COMPAÑERO -->
+            <div class="jugador-box pos-norte" id="box_norte">
+                <div class="badge-mano" id="badge_norte">👑 MANO</div>
+                <div class="bocadillo" id="boc_norte"></div>
+                <div class="cartel mi-equipo" id="lbl_norte">
+                    <span id="nom_norte">Esperando...</span>
+                    <span class="sub-pareja">🤝 Tu Compañero</span>
+                </div>
+                <div class="mano" id="mano_norte"></div>
+            </div>
+
+            <!-- OESTE: RIVAL 1 -->
+            <div class="jugador-box pos-oeste" id="box_oeste">
+                <div class="badge-mano" id="badge_oeste">👑 MANO</div>
+                <div class="bocadillo" id="boc_oeste"></div>
+                <div class="cartel rival-equipo" id="lbl_oeste">
+                    <span id="nom_oeste">Esperando...</span>
+                    <span class="sub-pareja">⚔️ Rival</span>
+                </div>
+                <div class="mano vertical" id="mano_oeste"></div>
+            </div>
+
+            <!-- CENTRO -->
+            <div class="pos-centro centro-mesa" id="boxCentro">
+                <h3 id="faseTxt">SALA DE ESPERA</h3>
+                <p id="msgTxt">Esperando a que se unan 4 jugadores o pulsa en rellenar con Bots.</p>
+            </div>
+
+            <!-- ESTE: RIVAL 2 -->
+            <div class="jugador-box pos-este" id="box_este">
+                <div class="badge-mano" id="badge_este">👑 MANO</div>
+                <div class="bocadillo" id="boc_este"></div>
+                <div class="cartel rival-equipo" id="lbl_este">
+                    <span id="nom_este">Esperando...</span>
+                    <span class="sub-pareja">⚔️ Rival</span>
+                </div>
+                <div class="mano vertical" id="mano_este"></div>
+            </div>
+
+            <!-- SUR: TÚ -->
+            <div class="jugador-box pos-sur" id="box_sur">
+                <div class="badge-mano" id="badge_sur">👑 MANO</div>
+                <div class="bocadillo" id="boc_sur"></div>
+                <div class="mano" id="miMano"></div>
+                <div class="cartel mi-equipo activo" id="lbl_sur">
+                    <span id="nom_sur">Tú</span>
+                    <span class="sub-pareja">👤 Tu Asiento</span>
+                </div>
+            </div>
+
+            <div class="chat-log" id="chatLog"></div>
+        </div>
     </div>
 
     <div class="panel-control" id="botonesAccion"></div>
@@ -733,6 +827,25 @@
             alert(msg);
         });
 
+        // ADMIN RESET
+        function abrirModalAdmin() {
+            document.getElementById('modalAdmin').style.display = 'flex';
+        }
+        function cerrarModalAdmin() {
+            document.getElementById('modalAdmin').style.display = 'none';
+        }
+        function ejecutarAdminReset() {
+            const pass = document.getElementById('inputAdminPass').value;
+            socket.emit('solicitarResetAdmin', { password: pass });
+        }
+        socket.on('errorAdminPassword', (msg) => {
+            alert(msg);
+        });
+        socket.on('resetCompleto', () => {
+            alert("El administrador ha reiniciado la sala y la partida por completo.");
+            location.reload();
+        });
+
         socket.on('misCartas', (cartas) => {
             misCartas = cartas.map(c => ({ ...c, seleccionada: false }));
             renderizarMiMano();
@@ -765,11 +878,12 @@
             if (tiempo <= 3) reproducirTono(700, 0.05);
         });
 
-        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, puntosActualizados }) => {
+        socket.on('eventoLanceGanado', ({ lance, asientoGanador, parejaGanadora, desglose, desgloseItems, puntosActualizados, esOrdagoDirecto }) => {
             document.getElementById('faseTxt').innerText = `🏆 ${lance}`;
             document.getElementById('msgTxt').innerText = desglose;
 
-            actualizarPuntuacionesPersonalizadas(puntosActualizados);
+            actualizarPuntuacionesPersonalizadas(puntosActualizados, estadoActual.juegosGanados);
+            actualizarTablaDesgloseLateral(lance, parejaGanadora, desgloseItems);
 
             const yo = miAsiento !== null ? miAsiento : 0;
             let targetBox = 'box_sur';
@@ -786,6 +900,13 @@
             }
         });
 
+        socket.on('victoriaChico', ({ ganadorPareja, mensaje, juegosGanados }) => {
+            actualizarPuntuacionesPersonalizadas(estadoActual.puntos || {0:0, 1:0}, juegosGanados);
+            alert(mensaje);
+            // Limpiar log desglose para el nuevo chico
+            document.getElementById('desgloseLog').innerHTML = `<div style="color: #888; text-align: center; margin-top: 15px;">Nuevo juego/chico iniciado.</div>`;
+        });
+
         socket.on('estadoJuego', (estado) => {
             estadoActual = estado;
             if (estado.fase !== 'recuento') {
@@ -793,7 +914,7 @@
                 document.getElementById('msgTxt').innerText = estado.mensaje;
             }
 
-            actualizarPuntuacionesPersonalizadas(estado.puntos);
+            actualizarPuntuacionesPersonalizadas(estado.puntos, estado.juegosGanados);
 
             const banner = document.getElementById('bannerDecision');
             if (estado.decisionPareja && estado.decisionPareja.activa) {
@@ -819,16 +940,48 @@
             actualizarControles();
         });
 
-        function actualizarPuntuacionesPersonalizadas(puntos) {
+        function actualizarPuntuacionesPersonalizadas(puntos, juegosGanados) {
+            if (!puntos) return;
+            const jG = juegosGanados || { 0: 0, 1: 0 };
             if (miAsiento !== null) {
                 const miPareja = (miAsiento % 2 === 0) ? 0 : 1;
                 const rivalPareja = miPareja === 0 ? 1 : 0;
                 document.getElementById('puntosNosotros').innerText = puntos[miPareja];
                 document.getElementById('puntosRivales').innerText = puntos[rivalPareja];
+                document.getElementById('juegosNosotros').innerText = `Juegos: ${jG[miPareja]}`;
+                document.getElementById('juegosRivales').innerText = `Juegos: ${jG[rivalPareja]}`;
             } else {
                 document.getElementById('puntosNosotros').innerText = puntos[0];
                 document.getElementById('puntosRivales').innerText = puntos[1];
+                document.getElementById('juegosNosotros').innerText = `Juegos: ${jG[0]}`;
+                document.getElementById('juegosRivales').innerText = `Juegos: ${jG[1]}`;
             }
+        }
+
+        function actualizarTablaDesgloseLateral(lance, parejaGanadora, items) {
+            const contenedor = document.getElementById('desgloseLog');
+            if (contenedor.children.length === 1 && contenedor.children[0].innerText.includes('Aún no hay')) {
+                contenedor.innerHTML = '';
+            }
+
+            const miPareja = (miAsiento !== null && miAsiento % 2 !== 0) ? 1 : 0;
+            const esMiEquipo = (parejaGanadora === miPareja);
+            const colorClase = esMiEquipo ? 'verde' : 'rojo';
+
+            let itemsHTML = '';
+            if (items && items.length > 0) {
+                items.forEach(it => {
+                    itemsHTML += `<div>• <strong>${it.jugador}:</strong> ${it.desc} (+${it.pts})</div>`;
+                });
+            }
+
+            const card = document.createElement('div');
+            card.className = `item-desglose ${colorClase}`;
+            card.innerHTML = `
+                <div class="titulo-item">${lance} (Pareja ${parejaGanadora + 1})</div>
+                <div class="detalle-item">${itemsHTML}</div>
+            `;
+            contenedor.prepend(card);
         }
 
         function actualizarBotesLances(lances) {
