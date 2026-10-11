@@ -1233,8 +1233,42 @@
             padding: 3px 4px;
             cursor: pointer;
             position: relative;
+            overflow: hidden;
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
             transform-style: preserve-3d;
+        }
+
+        .card-photo-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: none;
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 9px;
+        }
+
+        .card.has-card-photo {
+            padding: 0 !important;
+            background: #ffffff !important;
+        }
+
+        .card.has-card-photo .card-photo-img {
+            display: block;
+        }
+
+        .card.has-card-photo .card-fallback-vector {
+            display: none !important;
+        }
+
+        .card-fallback-vector {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .card::after {
@@ -1309,6 +1343,32 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            overflow: hidden;
+        }
+
+        .card-back-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: none;
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 8px;
+        }
+
+        .card-back.has-back-photo {
+            background: #ffffff !important;
+            border: 1px solid rgba(0,0,0,0.15) !important;
+        }
+
+        .card-back.has-back-photo .card-back-img {
+            display: block;
+        }
+
+        .card-back.has-back-photo .card-back-pattern {
+            display: none !important;
         }
 
         .card-back-pattern {
@@ -1815,6 +1875,13 @@
                     <span class="stat-val" id="statNivel">Lvl 1</span>
                     <span class="stat-label">Nivel Tahúr</span>
                 </div>
+            <div class="perfil-section-title">🎴 Baraja de Cartas:</div>
+            <div id="infoBarajaCard" style="background:var(--glass-card); border:1px solid var(--glass-border); border-radius:10px; padding:8px 12px; font-size:0.75rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                <div>
+                    <div style="font-weight:800; color:var(--accent-gold);" id="txtEstadoBaraja">Comprobando fotos locales...</div>
+                    <div style="font-size:0.67rem; color:var(--text-muted);" id="txtDetalleBaraja">Carpeta: public/cartas</div>
+                </div>
+                <span style="font-size:1.2rem;" id="iconoEstadoBaraja">🎴</span>
             </div>
 
             <div class="perfil-actions-row">
@@ -1945,7 +2012,8 @@
 
             <!-- CENTRO CON MAZO Y FICHAS -->
             <div class="table-hub pos-centro" id="boxCentro">
-                <div class="mazo-central" id="mazoVisual">
+                <div class="mazo-central" id="mazoVisual" style="overflow: hidden;">
+                    <img class="card-back-img" id="imgMazoVisual" src="/cartas/tapa.png" data-alts="/cartas/tapa.jpg,/cartas/reverso.png,/cartas/reverso.jpg,/cartas/dorso.png" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none';" alt="Mazo" />
                     <span>BARAJA</span>
                 </div>
                 <div class="fichas-bote-pill" id="fichasBoteContainer" style="display: none;">
@@ -2312,6 +2380,7 @@
 
             renderizarGridAvatares();
             actualizarUIPerfil(perfil);
+            actualizarUIEstadoBaraja();
 
             const modal = document.getElementById('modalPerfil');
             if (modal) modal.classList.remove('oculto');
@@ -2412,6 +2481,7 @@
             aplicarTemaInicial();
             actualizarBotonAudio();
             initPerfil();
+            cargarInfoCartasServidor();
         });
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -3087,12 +3157,267 @@
             }
         }
 
+        /* ===== GESTIÓN DE BARAJA FOTOGRÁFICA Y REVERSOS REALES ===== */
+        let infoCartasLocales = { existe: false, total: 0, prefix: '/cartas/', archivos: [] };
+        let mapaFotosDetectadas = {};
+
+        async function cargarInfoCartasServidor() {
+            try {
+                const res = await fetch('/api/cartas-info');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.existe && Array.isArray(data.archivos)) {
+                        infoCartasLocales = data;
+                        mapearArchivosCartas(data.archivos, data.prefix || '/cartas/');
+                        actualizarUIEstadoBaraja();
+                        renderizarMiMano();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function actualizarUIEstadoBaraja() {
+            const txt = document.getElementById('txtEstadoBaraja');
+            const det = document.getElementById('txtDetalleBaraja');
+            const ico = document.getElementById('iconoEstadoBaraja');
+            if (!txt) return;
+
+            if (infoCartasLocales.existe && infoCartasLocales.total > 0) {
+                txt.innerText = `${infoCartasLocales.total} fotos detectadas (Baraja Real Activa)`;
+                txt.style.color = 'var(--accent-gold)';
+                const rutaInfo = infoCartasLocales.prefix === '/' ? 'carpeta public/' : 'public/cartas/';
+                if (det) det.innerText = `Cargadas desde ${rutaInfo} (${Object.keys(mapaFotosDetectadas).length} naipes mapeados)`;
+                if (ico) ico.innerText = '✅';
+            } else {
+                txt.innerText = 'Diseño Vectorial Clásico';
+                txt.style.color = 'var(--text-muted)';
+                if (det) det.innerText = 'Coloca tus imágenes en public/ para usar fotos reales';
+                if (ico) ico.innerText = '🎨';
+            }
+        }
+
+        function mapearArchivosCartas(archivos, prefix = '/cartas/') {
+            mapaFotosDetectadas = {};
+            const palosNorm = ['oros', 'copas', 'espadas', 'bastos'];
+            const mapaValoresMus = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+
+            // 1. Detección específica de "tapa de carta" y "fondo blanco"
+            archivos.forEach(nombre => {
+                const clean = nombre.toLowerCase();
+                const cleanSimple = clean.replace(/[_\-\s]+/g, ' ');
+
+                if (cleanSimple.includes('tapa de carta') || cleanSimple.includes('tapa') || cleanSimple.includes('reverso') || cleanSimple.includes('dorso') || cleanSimple.includes('back')) {
+                    if (!mapaFotosDetectadas['reverso'] || cleanSimple.includes('tapa de carta')) {
+                        mapaFotosDetectadas['reverso'] = `${prefix}${nombre}`;
+                    }
+                }
+
+                if (cleanSimple.includes('fondo blanco') || cleanSimple.includes('blanco') || cleanSimple.includes('fondo') || cleanSimple.includes('tapete') || cleanSimple.includes('white')) {
+                    if (!mapaFotosDetectadas['fondo'] || cleanSimple.includes('fondo blanco')) {
+                        mapaFotosDetectadas['fondo'] = `${prefix}${nombre}`;
+                    }
+                }
+            });
+
+            // 2. Detección automática por numeración carta_01 a carta_40 (Oros, Copas, Espadas, Bastos)
+            const archivosCartaNum = {};
+            archivos.forEach(nombre => {
+                const matchNum = nombre.toLowerCase().match(/^carta_?0*(\d+)\.(png|jpg|jpeg|webp)$/);
+                if (matchNum) {
+                    const numIdx = parseInt(matchNum[1], 10);
+                    archivosCartaNum[numIdx] = `${prefix}${nombre}`;
+                }
+            });
+
+            if (Object.keys(archivosCartaNum).length >= 40) {
+                // Orden tradicional de la baraja española de 40 cartas:
+                // 1-10: Oros (1, 2, 3, 4, 5, 6, 7, 10/Sota, 11/Caballo, 12/Rey)
+                // 11-20: Copas
+                // 21-30: Espadas
+                // 31-40: Bastos
+                palosNorm.forEach((p, pIdx) => {
+                    mapaValoresMus.forEach((val, vIdx) => {
+                        const numIdx = (pIdx * 10) + vIdx + 1;
+                        if (archivosCartaNum[numIdx]) {
+                            mapaFotosDetectadas[`${val}_${p}`] = archivosCartaNum[numIdx];
+                        }
+                    });
+                });
+                // Fallback para reverso/fondo si no se llamaran "tapa de carta" / "fondo blanco"
+                if (!mapaFotosDetectadas['reverso'] && archivosCartaNum[41]) mapaFotosDetectadas['reverso'] = archivosCartaNum[41];
+                if (!mapaFotosDetectadas['fondo'] && archivosCartaNum[42]) mapaFotosDetectadas['fondo'] = archivosCartaNum[42];
+            }
+
+            // 3. Detección por nombres con palos y palabras clave
+            archivos.forEach(nombre => {
+                const clean = nombre.toLowerCase();
+
+                palosNorm.forEach(p => {
+                    for (let n of [1, 2, 3, 4, 5, 6, 7, 10, 11, 12]) {
+                        const key = `${n}_${p}`;
+                        if (mapaFotosDetectadas[key]) return;
+
+                        const num2 = n < 10 ? `0${n}` : `${n}`;
+                        const match1 = clean.includes(`${n}_${p}`) || clean.includes(`${p}_${n}`);
+                        const match2 = clean.includes(`${n}-${p}`) || clean.includes(`${p}-${n}`);
+                        const match3 = clean.includes(`${num2}_${p}`) || clean.includes(`${p}_${num2}`);
+                        const match4 = clean.includes(`${n}${p}`) || clean.includes(`${p}${n}`);
+                        const match5 = clean.includes(`${n}_de_${p}`) || clean.includes(`${n}de${p}`);
+
+                        if (match1 || match2 || match3 || match4 || match5) {
+                            mapaFotosDetectadas[key] = `${prefix}${nombre}`;
+                        }
+                    }
+                });
+            });
+
+            // Si hay reverso detectado, actualizar mazo central
+            if (mapaFotosDetectadas['reverso']) {
+                const imgMazo = document.getElementById('imgMazoVisual');
+                if (imgMazo) {
+                    imgMazo.src = mapaFotosDetectadas['reverso'];
+                    imgMazo.style.display = 'block';
+                }
+            }
+
+            // Si hay imagen de fondo blanco detectada, aplicarla al fondo de las cartas
+            if (mapaFotosDetectadas['fondo']) {
+                document.documentElement.style.setProperty('--card-bg-custom', `url('${mapaFotosDetectadas['fondo']}')`);
+                document.querySelectorAll('.card').forEach(el => {
+                    el.style.backgroundImage = `url('${mapaFotosDetectadas['fondo']}')`;
+                    el.style.backgroundSize = 'cover';
+                });
+            }
+        }
+
+        function calcularIndiceCartaBaraja40(c) {
+            if (!c) return 41;
+            const p = (c.palo || '').toLowerCase();
+            const n = parseInt(c.numero);
+            const palosIndex = { 'oros': 0, 'copas': 1, 'espadas': 2, 'bastos': 3 };
+            const pIdx = palosIndex[p] !== undefined ? palosIndex[p] : 0;
+            const mapaValores = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 10: 7, 11: 8, 12: 9 };
+            const vIdx = mapaValores[n] !== undefined ? mapaValores[n] : 0;
+            return (pIdx * 10) + vIdx + 1;
+        }
+
+        function obtenerRutasCandidatasCarta(c) {
+            if (!c) return { principal: '', alts: [] };
+            const p = (c.palo || '').toLowerCase();
+            const n = c.numero;
+            const key = `${n}_${p}`;
+
+            if (mapaFotosDetectadas[key]) {
+                return { principal: mapaFotosDetectadas[key], alts: [] };
+            }
+
+            const numIdx = calcularIndiceCartaBaraja40(c);
+            const numPad = numIdx < 10 ? `0${numIdx}` : `${numIdx}`;
+
+            // Candidata principal: /carta_01.png
+            const principal = `/carta_${numPad}.png`;
+            const alts = [
+                `/cartas/carta_${numPad}.png`,
+                `/carta_${numIdx}.png`,
+                `/cartas/carta_${numIdx}.png`,
+                `/cartas/${n}_${p}.png`,
+                `/cartas/${n}_${p}.jpg`,
+                `/${n}_${p}.png`,
+                `/${n}_${p}.jpg`,
+                `/cartas/${p}_${n}.png`,
+                `/cartas/${p}_${n}.jpg`
+            ];
+            return { principal, alts };
+        }
+
+        function construirHTMLCarta(c, conAnim = false) {
+            const p = (c.palo || '').toLowerCase();
+            const n = c.numero;
+            const { principal, alts } = obtenerRutasCandidatasCarta(c);
+            const altsStr = alts.join(',');
+
+            return `
+                <img class="card-photo-img" src="${principal}" data-alts="${altsStr}" onload="onCartaImgLoad(this)" onerror="onCartaImgError(this)" alt="${n} de ${p}" />
+                <div class="card-fallback-vector">
+                    <div class="card-corner"><span class="card-num">${n}</span><div class="card-mini-symbol">${svgPalos[c.palo] || ''}</div></div>
+                    <div class="card-center-art">${svgPalos[c.palo] || ''}</div>
+                    <div class="card-corner inf"><span class="card-num">${n}</span><div class="card-mini-symbol">${svgPalos[c.palo] || ''}</div></div>
+                </div>
+            `;
+        }
+
+        function onCartaImgLoad(img) {
+            img.style.display = 'block';
+            if (img.parentElement) {
+                img.parentElement.classList.add('has-card-photo');
+            }
+        }
+
+        function onCartaImgError(img) {
+            const alts = img.dataset.alts ? img.dataset.alts.split(',').filter(Boolean) : [];
+            if (alts.length > 0) {
+                const sig = alts.shift();
+                img.dataset.alts = alts.join(',');
+                img.src = sig;
+            } else {
+                img.style.display = 'none';
+                if (img.parentElement) {
+                    img.parentElement.classList.remove('has-card-photo');
+                }
+            }
+        }
+
+        function generarReversoHTML(customClass = '') {
+            const reversoSrc = mapaFotosDetectadas['reverso'] || '/tapa de carta.png';
+            const alts = [
+                '/tapa de carta.png',
+                '/tapa_de_carta.png',
+                '/tapa de carta.jpg',
+                '/tapa_de_carta.jpg',
+                '/cartas/tapa de carta.png',
+                '/cartas/tapa_de_carta.png',
+                '/carta_41.png',
+                '/cartas/carta_41.png',
+                '/tapa.png',
+                '/cartas/tapa.png',
+                '/reverso.png'
+            ].filter(r => r !== reversoSrc).join(',');
+
+            return `
+                <div class="card-back ${customClass}">
+                    <img class="card-back-img" src="${reversoSrc}" data-alts="${alts}" onload="onReversoImgLoad(this)" onerror="onReversoImgError(this)" alt="Reverso" />
+                    <div class="card-back-pattern">
+                        <div class="card-back-logo">MUS</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function onReversoImgLoad(img) {
+            img.style.display = 'block';
+            if (img.parentElement) {
+                img.parentElement.classList.add('has-back-photo');
+            }
+        }
+
+        function onReversoImgError(img) {
+            const alts = img.dataset.alts ? img.dataset.alts.split(',').filter(Boolean) : [];
+            if (alts.length > 0) {
+                const sig = alts.shift();
+                img.dataset.alts = alts.join(',');
+                img.src = sig;
+            } else {
+                img.style.display = 'none';
+                if (img.parentElement) {
+                    img.parentElement.classList.remove('has-back-photo');
+                }
+            }
+        }
+
         function generarCartaHTML(c, conAnim = false) {
             return `
                 <div class="card palo-${c.palo} ${conAnim ? 'revelada-anim' : ''}">
-                    <div class="card-corner"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
-                    <div class="card-center-art">${svgPalos[c.palo]}</div>
-                    <div class="card-corner inf"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
+                    ${construirHTMLCarta(c, conAnim)}
                 </div>
             `;
         }
@@ -3105,10 +3430,9 @@
             if (modoClaseActivo) {
                 for (let i = 0; i < 4; i++) {
                     const rev = document.createElement('div');
-                    rev.className = 'card-back';
                     rev.style.cursor = 'pointer';
                     rev.title = 'Modo Clase: Pulsa para descubrir';
-                    rev.innerHTML = `<div class="card-back-pattern"><div class="card-back-logo">OCULTO</div></div>`;
+                    rev.innerHTML = generarReversoHTML();
                     rev.onclick = toggleModoClase;
                     cont.appendChild(rev);
                 }
@@ -3126,11 +3450,7 @@
                 div.style.transform = `rotate(${baseRot}deg) translateY(${baseY}px)`;
                 div.style.transition = 'transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.2s ease';
 
-                div.innerHTML = `
-                    <div class="card-corner"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
-                    <div class="card-center-art">${svgPalos[c.palo]}</div>
-                    <div class="card-corner inf"><span class="card-num">${c.numero}</span><div class="card-mini-symbol">${svgPalos[c.palo]}</div></div>
-                `;
+                div.innerHTML = construirHTMLCarta(c);
 
                 // Interactive 3D perspective mouse tilt
                 div.addEventListener('mousemove', (e) => {
@@ -3177,13 +3497,7 @@
                     if (locoInfo && locoInfo.indice === i) {
                         el.innerHTML += generarCartaHTML(locoInfo.carta, false);
                     } else {
-                        el.innerHTML += `
-                            <div class="card-back">
-                                <div class="card-back-pattern">
-                                    <div class="card-back-logo">MUS</div>
-                                </div>
-                            </div>
-                        `;
+                        el.innerHTML += generarReversoHTML();
                     }
                 }
             });
