@@ -16,7 +16,40 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 const publicDir = fs.existsSync(path.join(__dirname, 'public')) ? path.join(__dirname, 'public') : __dirname;
+const cartasDir = path.join(publicDir, 'cartas');
+if (!fs.existsSync(cartasDir)) {
+  try { fs.mkdirSync(cartasDir, { recursive: true }); } catch (e) {}
+}
 app.use(express.static(publicDir));
+
+app.get('/api/cartas-info', (req, res) => {
+  let archivos = [];
+  let prefix = '/cartas/';
+
+  if (fs.existsSync(cartasDir)) {
+    const listCartas = fs.readdirSync(cartasDir).filter(f => !f.startsWith('.'));
+    if (listCartas.length > 0) {
+      archivos = listCartas;
+      prefix = '/cartas/';
+    }
+  }
+
+  // Si no hay en public/cartas, buscar si están directamente en public/
+  if (archivos.length === 0 && fs.existsSync(publicDir)) {
+    const listPub = fs.readdirSync(publicDir).filter(f => {
+      const lower = f.toLowerCase();
+      const esImg = lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp');
+      if (!esImg || f.startsWith('.')) return false;
+      return lower.startsWith('carta') || lower.includes('tapa') || lower.includes('fondo') || lower.includes('blanco') || lower.includes('reverso') || lower.includes('dorso');
+    });
+    if (listPub.length > 0) {
+      archivos = listPub;
+      prefix = '/';
+    }
+  }
+
+  return res.json({ existe: archivos.length > 0, total: archivos.length, prefix, archivos });
+});
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
