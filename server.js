@@ -288,6 +288,7 @@ function obtenerEstadoAsientos(sala) {
       nombrePareja: obtenerNombrePareja(sala, a.pareja),
       ocupado: !!j,
       ocupante: j?.nombre,
+      avatar: j?.avatar || (j?.esBot ? '🤖' : '👑'),
       esBot: j?.esBot
     };
   });
@@ -346,7 +347,13 @@ function notificarEstado(sala, msg, forzarRevelado = false) {
 
   const mapaJugadores = {};
   Object.values(sala.jugadoresPorToken).forEach(j => {
-    mapaJugadores[j.asiento] = { asiento: j.asiento, nombre: j.nombre, pareja: j.pareja, esBot: j.esBot };
+    mapaJugadores[j.asiento] = {
+      asiento: j.asiento,
+      nombre: j.nombre,
+      avatar: j.avatar || (j.esBot ? '🤖' : '👑'),
+      pareja: j.pareja,
+      esBot: j.esBot
+    };
   });
 
   let cartasReveladasModoLoco = {};
@@ -1425,7 +1432,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('unirseAsiento', ({ nombre, nombrePareja, asientoElegido, salaId, token }) => {
+  socket.on('unirseAsiento', ({ nombre, nombrePareja, asientoElegido, salaId, token, avatar }) => {
     const sId = (salaId && salaId.trim() !== "") ? salaId.trim().toLowerCase() : miSalaId;
     const sala = obtenerOCrearSala(sId);
     miToken = token;
@@ -1437,7 +1444,8 @@ io.on('connection', (socket) => {
     }
 
     const aInfo = ASIENTOS_INFO[asientoElegido];
-    const nombreFinal = (nombre && nombre.trim() !== '') ? nombre.trim() : `Jugador ${asientoElegido + 1}`;
+    const nombreFinal = (nombre && nombre.trim() !== '') ? nombre.trim().slice(0, 14) : `Jugador ${asientoElegido + 1}`;
+    const avatarFinal = (avatar && typeof avatar === 'string') ? avatar.slice(0, 6) : '👑';
 
     if (nombrePareja && typeof nombrePareja === 'string' && nombrePareja.trim() !== '') {
       sala.nombresParejas[aInfo.pareja] = nombrePareja.trim().slice(0, 20);
@@ -1446,6 +1454,7 @@ io.on('connection', (socket) => {
     sala.jugadoresPorToken[miToken] = {
       asiento: asientoElegido,
       nombre: nombreFinal,
+      avatar: avatarFinal,
       pareja: aInfo.pareja,
       esBot: false,
       socketId: socket.id
@@ -1462,11 +1471,25 @@ io.on('connection', (socket) => {
     }
 
     emitirActualizacionAsientos(sala);
-    notificarEstado(sala, `${nombreFinal} se sentó en ${aInfo.nombreDef} (${obtenerNombrePareja(sala, aInfo.pareja)}).`);
+    notificarEstado(sala, `${avatarFinal} ${nombreFinal} se sentó en ${aInfo.nombreDef} (${obtenerNombrePareja(sala, aInfo.pareja)}).`);
 
     if (Object.keys(sala.jugadoresPorToken).length === 4 && !sala.enPartida) {
       iniciarMano(sala);
     }
+  });
+
+  socket.on('actualizarPerfil', ({ nombre, avatar }) => {
+    const sala = obtenerOCrearSala(miSalaId);
+    if (!miToken || !sala.jugadoresPorToken[miToken]) return;
+    const j = sala.jugadoresPorToken[miToken];
+    if (nombre && typeof nombre === 'string' && nombre.trim() !== '') {
+      j.nombre = nombre.trim().slice(0, 14);
+    }
+    if (avatar && typeof avatar === 'string') {
+      j.avatar = avatar.slice(0, 6);
+    }
+    emitirActualizacionAsientos(sala);
+    notificarEstado(sala, `${j.avatar || ''} ${j.nombre} actualizó su perfil.`);
   });
 
   socket.on('rellenarBots', () => {
@@ -1481,6 +1504,7 @@ io.on('connection', (socket) => {
         sala.jugadoresPorToken[miToken] = {
           asiento: primerLibre,
           nombre: "Mario",
+          avatar: "👑",
           pareja: aInfo.pareja,
           esBot: false,
           socketId: socket.id
@@ -1496,6 +1520,7 @@ io.on('connection', (socket) => {
         sala.jugadoresPorToken[`bot_${a}`] = {
           asiento: a,
           nombre: `🤖 Bot ${a + 1}`,
+          avatar: '🤖',
           pareja: aInfo.pareja,
           esBot: true,
           socketId: null
