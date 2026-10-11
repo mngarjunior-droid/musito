@@ -449,6 +449,264 @@
             margin-left: 2px;
         }
 
+        /* ===== BOTÓN DE PERFIL EN EL HEADER ===== */
+        .btn-perfil-header {
+            background: var(--glass-surface);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1.5px solid var(--accent-gold);
+            color: var(--text-primary);
+            padding: 3px 12px 3px 6px;
+            border-radius: 980px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 4px 14px var(--accent-gold-glow);
+        }
+
+        .btn-perfil-header:hover {
+            transform: translateY(-1.5px) scale(1.02);
+            box-shadow: 0 6px 20px var(--accent-gold-glow);
+            border-color: var(--accent-gold-hover);
+            background: var(--glass-card);
+        }
+
+        .perfil-avatar-pill {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--tapete-core);
+            border: 1.5px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            line-height: 1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .perfil-info-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.1;
+        }
+
+        .perfil-nombre-pill {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        .perfil-rango-pill {
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        /* ===== MODAL DE PERFIL Y ESTADÍSTICAS ===== */
+        .modal-perfil-box {
+            max-width: 460px !important;
+            width: 92vw !important;
+            padding: 22px 24px !important;
+            border: 1.5px solid var(--accent-gold) !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 35px var(--accent-gold-glow) !important;
+        }
+
+        .modal-perfil-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .perfil-avatar-preview-wrap {
+            position: relative;
+        }
+
+        .perfil-avatar-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--tapete-core) 0%, var(--tapete-edge) 100%);
+            border: 2.5px solid var(--accent-gold);
+            box-shadow: 0 0 20px var(--accent-gold-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            line-height: 1;
+            transition: transform 0.25s ease;
+        }
+
+        .perfil-avatar-preview:hover {
+            transform: scale(1.08) rotate(5deg);
+        }
+
+        .perfil-avatar-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: var(--accent-gold);
+            color: #122218;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        .perfil-meta-header {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .perfil-titulo-usuario {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .perfil-badge-rango {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--accent-gold-glow);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 2px 8px;
+            border-radius: 980px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            width: fit-content;
+        }
+
+        .perfil-section-title {
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--accent-gold);
+            margin-bottom: 8px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .perfil-avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin-bottom: 16px;
+            max-height: 125px;
+            overflow-y: auto;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+        }
+
+        @media (max-width: 480px) {
+            .perfil-avatar-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        .avatar-option-btn {
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .avatar-option-btn:hover {
+            transform: scale(1.15);
+            border-color: var(--accent-gold);
+            background: var(--accent-gold-glow);
+        }
+
+        .avatar-option-btn.selected {
+            border-color: var(--accent-gold) !important;
+            background: var(--accent-gold-glow) !important;
+            box-shadow: 0 0 12px var(--accent-gold-glow);
+            transform: scale(1.12);
+        }
+
+        .perfil-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .perfil-stat-card {
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 6px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .perfil-stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-gold);
+        }
+
+        .stat-icon {
+            font-size: 1.15rem;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .stat-val {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--accent-gold);
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .perfil-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
         /* ===== MARCADOR WIDGET ===== */
         .scoreboard-widget {
             display: flex;
@@ -1498,6 +1756,77 @@
         </div>
     </div>
 
+    <!-- MODAL DE PERFIL Y ESTADÍSTICAS PERSISTENTES -->
+    <div class="overlay-modal oculto" id="modalPerfil">
+        <div class="modal-box modal-perfil-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h2 style="margin:0; font-family:'Cinzel',serif; font-size:1.3rem; color:var(--accent-gold);">Perfil de Jugador</h2>
+                <button onclick="cerrarModalPerfil()" class="btn-compact" style="padding:2px 8px; font-size:1.1rem; border-radius:50%; line-height:1;" title="Cerrar">&times;</button>
+            </div>
+
+            <div class="modal-perfil-header">
+                <div class="perfil-avatar-preview-wrap">
+                    <div class="perfil-avatar-preview" id="perfilAvatarBig">👑</div>
+                    <div class="perfil-avatar-badge" title="Avatar activo">✓</div>
+                </div>
+                <div class="perfil-meta-header">
+                    <div class="perfil-titulo-usuario" id="perfilNombreDisplay">Mario</div>
+                    <div class="perfil-badge-rango" id="perfilRangoTag">🌱 Novato del Mus</div>
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 14px;">
+                <label for="inputPerfilNombre" style="font-size: 0.74rem; font-weight: 800; color: var(--accent-gold); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">✏️ Tu Apodo en la mesa:</label>
+                <input type="text" id="inputPerfilNombre" placeholder="Tu Apodo..." maxlength="14" style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 0.9rem;">
+            </div>
+
+            <div class="perfil-section-title">🎨 Elige tu Icono / Avatar:</div>
+            <div class="perfil-avatar-grid" id="gridAvatares"></div>
+
+            <div class="perfil-section-title">📊 Tus Victorias (Guardadas en navegador):</div>
+            <div class="perfil-stats-grid">
+                <div class="perfil-stat-card">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-val" id="statVacas">0</span>
+                    <span class="stat-label">Vacas Ganadas</span>
+                </div>
+                <div class="perfil-stat-card">
+                    <span class="stat-icon">🥇</span>
+                    <span class="stat-val" id="statChicos">0</span>
+                    <span class="stat-label">Chicos Ganados</span>
+                </div>
+                <div class="perfil-stat-card">
+                    <span class="stat-icon">⚔️</span>
+                    <span class="stat-val" id="statOrdagos">0</span>
+                    <span class="stat-label">Órdagos Ganados</span>
+                </div>
+                <div class="perfil-stat-card">
+                    <span class="stat-icon">🎮</span>
+                    <span class="stat-val" id="statPartidas">0</span>
+                    <span class="stat-label">Chicos Jugados</span>
+                </div>
+                <div class="perfil-stat-card">
+                    <span class="stat-icon">📈</span>
+                    <span class="stat-val" id="statWinrate">0%</span>
+                    <span class="stat-label">% Victoria</span>
+                </div>
+                <div class="perfil-stat-card">
+                    <span class="stat-icon">🎖️</span>
+                    <span class="stat-val" id="statNivel">Lvl 1</span>
+                    <span class="stat-label">Nivel Tahúr</span>
+                </div>
+            </div>
+
+            <div class="perfil-actions-row">
+                <button onclick="reiniciarStatsPerfil()" class="btn-compact danger" style="font-size: 0.7rem;" title="Resetear solo estadísticas">🔄 Reiniciar Stats</button>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="cerrarModalPerfil()" class="btn-compact">Cancelar</button>
+                    <button onclick="guardarPerfilDesdeModal()" class="btn-action gold" style="padding: 8px 18px; font-size: 0.84rem;">Guardar Perfil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER / TOOLBAR -->
     <header class="app-header">
         <div class="brand-container">
@@ -1506,6 +1835,13 @@
         </div>
 
         <div class="header-actions">
+            <button onclick="abrirModalPerfil()" id="btnPerfilHeader" class="btn-perfil-header" title="Tu Perfil y Estadísticas de Victorias">
+                <span class="perfil-avatar-pill" id="headerAvatarMini">👑</span>
+                <div class="perfil-info-pill">
+                    <span class="perfil-nombre-pill" id="headerPerfilNombre">Mario</span>
+                    <span class="perfil-rango-pill" id="headerPerfilRango">🏆 0 Vacas · 0 Chicos</span>
+                </div>
+            </button>
             <div class="capsule" id="miAsientoTexto">Conectando...</div>
             <button onclick="toggleTemaVisual()" id="btnThemeToggle" class="btn-compact" title="Cambiar modo claro / oscuro">☀️ Modo Claro</button>
             <button onclick="toggleAudio()" id="btnAudioToggle" class="btn-compact" title="Activar / Desactivar efectos sonoros">🔊 Sonido</button>
@@ -1857,9 +2193,225 @@
             }
         }
 
+        /* ===== SISTEMA DE PERFIL Y ESTADÍSTICAS PERSISTENTES ===== */
+        const AVATARES_DISPONIBLES = [
+            '👑', '🃏', '🤠', '🥷', '🧙‍♂️', '🦁', '🦊', '🐉',
+            '🐺', '🦉', '♠️', '💎', '⚡', '🎲', '🏆', '🍀',
+            '🎩', '🏴‍☠️', '🍷', '🎸', '🦅', '🔥', '🐱', '🕶️'
+        ];
+
+        let avatarSeleccionadoTemporal = '👑';
+
+        function obtenerPerfil() {
+            try {
+                const raw = localStorage.getItem('mus_perfil');
+                if (raw) {
+                    const p = JSON.parse(raw);
+                    if (p && typeof p === 'object') {
+                        if (!p.avatar) p.avatar = '👑';
+                        if (!p.nombre) p.nombre = localStorage.getItem('mus_apodo') || 'Mario';
+                        if (!p.stats) p.stats = {};
+                        p.stats.vacasGanadas = Number(p.stats.vacasGanadas) || 0;
+                        p.stats.chicosGanados = Number(p.stats.chicosGanados) || 0;
+                        p.stats.partidasJugadas = Number(p.stats.partidasJugadas) || 0;
+                        p.stats.ordagosGanados = Number(p.stats.ordagosGanados) || 0;
+                        return p;
+                    }
+                }
+            } catch(e) {}
+
+            const nuevo = {
+                nombre: localStorage.getItem('mus_apodo') || "Mario",
+                avatar: "👑",
+                stats: {
+                    vacasGanadas: 0,
+                    chicosGanados: 0,
+                    partidasJugadas: 0,
+                    ordagosGanados: 0
+                },
+                creadoEn: Date.now()
+            };
+            guardarPerfil(nuevo);
+            return nuevo;
+        }
+
+        function guardarPerfil(perfil) {
+            try {
+                localStorage.setItem('mus_perfil', JSON.stringify(perfil));
+                localStorage.setItem('mus_apodo', perfil.nombre);
+            } catch(e) {}
+            actualizarUIPerfil(perfil);
+        }
+
+        function calcularRangoMus(stats) {
+            const vacas = stats.vacasGanadas || 0;
+            const chicos = stats.chicosGanados || 0;
+            const ordagos = stats.ordagosGanados || 0;
+            const pts = vacas * 3 + chicos;
+
+            if (vacas >= 5 || pts >= 25) return { titulo: "Leyenda del Tapete", nivel: "Lvl 5 👑" };
+            if (vacas >= 3 || pts >= 15) return { titulo: "Terror del Órdago", nivel: "Lvl 4 ⚔️" };
+            if (vacas >= 1 || pts >= 8)  return { titulo: "Maestro del Mus", nivel: "Lvl 3 🎩" };
+            if (chicos >= 3)              return { titulo: "Tahúr Experto", nivel: "Lvl 2 🍀" };
+            if (chicos >= 1 || ordagos >= 1) return { titulo: "Aprendiz con Arte", nivel: "Lvl 1 🃏" };
+            return { titulo: "Novato del Mus", nivel: "Lvl 1 🌱" };
+        }
+
+        function actualizarUIPerfil(perfil) {
+            if (!perfil) perfil = obtenerPerfil();
+            const stats = perfil.stats || { vacasGanadas: 0, chicosGanados: 0, partidasJugadas: 0, ordagosGanados: 0 };
+            const infoRango = calcularRangoMus(stats);
+
+            // Botón en Header
+            const elMini = document.getElementById('headerAvatarMini');
+            const elNomPill = document.getElementById('headerPerfilNombre');
+            const elRangoPill = document.getElementById('headerPerfilRango');
+            if (elMini) elMini.innerText = perfil.avatar || '👑';
+            if (elNomPill) elNomPill.innerText = perfil.nombre || 'Jugador';
+            if (elRangoPill) elRangoPill.innerText = `🏆 ${stats.vacasGanadas} V · ${stats.chicosGanados} C`;
+
+            // Modal de perfil
+            const elAvatarBig = document.getElementById('perfilAvatarBig');
+            const elNomDisplay = document.getElementById('perfilNombreDisplay');
+            const elRangoTag = document.getElementById('perfilRangoTag');
+            if (elAvatarBig) elAvatarBig.innerText = perfil.avatar || '👑';
+            if (elNomDisplay) elNomDisplay.innerText = perfil.nombre || 'Jugador';
+            if (elRangoTag) elRangoTag.innerText = `${infoRango.nivel} · ${infoRango.titulo}`;
+
+            // Estadísticas en modal
+            const sVacas = document.getElementById('statVacas');
+            const sChicos = document.getElementById('statChicos');
+            const sOrdagos = document.getElementById('statOrdagos');
+            const sPartidas = document.getElementById('statPartidas');
+            const sWinrate = document.getElementById('statWinrate');
+            const sNivel = document.getElementById('statNivel');
+
+            if (sVacas) sVacas.innerText = stats.vacasGanadas;
+            if (sChicos) sChicos.innerText = stats.chicosGanados;
+            if (sOrdagos) sOrdagos.innerText = stats.ordagosGanados;
+            if (sPartidas) sPartidas.innerText = stats.partidasJugadas;
+
+            const winrate = stats.partidasJugadas > 0 ? Math.round((stats.chicosGanados / stats.partidasJugadas) * 100) : 0;
+            if (sWinrate) sWinrate.innerText = `${winrate}%`;
+            if (sNivel) sNivel.innerText = infoRango.nivel.split(' ')[1] || 'Lvl 1';
+
+            // Sincronizar input modal inicio si está presente
+            const inputInicio = document.getElementById('inputNombre');
+            if (inputInicio && !inputInicio.value) {
+                inputInicio.value = perfil.nombre;
+            }
+        }
+
+        function abrirModalPerfil() {
+            audioEngine.playTurn();
+            const perfil = obtenerPerfil();
+            avatarSeleccionadoTemporal = perfil.avatar || '👑';
+
+            const inputNom = document.getElementById('inputPerfilNombre');
+            if (inputNom) inputNom.value = perfil.nombre || '';
+
+            renderizarGridAvatares();
+            actualizarUIPerfil(perfil);
+
+            const modal = document.getElementById('modalPerfil');
+            if (modal) modal.classList.remove('oculto');
+        }
+
+        function cerrarModalPerfil() {
+            const modal = document.getElementById('modalPerfil');
+            if (modal) modal.classList.add('oculto');
+        }
+
+        function renderizarGridAvatares() {
+            const grid = document.getElementById('gridAvatares');
+            if (!grid) return;
+            grid.innerHTML = '';
+            AVATARES_DISPONIBLES.forEach(av => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `avatar-option-btn ${av === avatarSeleccionadoTemporal ? 'selected' : ''}`;
+                btn.innerText = av;
+                btn.onclick = () => {
+                    avatarSeleccionadoTemporal = av;
+                    document.querySelectorAll('.avatar-option-btn').forEach(el => el.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    const elBig = document.getElementById('perfilAvatarBig');
+                    if (elBig) {
+                        elBig.innerText = av;
+                        elBig.style.transform = 'scale(1.2) rotate(10deg)';
+                        setTimeout(() => elBig.style.transform = 'scale(1)', 200);
+                    }
+                    audioEngine.playCard();
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function guardarPerfilDesdeModal() {
+            const inputNom = document.getElementById('inputPerfilNombre');
+            const nuevoNombre = (inputNom && inputNom.value.trim() !== '') ? inputNom.value.trim().slice(0, 14) : 'Jugador';
+
+            const perfil = obtenerPerfil();
+            perfil.nombre = nuevoNombre;
+            perfil.avatar = avatarSeleccionadoTemporal;
+            guardarPerfil(perfil);
+
+            // Sincronizar input de modalInicio
+            const inputInicio = document.getElementById('inputNombre');
+            if (inputInicio) inputInicio.value = nuevoNombre;
+
+            // Si ya estamos sentados en mesa, avisar al servidor para que actualice nuestro asiento y carteles
+            if (miAsiento !== null) {
+                socket.emit('actualizarPerfil', { nombre: nuevoNombre, avatar: avatarSeleccionadoTemporal });
+            }
+
+            audioEngine.playChip();
+            cerrarModalPerfil();
+        }
+
+        function reiniciarStatsPerfil() {
+            if (!confirm('¿Deseas reiniciar todas tus estadísticas y victorias a 0?')) return;
+            const perfil = obtenerPerfil();
+            perfil.stats = {
+                vacasGanadas: 0,
+                chicosGanados: 0,
+                partidasJugadas: 0,
+                ordagosGanados: 0
+            };
+            guardarPerfil(perfil);
+            audioEngine.playTurn();
+        }
+
+        function registrarVictoriaEnPerfil(tipo) {
+            const perfil = obtenerPerfil();
+            if (tipo !== 'ordago') {
+                perfil.stats.partidasJugadas = (perfil.stats.partidasJugadas || 0) + 1;
+            }
+            if (tipo === 'vaca') {
+                perfil.stats.vacasGanadas = (perfil.stats.vacasGanadas || 0) + 1;
+                perfil.stats.chicosGanados = (perfil.stats.chicosGanados || 0) + 1;
+            } else if (tipo === 'chico') {
+                perfil.stats.chicosGanados = (perfil.stats.chicosGanados || 0) + 1;
+            } else if (tipo === 'ordago') {
+                perfil.stats.ordagosGanados = (perfil.stats.ordagosGanados || 0) + 1;
+            }
+            guardarPerfil(perfil);
+        }
+
+        function initPerfil() {
+            const perfil = obtenerPerfil();
+            actualizarUIPerfil(perfil);
+            renderizarGridAvatares();
+            const inputInicio = document.getElementById('inputNombre');
+            if (inputInicio && !inputInicio.value) {
+                inputInicio.value = perfil.nombre;
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             aplicarTemaInicial();
             actualizarBotonAudio();
+            initPerfil();
         });
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -1933,10 +2485,11 @@
                 div.className = `asiento-card ${a.pareja === 0 ? 'p1' : 'p2'} ${a.ocupado ? 'ocupado' : ''}`;
                 if (asientoElegidoTemporal === a.id && !a.ocupado) div.classList.add('seleccionado');
                 const tagNombre = a.nombrePareja || (nombresParejasGlobal && nombresParejasGlobal[a.pareja]) || `Pareja ${a.pareja + 1}`;
+                const av = a.avatar ? `${a.avatar} ` : '👤 ';
                 div.innerHTML = `
                     <div style="font-weight:700; font-size:0.8rem;">${a.nombreDef}</div>
                     <div class="tag-p">${tagNombre}</div>
-                    <div style="font-size:0.7rem; color:#8ba396;">${a.ocupado ? `👤 ${a.ocupante}` : '🟢 Libre'}</div>
+                    <div style="font-size:0.7rem; color:#8ba396;">${a.ocupado ? `${av}${a.ocupante}` : '🟢 Libre'}</div>
                 `;
                 if (!a.ocupado) {
                     div.onclick = () => {
@@ -1969,7 +2522,15 @@
 
         function confirmarUnion() {
             if (asientoElegidoTemporal === null) return;
-            const nom = document.getElementById('inputNombre').value;
+            const inputNom = document.getElementById('inputNombre');
+            let nom = inputNom ? inputNom.value.trim() : '';
+            const perfil = obtenerPerfil();
+            if (!nom) {
+                nom = perfil.nombre || 'Mario';
+            } else {
+                perfil.nombre = nom;
+                guardarPerfil(perfil);
+            }
             const inputNomP = document.getElementById('inputNombrePareja');
             const nomPareja = inputNomP ? inputNomP.value.trim() : '';
             salaActualId = selectSala ? selectSala.value : "principal";
@@ -1979,6 +2540,7 @@
 
             socket.emit('unirseAsiento', {
                 nombre: nom,
+                avatar: perfil.avatar || '👑',
                 nombrePareja: nomPareja,
                 asientoElegido: asientoElegidoTemporal,
                 salaId: salaActualId,
@@ -1994,7 +2556,8 @@
             document.getElementById('modalInicio').classList.add('oculto');
             document.getElementById('codigoSalaTexto').innerText = `Sala: ${salaActualId.toUpperCase()}`;
             const nomPareja = (nombresParejasGlobal && nombresParejasGlobal[info.pareja]) ? nombresParejasGlobal[info.pareja] : `Pareja ${info.pareja + 1}`;
-            document.getElementById('miAsientoTexto').innerHTML = `Asiento: <strong>${info.nombre}</strong> (<strong class="pareja-tag">${nomPareja}</strong>)`;
+            const av = info.avatar ? `${info.avatar} ` : '';
+            document.getElementById('miAsientoTexto').innerHTML = `${av}<strong>${info.nombre}</strong> (<strong class="pareja-tag">${nomPareja}</strong>)`;
             socket.emit('pedirMisCartas');
         });
 
@@ -2222,6 +2785,12 @@
 
             if (esOrdagoDirecto) {
                 audioEngine.playOrdago();
+                if (miAsiento !== null) {
+                    const miP = (miAsiento % 2 === 0) ? 0 : 1;
+                    if (parejaGanadora === miP) {
+                        registrarVictoriaEnPerfil('ordago');
+                    }
+                }
             } else {
                 audioEngine.playChip();
             }
@@ -2244,6 +2813,14 @@
         });
 
         socket.on('victoriaChico', ({ ganadorPareja, nombreGanador, mensaje, chicosGanados, vacasGanadas, esVaca }) => {
+            if (miAsiento !== null) {
+                const miP = (miAsiento % 2 === 0) ? 0 : 1;
+                if (ganadorPareja === miP) {
+                    registrarVictoriaEnPerfil(esVaca ? 'vaca' : 'chico');
+                } else {
+                    registrarVictoriaEnPerfil('derrota');
+                }
+            }
             actualizarPuntuacionesPersonalizadas({ 0: 0, 1: 0 }, chicosGanados, vacasGanadas);
             mostrarModalVictoria({ ganadorPareja, nombreGanador, mensaje, chicosGanados, vacasGanadas, esVaca });
             document.getElementById('desgloseLog').innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 18px; font-size: 0.72rem;">Nuevo Chico comenzado.</div>`;
@@ -2638,7 +3215,10 @@
             const ref = { sur: yo, norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
 
             function obtenerNombre(asientoIdx) {
-                return jugadoresEnMesa && jugadoresEnMesa[asientoIdx] ? jugadoresEnMesa[asientoIdx].nombre : "Esperando...";
+                if (!jugadoresEnMesa || !jugadoresEnMesa[asientoIdx]) return "Esperando...";
+                const j = jugadoresEnMesa[asientoIdx];
+                const av = j.avatar ? `${j.avatar} ` : (j.esBot ? '🤖 ' : '');
+                return `${av}${j.nombre}`;
             }
 
             document.getElementById('nom_sur').innerText = obtenerNombre(ref.sur) + (ref.sur === miAsiento ? ' (Tú)' : '');
