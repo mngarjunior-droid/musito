@@ -1875,11 +1875,13 @@
                     <span class="stat-val" id="statNivel">Lvl 1</span>
                     <span class="stat-label">Nivel Tahúr</span>
                 </div>
+            </div>
+
             <div class="perfil-section-title">🎴 Baraja de Cartas:</div>
             <div id="infoBarajaCard" style="background:var(--glass-card); border:1px solid var(--glass-border); border-radius:10px; padding:8px 12px; font-size:0.75rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
                 <div>
                     <div style="font-weight:800; color:var(--accent-gold);" id="txtEstadoBaraja">Comprobando fotos locales...</div>
-                    <div style="font-size:0.67rem; color:var(--text-muted);" id="txtDetalleBaraja">Carpeta: public/cartas</div>
+                    <div style="font-size:0.67rem; color:var(--text-muted);" id="txtDetalleBaraja">Carpeta: public/</div>
                 </div>
                 <span style="font-size:1.2rem;" id="iconoEstadoBaraja">🎴</span>
             </div>
@@ -2013,7 +2015,7 @@
             <!-- CENTRO CON MAZO Y FICHAS -->
             <div class="table-hub pos-centro" id="boxCentro">
                 <div class="mazo-central" id="mazoVisual" style="overflow: hidden;">
-                    <img class="card-back-img" id="imgMazoVisual" src="/cartas/tapa.png" data-alts="/cartas/tapa.jpg,/cartas/reverso.png,/cartas/reverso.jpg,/cartas/dorso.png" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none';" alt="Mazo" />
+                    <img class="card-back-img" id="imgMazoVisual" src="/tapadecarta.png" data-alts="/tapadecarta.jpg,/tapa de carta.png,/cartas/tapadecarta.png,/cartas/tapa.png,/cartas/reverso.png,/carta_41.png" onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';" onerror="this.style.display='none';" alt="Mazo" />
                     <span>BARAJA</span>
                 </div>
                 <div class="fichas-bote-pill" id="fichasBoteContainer" style="display: none;">
@@ -2494,15 +2496,19 @@
             selectSala.onchange = () => {
                 salaActualId = selectSala.value;
                 localStorage.setItem('mus_sala', salaActualId);
-                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
-                window.history.replaceState({ path: newUrl }, '', newUrl);
+                try {
+                    const newUrl = window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
+                    window.history.replaceState(null, '', newUrl);
+                } catch(e) {}
                 socket.emit('entrarSala', { salaId: salaActualId, token: miToken });
             };
         }
 
         if (!salaUrl) {
-            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
-            window.history.replaceState({ path: newUrl }, '', newUrl);
+            try {
+                const newUrl = window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
+                window.history.replaceState(null, '', newUrl);
+            } catch(e) {}
         }
         localStorage.setItem('mus_sala', salaActualId);
 
@@ -2605,8 +2611,10 @@
             const nomPareja = inputNomP ? inputNomP.value.trim() : '';
             salaActualId = selectSala ? selectSala.value : "principal";
             localStorage.setItem('mus_sala', salaActualId);
-            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
-            window.history.replaceState({ path: newUrl }, '', newUrl);
+            try {
+                const newUrl = window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
+                window.history.replaceState(null, '', newUrl);
+            } catch(e) {}
 
             socket.emit('unirseAsiento', {
                 nombre: nom,
@@ -3201,19 +3209,19 @@
             const palosNorm = ['oros', 'copas', 'espadas', 'bastos'];
             const mapaValoresMus = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
 
-            // 1. Detección específica de "tapa de carta" y "fondo blanco"
+            // 1. Detección específica de tapadecarta / tapa de carta y fondoblanco / fondo blanco
             archivos.forEach(nombre => {
                 const clean = nombre.toLowerCase();
-                const cleanSimple = clean.replace(/[_\-\s]+/g, ' ');
+                const cleanCompact = clean.replace(/[^a-z0-9]/g, '');
 
-                if (cleanSimple.includes('tapa de carta') || cleanSimple.includes('tapa') || cleanSimple.includes('reverso') || cleanSimple.includes('dorso') || cleanSimple.includes('back')) {
-                    if (!mapaFotosDetectadas['reverso'] || cleanSimple.includes('tapa de carta')) {
+                if (cleanCompact.includes('tapadecarta') || cleanCompact.includes('tapacarta') || cleanCompact.includes('tapa') || cleanCompact.includes('reverso') || cleanCompact.includes('dorso') || cleanCompact.includes('back')) {
+                    if (!mapaFotosDetectadas['reverso'] || cleanCompact.includes('tapadecarta') || cleanCompact.includes('tapacarta')) {
                         mapaFotosDetectadas['reverso'] = `${prefix}${nombre}`;
                     }
                 }
 
-                if (cleanSimple.includes('fondo blanco') || cleanSimple.includes('blanco') || cleanSimple.includes('fondo') || cleanSimple.includes('tapete') || cleanSimple.includes('white')) {
-                    if (!mapaFotosDetectadas['fondo'] || cleanSimple.includes('fondo blanco')) {
+                if (cleanCompact.includes('fondoblanco') || cleanCompact.includes('blanco') || cleanCompact.includes('fondo') || cleanCompact.includes('tapete') || cleanCompact.includes('white')) {
+                    if (!mapaFotosDetectadas['fondo'] || cleanCompact.includes('fondoblanco')) {
                         mapaFotosDetectadas['fondo'] = `${prefix}${nombre}`;
                     }
                 }
@@ -3368,18 +3376,17 @@
         }
 
         function generarReversoHTML(customClass = '') {
-            const reversoSrc = mapaFotosDetectadas['reverso'] || '/tapa de carta.png';
+            const reversoSrc = mapaFotosDetectadas['reverso'] || '/tapadecarta.png';
             const alts = [
+                '/tapadecarta.png',
+                '/tapadecarta.jpg',
                 '/tapa de carta.png',
                 '/tapa_de_carta.png',
-                '/tapa de carta.jpg',
-                '/tapa_de_carta.jpg',
+                '/cartas/tapadecarta.png',
+                '/cartas/tapadecarta.jpg',
                 '/cartas/tapa de carta.png',
-                '/cartas/tapa_de_carta.png',
                 '/carta_41.png',
-                '/cartas/carta_41.png',
                 '/tapa.png',
-                '/cartas/tapa.png',
                 '/reverso.png'
             ].filter(r => r !== reversoSrc).join(',');
 
