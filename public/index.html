@@ -50,10 +50,10 @@
             --card-back-core: #8e1818;
             --card-back-edge: #520909;
 
-            --carta-w: clamp(52px, min(11.5vw, 11vh), 86px);
-            --carta-h: clamp(76px, min(17vw, 16vh), 126px);
-            --carta-opp-w: clamp(34px, min(6.5vw, 6.2vh), 56px);
-            --carta-opp-h: clamp(50px, min(9.5vw, 9.2vh), 80px);
+            --carta-w: clamp(70px, min(13vw, 15vh), 116px);
+            --carta-h: clamp(102px, min(19vw, 22vh), 168px);
+            --carta-opp-w: clamp(44px, min(8vw, 8.8vh), 72px);
+            --carta-opp-h: clamp(64px, min(11.8vw, 13vh), 104px);
             --table-max-w: 1240px;
         }
 
@@ -370,6 +370,7 @@
             align-items: center;
             gap: 6px;
             flex-shrink: 0;
+            min-width: max-content;
         }
 
         .brand-title {
@@ -415,7 +416,7 @@
             display: none;
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 860px) {
             .header-desktop-actions {
                 display: none !important;
             }
@@ -1463,24 +1464,24 @@
         #mano_norte .card .card-num,
         #mano_oeste .card .card-num,
         #mano_este .card .card-num {
-            font-size: clamp(0.72rem, 1vw, 0.85rem);
+            font-size: clamp(0.78rem, 1.2vw, 0.95rem);
         }
         #mano_norte .card .card-mini-symbol,
         #mano_oeste .card .card-mini-symbol,
         #mano_este .card .card-mini-symbol {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
         }
         #mano_norte .card-center-art svg,
         #mano_oeste .card-center-art svg,
         #mano_este .card-center-art svg {
-            width: clamp(18px, 2.4vw, 26px);
-            height: clamp(22px, 3.2vw, 32px);
+            width: clamp(22px, 2.8vw, 32px);
+            height: clamp(28px, 3.8vw, 42px);
         }
         #mano_norte .card-back-logo,
         #mano_oeste .card-back-logo,
         #mano_este .card-back-logo {
-            font-size: 0.54rem;
+            font-size: 0.62rem;
             letter-spacing: 0.8px;
         }
 
@@ -1488,8 +1489,8 @@
         .table-viewport.fase-recuento #mano_norte .card,
         .table-viewport.fase-recuento #mano_oeste .card,
         .table-viewport.fase-recuento #mano_este .card {
-            width: clamp(56px, 7vw, 78px) !important;
-            height: clamp(82px, 10.2vw, 114px) !important;
+            width: clamp(64px, 8.5vw, 92px) !important;
+            height: clamp(92px, 12.5vw, 134px) !important;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.65), 0 0 16px var(--accent-gold-glow) !important;
             transform: scale(1.08);
             z-index: 35;
@@ -1497,7 +1498,7 @@
         .table-viewport.fase-recuento #mano_norte .card .card-num,
         .table-viewport.fase-recuento #mano_oeste .card .card-num,
         .table-viewport.fase-recuento #mano_este .card .card-num {
-            font-size: clamp(0.85rem, 1.2vw, 1rem) !important;
+            font-size: clamp(0.95rem, 1.4vw, 1.2rem) !important;
         }
         .table-viewport.fase-recuento #mano_norte .card-center-art svg,
         .table-viewport.fase-recuento #mano_oeste .card-center-art svg,
@@ -1601,8 +1602,8 @@
             z-index: 1;
         }
         .card-corner.inf { align-self: flex-end; transform: rotate(180deg); }
-        .card-num { font-size: clamp(0.82rem, 1.3vw, 0.95rem); font-weight: 800; }
-        .card-mini-symbol { width: 11px; height: 11px; margin-top: 1px; }
+        .card-num { font-size: clamp(0.95rem, 1.5vw, 1.25rem); font-weight: 800; }
+        .card-mini-symbol { width: 13px; height: 13px; margin-top: 1px; }
 
         .palo-oros .card-num { color: #d48b00; }
         .palo-copas .card-num { color: #c0392b; }
@@ -1617,8 +1618,8 @@
             z-index: 1;
         }
         .card-center-art svg {
-            width: clamp(22px, 3.2vw, 32px);
-            height: clamp(30px, 4.2vw, 44px);
+            width: clamp(26px, 3.8vw, 42px);
+            height: clamp(36px, 5vw, 56px);
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.18));
         }
 
@@ -2467,7 +2468,6 @@
 
         <div class="header-actions">
             <button onclick="copiarEnlaceInvitacion()" class="btn-compact gold" title="Copiar enlace directo a esta sala para tus amigos"><span style="font-size:0.85rem;">🔗</span> <span class="btn-txt-responsive">Invitar</span></button>
-            <button onclick="abrirModalPersonalizacion()" class="btn-compact" title="Personalizar color del tapete y estilo de cartas">🎨 <span class="btn-txt-responsive">Mesa</span></button>
             <button onclick="abrirModalPerfil()" id="btnPerfilHeader" class="btn-perfil-header" title="Tu Perfil y Estadísticas de Victorias">
                 <span class="perfil-avatar-pill" id="headerAvatarMini">👑</span>
                 <div class="perfil-info-pill">
@@ -2480,14 +2480,16 @@
             <!-- ACCIONES SECUNDARIAS EN PANTALLA ANCHA -->
             <div class="header-desktop-actions" id="headerDesktopActions">
                 <button onclick="abrirModalLeaderboard()" class="btn-compact gold" title="Ver Clasificación General">🏆 Clasificación</button>
-                <button onclick="toggleTemaVisual()" id="btnThemeToggle" class="btn-compact" title="Cambiar modo claro / oscuro">☀️ Modo Claro</button>
                 <button onclick="toggleAudio()" id="btnAudioToggle" class="btn-compact" title="Activar / Desactivar efectos sonoros">🔊 Sonido</button>
                 <button onclick="toggleModoClase()" id="btnModoClase" class="btn-compact" title="Ocultar cartas si juegas en clase">🙈 Ocultar</button>
                 <button onclick="socket.emit('rellenarBots')" class="btn-compact">🤖 Rellenar Bots</button>
                 <button onclick="abrirModalAdmin()" class="btn-compact danger">🔑 Admin</button>
                 <div class="capsule" id="codigoSalaTexto" style="color: var(--accent-gold);">Sala: ...</div>
-                <div class="capsule" id="miAsientoTexto">Conectando...</div>
             </div>
+
+            <!-- COMPATIBILIDAD JS OCULTA -->
+            <button id="btnThemeToggle" style="display:none;"></button>
+            <div id="miAsientoTexto" style="display:none;"></div>
 
             <!-- BOTÓN MENÚ MÓVIL / TABLET -->
             <button onclick="toggleAjustesDropdown()" id="btnAjustesToggle" class="btn-compact btn-menu-responsive" title="Más opciones y ajustes">⚙️ <span class="btn-txt-menu">Menú</span></button>
@@ -2504,15 +2506,14 @@
         <div class="ajustes-drawer-body">
             <div class="ajustes-drawer-info">
                 <div class="capsule-drawer" id="codigoSalaTextoDrawer">Sala: ...</div>
-                <div class="capsule-drawer" id="miAsientoTextoDrawer">Conectando...</div>
             </div>
             <div class="ajustes-drawer-grid">
                 <button onclick="abrirModalLeaderboard(); cerrarAjustesDropdown();" class="btn-compact gold">🏆 Clasificación</button>
-                <button onclick="toggleTemaVisual(); actualizarTextosAjustesDrawer();" id="btnThemeToggleDrawer" class="btn-compact">☀️ Modo Claro</button>
                 <button onclick="toggleAudio(); actualizarTextosAjustesDrawer();" id="btnAudioToggleDrawer" class="btn-compact">🔊 Sonido</button>
                 <button onclick="toggleModoClase(); actualizarTextosAjustesDrawer();" id="btnModoClaseDrawer" class="btn-compact">🙈 Modo Clase</button>
                 <button onclick="socket.emit('rellenarBots'); cerrarAjustesDropdown();" class="btn-compact">🤖 Rellenar Bots</button>
                 <button onclick="abrirModalAdmin(); cerrarAjustesDropdown();" class="btn-compact danger">🔑 Administrador</button>
+                <button onclick="abrirModalPersonalizacion(); cerrarAjustesDropdown();" class="btn-compact">🎨 Personalizar Mesa</button>
             </div>
         </div>
     </div>
