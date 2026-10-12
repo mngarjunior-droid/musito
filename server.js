@@ -66,6 +66,101 @@ app.get('/api/cartas-info', (req, res) => {
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
+// ===== PERSISTENCIA Y REGISTRO DE CLASIFICACIÓN / LEADERBOARD =====
+const LEADERBOARD_FILE = path.join(__dirname, 'leaderboard.json');
+let leaderboard = {};
+
+function cargarLeaderboard() {
+  try {
+    if (fs.existsSync(LEADERBOARD_FILE)) {
+      const data = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
+      if (data && typeof data === 'object') leaderboard = data;
+    }
+  } catch (e) {
+    console.error("Error al cargar leaderboard:", e);
+  }
+}
+
+function guardarLeaderboard() {
+  try {
+    fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2), 'utf8');
+  } catch (e) {
+    console.error("Error al guardar leaderboard:", e);
+  }
+}
+cargarLeaderboard();
+
+function actualizarJugadorEnLeaderboard(token, nombre, avatar) {
+  if (!token) return;
+  if (!leaderboard[token]) {
+    leaderboard[token] = {
+      token: token,
+      nombre: nombre || 'Jugador',
+      avatar: avatar || '👑',
+      vacas: 0,
+      chicos: 0,
+      ordagos: 0,
+      partidas: 0,
+      ultimaConexion: Date.now()
+    };
+  } else {
+    if (nombre && typeof nombre === 'string') leaderboard[token].nombre = nombre;
+    if (avatar && typeof avatar === 'string') leaderboard[token].avatar = avatar;
+    leaderboard[token].ultimaConexion = Date.now();
+  }
+  guardarLeaderboard();
+}
+
+function registrarVictoriaLeaderboard(token, nombre, avatar, tipo) {
+  if (!token) return;
+  actualizarJugadorEnLeaderboard(token, nombre, avatar);
+  const entrada = leaderboard[token];
+  if (!entrada) return;
+
+  if (tipo !== 'ordago') {
+    entrada.partidas = (entrada.partidas || 0) + 1;
+  }
+  if (tipo === 'vaca') {
+    entrada.vacas = (entrada.vacas || 0) + 1;
+    entrada.chicos = (entrada.chicos || 0) + 1;
+  } else if (tipo === 'chico') {
+    entrada.chicos = (entrada.chicos || 0) + 1;
+  } else if (tipo === 'ordago') {
+    entrada.ordagos = (entrada.ordagos || 0) + 1;
+  }
+  guardarLeaderboard();
+  io.emit('leaderboardActualizado', obtenerListaLeaderboard());
+}
+
+function obtenerListaLeaderboard() {
+  const lista = Object.values(leaderboard).map(item => {
+    const partidas = item.partidas || 0;
+    const chicos = item.chicos || 0;
+    const winrate = partidas > 0 ? Math.round((chicos / partidas) * 100) : 0;
+    return {
+      token: item.token,
+      nombre: item.nombre || 'Jugador',
+      avatar: item.avatar || '👑',
+      vacas: item.vacas || 0,
+      chicos: item.chicos || 0,
+      ordagos: item.ordagos || 0,
+      partidas: partidas,
+      winrate: winrate,
+      ultimaConexion: item.ultimaConexion || Date.now()
+    };
+  });
+
+  lista.sort((a, b) => {
+    if (b.vacas !== a.vacas) return b.vacas - a.vacas;
+    if (b.chicos !== a.chicos) return b.chicos - a.chicos;
+    if (b.ordagos !== a.ordagos) return b.ordagos - a.ordagos;
+    if (b.winrate !== a.winrate) return b.winrate - a.winrate;
+    return b.partidas - a.partidas;
+  });
+
+  return lista;
+}
+
 const ASIENTOS_INFO = [
   { id: 0, nombreDef: "Asiento 1", rol: "Mano", pareja: 0 },
   { id: 1, nombreDef: "Asiento 2", rol: "Segundo", pareja: 1 },
@@ -1825,6 +1920,21 @@ function comprobarVictoriaChico(sala, ganadorForzado = null, motivo = "", esOrda
       msgFinal = `🏆 ¡¡VICTORIA TOTAL!! ${nomGanador} gana 3 Chicos y se lleva LA VACA del torneo.`;
     }
 
+    // Registrar victorias y estadísticas en el Leaderboard global
+    for (const tok in sala.jugadoresPorToken) {
+      const jug = sala.jugadoresPorToken[tok];
+      if (jug && !jug.esBot) {
+        if (ASIENTOS_INFO[jug.asiento].pareja === ganador) {
+          if (esOrdago) {
+            registrarVictoriaLeaderboard(tok, jug.nombre, jug.avatar, 'ordago');
+          }
+          registrarVictoriaLeaderboard(tok, jug.nombre, jug.avatar, vacaGanada ? 'vaca' : 'chico');
+        } else {
+          registrarVictoriaLeaderboard(tok, jug.nombre, jug.avatar, 'derrota');
+        }
+      }
+    }
+
     sala.puntos = { 0: 0, 1: 0 };
     sala.asientoMano = (sala.asientoMano + 1) % 4;
 
@@ -1905,6 +2015,11 @@ io.on('connection', (socket) => {
       asientos: obtenerEstadoAsientos(sala),
       nombresParejas: sala.nombresParejas || { 0: 'Pareja 1', 1: 'Pareja 2' }
     });
+    socket.emit('leaderboardActualizado', obtenerListaLeaderboard());
+  });
+
+  socket.on('obtenerLeaderboard', () => {
+    socket.emit('leaderboardActualizado', obtenerListaLeaderboard());
   });
 
   socket.on('pedirMisCartas', () => {
@@ -1944,6 +2059,10 @@ io.on('connection', (socket) => {
       socketId: socket.id
     };
 
+    // Actualizar nombre y avatar actuales en la tabla leaderboard
+    actualizarJugadorEnLeaderboard(miToken, nombreFinal, avatarFinal);
+    io.emit('leaderboardActualizado', obtenerListaLeaderboard());
+
     socket.emit('asientoAsignado', {
       asiento: asientoElegido,
       info: sala.jugadoresPorToken[miToken],
@@ -1972,6 +2091,8 @@ io.on('connection', (socket) => {
     if (avatar && typeof avatar === 'string') {
       j.avatar = avatar.slice(0, 6);
     }
+    actualizarJugadorEnLeaderboard(miToken, j.nombre, j.avatar);
+    io.emit('leaderboardActualizado', obtenerListaLeaderboard());
     emitirActualizacionAsientos(sala);
     notificarEstado(sala, `${j.avatar || ''} ${j.nombre} actualizó su perfil.`);
   });
@@ -1985,14 +2106,16 @@ io.on('connection', (socket) => {
       if (primerLibre !== undefined) {
         const aInfo = ASIENTOS_INFO[primerLibre];
         miToken = miToken || `user_${Date.now()}`;
+        const nomDefecto = `Jugador ${primerLibre + 1}`;
         sala.jugadoresPorToken[miToken] = {
           asiento: primerLibre,
-          nombre: "Mario",
+          nombre: nomDefecto,
           avatar: "👑",
           pareja: aInfo.pareja,
           esBot: false,
           socketId: socket.id
         };
+        actualizarJugadorEnLeaderboard(miToken, nomDefecto, "👑");
         socket.emit('asientoAsignado', { asiento: primerLibre, info: sala.jugadoresPorToken[miToken], salaId: miSalaId });
       }
     }
@@ -2063,6 +2186,20 @@ io.on('connection', (socket) => {
     const sala = obtenerOCrearSala(miSalaId);
     if (password === ADMIN_PASSWORD) {
       ejecutarResetAdmin(sala);
+    } else {
+      socket.emit('errorAdminPassword', "Contraseña de administrador incorrecta.");
+    }
+  });
+
+  socket.on('solicitarResetLeaderboard', ({ password }) => {
+    if (password === ADMIN_PASSWORD) {
+      leaderboard = {};
+      guardarLeaderboard();
+      io.emit('leaderboardActualizado', []);
+      const sala = obtenerOCrearSala(miSalaId);
+      notificarEstado(sala, "🏆 La tabla de clasificación ha sido reiniciada por el administrador.");
+      io.to(sala.id).emit('mensajeChat', { asiento: -1, jugador: 'Admin', texto: '🏆 La tabla de clasificación y estadísticas ha sido reiniciada por el Administrador.' });
+      socket.emit('avisoAdmin', "Tabla de clasificación y estadísticas reiniciada con éxito.");
     } else {
       socket.emit('errorAdminPassword', "Contraseña de administrador incorrecta.");
     }
