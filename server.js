@@ -441,7 +441,18 @@ function detectarJugadaEspecial(m) {
     };
   }
 
-  // 4. Cuarteto de Ases (4 Ases o Doses con valorMus 1)
+  // 4. El Besugo (1 Rey y 3 Ases)
+  if (reyes === 1 && ases === 3) {
+    return {
+      clave: 'besugo',
+      nombre: '🐟 EL BESUGO',
+      desc: 'Un Rey y Tres Ases',
+      badge: '🐟 BESUGO (R AAA)',
+      tipo: 'epica'
+    };
+  }
+
+  // 5. Cuarteto de Ases (4 Ases o Doses con valorMus 1)
   if (ases === 4) {
     return {
       clave: 'cuatro_ases',
@@ -452,7 +463,18 @@ function detectarJugadaEspecial(m) {
     };
   }
 
-  // 5. La 31 (La una: tres figuras y un as)
+  // 6. Tres Reyes y un As
+  if (reyes === 3 && ases === 1) {
+    return {
+      clave: 'tres_reyes_as',
+      nombre: '🦁 3 REYES Y 1 AS',
+      desc: 'Tres Reyes y un As',
+      badge: '🦁 3 REYES Y AS',
+      tipo: 'epica'
+    };
+  }
+
+  // 7. La 31 (La una: tres figuras y un as)
   const figuras = nums.filter(n => n >= 10 || n === 3).length;
   if (sietes !== 3 && figuras === 3 && ases === 1) {
     return {
