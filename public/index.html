@@ -50,10 +50,10 @@
             --card-back-core: #8e1818;
             --card-back-edge: #520909;
 
-            --carta-w: clamp(66px, 8.2vw, 96px);
-            --carta-h: clamp(98px, 12vw, 142px);
-            --carta-opp-w: clamp(42px, 5.2vw, 60px);
-            --carta-opp-h: clamp(62px, 7.6vw, 88px);
+            --carta-w: clamp(52px, min(11.5vw, 11vh), 86px);
+            --carta-h: clamp(76px, min(17vw, 16vh), 126px);
+            --carta-opp-w: clamp(34px, min(6.5vw, 6.2vh), 56px);
+            --carta-opp-h: clamp(50px, min(9.5vw, 9.2vh), 80px);
             --table-max-w: 1240px;
         }
 
@@ -109,16 +109,24 @@
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
         }
 
+        html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             background-color: var(--bg-canvas);
             background-image: var(--bg-gradient);
             color: var(--text-primary);
             min-height: 100vh;
+            min-height: 100dvh;
+            max-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 12px 14px 12px;
+            padding: 5px 10px 8px 10px;
+            overflow-y: auto;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
@@ -147,9 +155,13 @@
             background: var(--glass-surface);
             border: 1px solid var(--accent-gold-glow);
             border-radius: 24px;
-            padding: 26px 30px;
+            padding: 24px 26px;
             max-width: 480px;
             width: 92%;
+            max-height: 90vh;
+            max-height: 90dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             text-align: center;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 var(--glass-highlight);
             animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -346,45 +358,70 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 4px;
-            gap: 8px;
-            flex-wrap: wrap;
+            margin-bottom: 3px;
+            gap: 6px;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+            z-index: 100;
         }
 
         .brand-container {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-shrink: 0;
         }
 
         .brand-title {
             font-family: 'Cinzel', serif;
-            font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+            font-size: clamp(0.92rem, 2vw, 1.3rem);
             font-weight: 900;
-            letter-spacing: 2.2px;
+            letter-spacing: 1.8px;
             background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-gold) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            white-space: nowrap;
         }
 
         .brand-badge {
-            font-size: 0.62rem;
+            font-size: 0.58rem;
             font-weight: 800;
-            letter-spacing: 1.5px;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
             color: var(--accent-gold);
             background: var(--accent-gold-glow);
             border: 1px solid var(--accent-gold);
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 6px;
+            white-space: nowrap;
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
+            gap: 5px;
+            flex-wrap: nowrap;
             justify-content: flex-end;
+            min-width: 0;
+        }
+
+        .header-desktop-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-menu-responsive {
+            display: none;
+        }
+
+        @media (max-width: 1100px) {
+            .header-desktop-actions {
+                display: none !important;
+            }
+            .btn-menu-responsive {
+                display: inline-flex !important;
+            }
         }
 
         .capsule {
@@ -938,12 +975,13 @@
             backdrop-filter: blur(28px) saturate(190%);
             border: 1px solid var(--glass-border);
             box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 var(--glass-highlight);
-            border-radius: 18px;
-            padding: 5px 20px;
-            margin-bottom: 5px;
+            border-radius: 14px;
+            padding: 4px 16px;
+            margin-bottom: 3px;
             width: 100%;
             max-width: var(--table-max-w);
-            gap: 16px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
         .team-score {
@@ -975,7 +1013,7 @@
         }
 
         .score-num {
-            font-size: clamp(1.5rem, 3.2vw, 1.85rem);
+            font-size: clamp(1.4rem, 3vw, 1.8rem);
             font-weight: 900;
             letter-spacing: -0.5px;
             line-height: 1;
@@ -1002,11 +1040,12 @@
         /* ===== BARRA DE LANCES CON ESTILO RADIANTE ===== */
         .stakes-bar-advanced {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             width: 100%;
             max-width: var(--table-max-w);
-            margin-bottom: 6px;
+            margin-bottom: 3px;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .lance-node {
@@ -1089,12 +1128,13 @@
         /* ===== CONTENEDOR WORKSPACE RESPONSIVE ===== */
         .workspace {
             display: flex;
-            gap: 14px;
+            gap: 10px;
             width: 100%;
             max-width: var(--table-max-w);
             justify-content: center;
             align-items: stretch;
             flex: 1;
+            min-height: 0;
             position: relative;
         }
 
@@ -1225,19 +1265,21 @@
         .table-viewport {
             position: relative;
             flex: 1;
-            min-height: clamp(480px, 62vh, 600px);
+            min-height: 0;
+            height: 100%;
+            max-height: calc(100dvh - 170px);
             width: 100%;
             background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 76%, var(--tapete-bottom) 100%);
-            border: clamp(8px, 1.3vw, 14px) solid var(--rail-inner);
-            outline: clamp(2px, 0.35vw, 4px) solid var(--rail-outer);
-            border-radius: clamp(100px, 20vw, 260px);
+            border: clamp(6px, 1.2vw, 12px) solid var(--rail-inner);
+            outline: clamp(2px, 0.3vw, 4px) solid var(--rail-outer);
+            border-radius: clamp(48px, 14vw, 240px);
             box-shadow: 
                 inset 0 0 80px rgba(0,0,0,0.85),
                 inset 0 0 25px rgba(0,0,0,0.6),
                 0 0 0 2px var(--rail-gold),
                 0 25px 60px rgba(0,0,0,0.8);
             display: grid;
-            grid-template-columns: minmax(105px, 18%) 1fr minmax(105px, 18%);
+            grid-template-columns: minmax(75px, 18%) 1fr minmax(75px, 18%);
             grid-template-rows: auto 1fr auto;
             grid-template-areas:
                 ". norte ."
@@ -1245,7 +1287,7 @@
                 ". sur .";
             align-items: center;
             justify-items: center;
-            padding: clamp(8px, 1.5vw, 16px);
+            padding: clamp(5px, 1.2vw, 14px);
         }
 
         .pos-norte { grid-area: norte; }
@@ -1839,25 +1881,46 @@
         /* ===== SEÑAS DOCK ===== */
         .senas-dock {
             display: flex;
+            align-items: center;
             gap: 6px;
-            margin-top: 5px;
+            margin-top: 3px;
             background: var(--glass-surface);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            padding: 4px 10px;
+            padding: 3px 10px;
             border-radius: 980px;
             max-width: 100%;
             overflow-x: auto;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
         }
 
-        .senas-dock span {
+        .senas-items {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .senas-title-desktop {
             font-size: 0.68rem;
             font-weight: 800;
             letter-spacing: 0.6px;
             color: var(--accent-gold);
-            align-self: center;
             margin-right: 2px;
             white-space: nowrap;
+        }
+
+        .btn-toggle-senas {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--accent-gold);
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 3px 6px;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-sena {
@@ -1878,6 +1941,86 @@
             border-color: var(--accent-gold);
             color: var(--accent-gold);
             transform: translateY(-1px);
+        }
+
+        /* ===== HOJA / DRAWER DE AJUSTES EN MÓVIL Y TABLET ===== */
+        .ajustes-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 99990;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .ajustes-overlay.activo {
+            display: block;
+            opacity: 1;
+        }
+
+        .ajustes-drawer {
+            position: fixed;
+            bottom: -450px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(440px, 95vw);
+            background: var(--glass-surface);
+            backdrop-filter: blur(32px) saturate(200%);
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            border: 1px solid var(--accent-gold-glow);
+            border-bottom: none;
+            border-radius: 24px 24px 0 0;
+            padding: 16px 18px 24px 18px;
+            box-shadow: 0 -12px 40px rgba(0,0,0,0.8), inset 0 1px 0 var(--glass-highlight);
+            z-index: 99991;
+            transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ajustes-drawer.activo {
+            bottom: 0 !important;
+        }
+
+        .ajustes-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .ajustes-drawer-info {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .capsule-drawer {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            text-align: center;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ajustes-drawer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .ajustes-drawer-grid .btn-compact {
+            padding: 9px 12px;
+            justify-content: center;
+            font-size: 0.76rem;
+            border-radius: 12px;
+            width: 100%;
         }
 
         .chat-pane {
@@ -1929,71 +2072,151 @@
 
             .table-viewport {
                 width: 100%;
-                min-height: clamp(420px, 60vh, 500px);
-                padding: 6px 10px;
-                border-width: 10px;
-                outline-width: 3px;
-                border-radius: clamp(80px, 16vw, 180px);
-                grid-template-columns: minmax(88px, 18%) 1fr minmax(88px, 18%);
+                min-height: 0;
+                max-height: calc(100dvh - 165px);
+                padding: 5px 8px;
+                border-width: 8px;
+                outline-width: 2px;
+                border-radius: clamp(40px, 12vw, 140px);
+                grid-template-columns: minmax(70px, 18%) 1fr minmax(70px, 18%);
             }
 
             .table-hub {
-                max-width: 240px;
-                padding: 5px 14px;
+                max-width: min(200px, 42vw);
+                padding: 4px 10px;
             }
 
-            .mazo-central { left: -18px; top: -12px; width: 28px; height: 40px; }
+            .mazo-central { left: -14px; top: -10px; width: 24px; height: 34px; }
             .chat-pane { display: none; }
         }
 
+        @media (max-width: 768px) {
+            .btn-toggle-senas {
+                display: inline-flex;
+            }
+            .senas-title-desktop {
+                display: none;
+            }
+            .senas-dock {
+                padding: 2px 6px;
+                border-radius: 12px;
+                flex-direction: column;
+                align-items: center;
+            }
+            .senas-items {
+                display: none;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 4px;
+                margin-top: 4px;
+                padding-top: 4px;
+                border-top: 1px solid var(--glass-border);
+                width: 100%;
+            }
+            .senas-dock.abierto .senas-items {
+                display: flex;
+            }
+        }
+
         @media (max-width: 640px) {
-            body { padding: 4px 6px 10px 6px; }
+            body { padding: 4px 6px 6px 6px; }
             .brand-badge { display: none; }
-            .scoreboard-widget { padding: 3px 10px; gap: 6px; border-radius: 12px; margin-bottom: 4px; }
-            .score-num { font-size: 1.35rem; }
-            .team-tourney { font-size: 0.6rem; }
-            .scoreboard-target { font-size: 0.58rem; }
-            .stakes-bar-advanced { gap: 3px; margin-bottom: 4px; }
+            .scoreboard-widget { padding: 3px 10px; gap: 6px; border-radius: 12px; margin-bottom: 3px; }
+            .score-num { font-size: 1.25rem; }
+            .team-tourney { font-size: 0.58rem; }
+            .scoreboard-target { font-size: 0.54rem; }
+            .team-label { font-size: 0.64rem; }
+
+            .stakes-bar-advanced { gap: 3px; margin-bottom: 3px; }
             .lance-node { padding: 2px 4px; border-radius: 8px; }
-            .lance-node .lance-name { font-size: 0.56rem; }
-            .lance-node .lance-status { font-size: 0.62rem; }
+            .lance-node .lance-name { font-size: 0.54rem; }
+            .lance-node .lance-status { font-size: 0.58rem; }
 
             .table-viewport {
-                min-height: clamp(370px, 56vh, 440px);
-                border-radius: clamp(40px, 10vw, 90px);
-                grid-template-columns: minmax(72px, 20%) 1fr minmax(72px, 20%);
-                border-width: 7px;
+                border-radius: clamp(32px, 8vw, 70px);
+                grid-template-columns: minmax(60px, 19%) 1fr minmax(60px, 19%);
+                border-width: 6px;
                 outline-width: 2px;
-                padding: 4px 6px;
+                padding: 4px 5px;
+                max-height: calc(100dvh - 148px);
             }
 
-            .player-badge { min-width: 76px; padding: 2px 8px; font-size: 0.64rem; }
-            .player-badge .sub-role { font-size: 0.52rem; }
-            .action-dock { gap: 5px; margin-top: 4px; min-height: 40px; }
-            .btn-action { padding: 7px 12px; font-size: 0.74rem; border-radius: 10px; }
+            #mano_oeste .card, #mano_oeste .card-back,
+            #mano_este .card, #mano_este .card-back {
+                width: clamp(28px, 4vw, 38px) !important;
+                height: clamp(42px, 6vw, 56px) !important;
+                border-radius: 6px;
+            }
 
             .card-row.fanned-horizontal .card,
             .card-row.fanned-horizontal .card-back {
-                margin-left: -20px;
+                margin-left: -22px !important;
             }
 
+            .player-badge { min-width: 60px; padding: 2px 6px; font-size: 0.6rem; }
+            .player-badge .sub-role { font-size: 0.5rem; }
+            .btn-action { padding: 7px 12px; font-size: 0.74rem; border-radius: 10px; min-height: 36px; }
+            .action-dock { gap: 4px; margin-top: 3px; min-height: 38px; }
+
             .table-hub {
-                max-width: 190px;
-                padding: 4px 10px;
+                max-width: min(160px, 40vw);
+                padding: 3px 8px;
             }
-            .table-hub h3 { font-size: 0.74rem; }
-            .table-hub p { font-size: 0.62rem; max-width: 170px; }
-            .mazo-central { left: -14px; top: -10px; width: 24px; height: 34px; }
+            .table-hub h3 {
+                font-size: clamp(0.68rem, 2.2vw, 0.78rem);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .table-hub p {
+                font-size: clamp(0.56rem, 1.8vw, 0.64rem);
+                max-height: 2.5em;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+            .mazo-central { left: -10px; top: -8px; width: 20px; height: 30px; }
+
+            .btn-txt-responsive { display: none; }
+            .perfil-rango-pill { display: none !important; }
+            .perfil-nombre-pill { max-width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .btn-perfil-header { padding: 2px 6px 2px 4px; }
+            .perfil-avatar-pill { width: 22px; height: 22px; font-size: 0.85rem; }
+
+            /* Recuento en pantallas pequeñas */
+            .table-viewport.fase-recuento #mano_norte .card,
+            .table-viewport.fase-recuento #mano_oeste .card,
+            .table-viewport.fase-recuento #mano_este .card {
+                width: clamp(38px, 8.5vw, 48px) !important;
+                height: clamp(56px, 12.5vw, 70px) !important;
+            }
         }
 
         @media (max-width: 420px) {
+            .brand-title { font-size: 0.88rem; letter-spacing: 0.8px; }
+            .btn-compact { padding: 4px 8px; font-size: 0.68rem; }
             .table-viewport {
-                grid-template-columns: minmax(64px, 20%) 1fr minmax(64px, 20%);
-                min-height: 350px;
+                grid-template-columns: minmax(54px, 19%) 1fr minmax(54px, 19%);
+                border-width: 5px;
+                padding: 3px 4px;
             }
-            .player-badge { min-width: 66px; padding: 2px 5px; font-size: 0.6rem; }
-            .action-dock { gap: 4px; }
+            .player-badge { min-width: 54px; padding: 1px 4px; font-size: 0.58rem; }
             .btn-action { padding: 6px 10px; font-size: 0.7rem; }
+        }
+
+        @media (max-height: 600px) {
+            body { padding: 2px 6px; }
+            .app-header { margin-bottom: 2px; }
+            .brand-title { font-size: 0.95rem; }
+            .scoreboard-widget { padding: 2px 8px; margin-bottom: 2px; }
+            .score-num { font-size: 1.15rem; }
+            .stakes-bar-advanced { margin-bottom: 2px; }
+            .lance-node { padding: 1px 4px; }
+            .table-viewport { padding: 3px 6px; border-width: 5px; max-height: calc(100dvh - 135px); }
+            .action-dock { margin-top: 2px; min-height: 34px; gap: 4px; }
+            .btn-action { padding: 5px 10px; font-size: 0.72rem; min-height: 32px; }
+            .senas-dock { margin-top: 2px; padding: 2px 6px; }
         }
     </style>
 </head>
@@ -2235,7 +2458,7 @@
         </div>
     </div>
 
-    <!-- HEADER / TOOLBAR -->
+    <!-- HEADER / TOOLBAR RESPONSIVE -->
     <header class="app-header">
         <div class="brand-container">
             <span class="brand-title">EL MUS DE MARIO</span>
@@ -2243,8 +2466,8 @@
         </div>
 
         <div class="header-actions">
-            <button onclick="copiarEnlaceInvitacion()" class="btn-compact gold" title="Copiar enlace directo a esta sala para tus amigos"><span style="font-size:0.9rem;">🔗</span> Invitar</button>
-            <button onclick="abrirModalPersonalizacion()" class="btn-compact" title="Personalizar color del tapete y estilo de cartas">🎨 Mesa</button>
+            <button onclick="copiarEnlaceInvitacion()" class="btn-compact gold" title="Copiar enlace directo a esta sala para tus amigos"><span style="font-size:0.85rem;">🔗</span> <span class="btn-txt-responsive">Invitar</span></button>
+            <button onclick="abrirModalPersonalizacion()" class="btn-compact" title="Personalizar color del tapete y estilo de cartas">🎨 <span class="btn-txt-responsive">Mesa</span></button>
             <button onclick="abrirModalPerfil()" id="btnPerfilHeader" class="btn-perfil-header" title="Tu Perfil y Estadísticas de Victorias">
                 <span class="perfil-avatar-pill" id="headerAvatarMini">👑</span>
                 <div class="perfil-info-pill">
@@ -2252,17 +2475,47 @@
                     <span class="perfil-rango-pill" id="headerPerfilRango">🏆 0 Vacas · 0 Chicos</span>
                 </div>
             </button>
-            <button onclick="abrirModalLeaderboard()" class="btn-compact gold" title="Ver Clasificación General">🏆 Clasificación</button>
-            <div class="capsule" id="miAsientoTexto">Conectando...</div>
-            <button onclick="toggleTemaVisual()" id="btnThemeToggle" class="btn-compact" title="Cambiar modo claro / oscuro">☀️ Modo Claro</button>
-            <button onclick="toggleAudio()" id="btnAudioToggle" class="btn-compact" title="Activar / Desactivar efectos sonoros">🔊 Sonido</button>
-            <button onclick="toggleDesgloseDrawer()" id="btnToggleDesglose" class="btn-compact mobile-only-btn" title="Ver registro de lances de esta mano">📜 Lances <span class="badge-count" id="countLances">0</span></button>
-            <button onclick="toggleModoClase()" id="btnModoClase" class="btn-compact" title="Ocultar cartas si juegas en clase">🙈 Ocultar</button>
-            <button onclick="socket.emit('rellenarBots')" class="btn-compact">🤖 Rellenar Bots</button>
-            <button onclick="abrirModalAdmin()" class="btn-compact danger">🔑 Admin</button>
-            <div class="capsule" id="codigoSalaTexto" style="color: var(--accent-gold);">Sala: ...</div>
+            <button onclick="toggleDesgloseDrawer()" id="btnToggleDesglose" class="btn-compact" title="Ver registro de lances de esta mano">📜 <span class="btn-txt-responsive">Lances</span> <span class="badge-count" id="countLances">0</span></button>
+            
+            <!-- ACCIONES SECUNDARIAS EN PANTALLA ANCHA -->
+            <div class="header-desktop-actions" id="headerDesktopActions">
+                <button onclick="abrirModalLeaderboard()" class="btn-compact gold" title="Ver Clasificación General">🏆 Clasificación</button>
+                <button onclick="toggleTemaVisual()" id="btnThemeToggle" class="btn-compact" title="Cambiar modo claro / oscuro">☀️ Modo Claro</button>
+                <button onclick="toggleAudio()" id="btnAudioToggle" class="btn-compact" title="Activar / Desactivar efectos sonoros">🔊 Sonido</button>
+                <button onclick="toggleModoClase()" id="btnModoClase" class="btn-compact" title="Ocultar cartas si juegas en clase">🙈 Ocultar</button>
+                <button onclick="socket.emit('rellenarBots')" class="btn-compact">🤖 Rellenar Bots</button>
+                <button onclick="abrirModalAdmin()" class="btn-compact danger">🔑 Admin</button>
+                <div class="capsule" id="codigoSalaTexto" style="color: var(--accent-gold);">Sala: ...</div>
+                <div class="capsule" id="miAsientoTexto">Conectando...</div>
+            </div>
+
+            <!-- BOTÓN MENÚ MÓVIL / TABLET -->
+            <button onclick="toggleAjustesDropdown()" id="btnAjustesToggle" class="btn-compact btn-menu-responsive" title="Más opciones y ajustes">⚙️ <span class="btn-txt-menu">Menú</span></button>
         </div>
     </header>
+
+    <!-- DRAWER / HOJA DE AJUSTES EN MÓVIL Y TABLET -->
+    <div class="ajustes-overlay" id="ajustesOverlay" onclick="cerrarAjustesDropdown()"></div>
+    <div class="ajustes-drawer" id="ajustesDrawer">
+        <div class="ajustes-drawer-header">
+            <span style="font-family:'Cinzel',serif; font-size:1rem; color:var(--accent-gold); font-weight:800;">⚙️ Opciones de Sala</span>
+            <button onclick="cerrarAjustesDropdown()" class="btn-compact" style="border:none; font-size:1.2rem; padding:2px 8px; line-height:1;" title="Cerrar">&times;</button>
+        </div>
+        <div class="ajustes-drawer-body">
+            <div class="ajustes-drawer-info">
+                <div class="capsule-drawer" id="codigoSalaTextoDrawer">Sala: ...</div>
+                <div class="capsule-drawer" id="miAsientoTextoDrawer">Conectando...</div>
+            </div>
+            <div class="ajustes-drawer-grid">
+                <button onclick="abrirModalLeaderboard(); cerrarAjustesDropdown();" class="btn-compact gold">🏆 Clasificación</button>
+                <button onclick="toggleTemaVisual(); actualizarTextosAjustesDrawer();" id="btnThemeToggleDrawer" class="btn-compact">☀️ Modo Claro</button>
+                <button onclick="toggleAudio(); actualizarTextosAjustesDrawer();" id="btnAudioToggleDrawer" class="btn-compact">🔊 Sonido</button>
+                <button onclick="toggleModoClase(); actualizarTextosAjustesDrawer();" id="btnModoClaseDrawer" class="btn-compact">🙈 Modo Clase</button>
+                <button onclick="socket.emit('rellenarBots'); cerrarAjustesDropdown();" class="btn-compact">🤖 Rellenar Bots</button>
+                <button onclick="abrirModalAdmin(); cerrarAjustesDropdown();" class="btn-compact danger">🔑 Administrador</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MARCADOR PRINCIPAL -->
     <div class="scoreboard-widget">
@@ -2401,15 +2654,18 @@
     <!-- DOCK DE ACCIONES -->
     <div class="action-dock" id="botonesAccion"></div>
 
-    <!-- DOCK DE SEÑAS -->
-    <nav class="senas-dock">
-        <span>SEÑAS:</span>
-        <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="btn-sena" title="2 Reyes">👄 2 Reyes</button>
-        <button onclick="enviarSenaSecreta('2 Ases (Lengua)')" class="btn-sena" title="2 Ases">👅 2 Ases</button>
-        <button onclick="enviarSenaSecreta('Medias (Boca de lado)')" class="btn-sena" title="Medias">🥴 Medias</button>
-        <button onclick="enviarSenaSecreta('Duples (Cejas)')" class="btn-sena" title="Duples">🤨 Duples</button>
-        <button onclick="enviarSenaSecreta('31 La Una (Guiño)')" class="btn-sena" title="31">😉 31</button>
-        <button onclick="enviarSenaSecreta('Ciego / Nada')" class="btn-sena" title="Nada">🙈 Ciego</button>
+    <!-- DOCK DE SEÑAS CON TOGGLE COMPACTO -->
+    <nav class="senas-dock" id="dockSenas">
+        <button type="button" class="btn-toggle-senas" id="btnToggleSenas" onclick="toggleDockSenas()" title="Abrir o cerrar señas">🤫 <span class="txt-toggle-senas">Señas</span> <span class="arrow-senas" id="arrowSenas">▾</span></button>
+        <div class="senas-items" id="senasItems">
+            <span class="senas-title-desktop">SEÑAS:</span>
+            <button onclick="enviarSenaSecreta('2 Reyes (Labio)')" class="btn-sena" title="2 Reyes">👄 2 Reyes</button>
+            <button onclick="enviarSenaSecreta('2 Ases (Lengua)')" class="btn-sena" title="2 Ases">👅 2 Ases</button>
+            <button onclick="enviarSenaSecreta('Medias (Boca de lado)')" class="btn-sena" title="Medias">🥴 Medias</button>
+            <button onclick="enviarSenaSecreta('Duples (Cejas)')" class="btn-sena" title="Duples">🤨 Duples</button>
+            <button onclick="enviarSenaSecreta('31 La Una (Guiño)')" class="btn-sena" title="31">😉 31</button>
+            <button onclick="enviarSenaSecreta('Ciego / Nada')" class="btn-sena" title="Nada">🙈 Ciego</button>
+        </div>
     </nav>
 
     <!-- BANNER Y TOAST DE NOTIFICACIONES / JUGADAS ESPECIALES -->
@@ -2583,10 +2839,16 @@
 
         function actualizarBotonTema() {
             const btn = document.getElementById('btnThemeToggle');
-            if (!btn) return;
             const esClaro = document.body.classList.contains('theme-light');
-            btn.innerHTML = esClaro ? '🌙 Modo Oscuro' : '☀️ Modo Claro';
-            btn.classList.toggle('active-toggle', esClaro);
+            if (btn) {
+                btn.innerHTML = esClaro ? '🌙 Modo Oscuro' : '☀️ Modo Claro';
+                btn.classList.toggle('active-toggle', esClaro);
+            }
+            const btnDrawer = document.getElementById('btnThemeToggleDrawer');
+            if (btnDrawer) {
+                btnDrawer.innerHTML = esClaro ? '🌙 Modo Oscuro' : '☀️ Modo Claro';
+                btnDrawer.classList.toggle('active-toggle', esClaro);
+            }
         }
 
         /* ===== GESTIÓN DE PERSONALIZACIÓN DE TAPETE Y DORSOS ===== */
@@ -2822,9 +3084,16 @@
 
         function actualizarBotonAudio() {
             const btn = document.getElementById('btnAudioToggle');
-            if (!btn) return;
-            btn.innerHTML = audioEngine.enabled ? '🔊 Sonido' : '🔇 Silencio';
-            btn.classList.toggle('danger', !audioEngine.enabled);
+            const txt = audioEngine.enabled ? '🔊 Sonido' : '🔇 Silencio';
+            if (btn) {
+                btn.innerHTML = txt;
+                btn.classList.toggle('danger', !audioEngine.enabled);
+            }
+            const btnDrawer = document.getElementById('btnAudioToggleDrawer');
+            if (btnDrawer) {
+                btnDrawer.innerHTML = txt;
+                btnDrawer.classList.toggle('danger', !audioEngine.enabled);
+            }
         }
 
         /* ===== DRAWER PARA MÓVILES (REGISTRO DE LANCES) ===== */
@@ -2843,6 +3112,60 @@
             if (countEl && cont) {
                 const total = cont.querySelectorAll('.desglose-card').length;
                 countEl.innerText = total;
+            }
+        }
+
+        /* ===== DRAWER PARA MÓVILES (AJUSTES Y MENÚ) ===== */
+        function toggleAjustesDropdown() {
+            const drawer = document.getElementById('ajustesDrawer');
+            const overlay = document.getElementById('ajustesOverlay');
+            if (!drawer || !overlay) return;
+            const abierto = drawer.classList.contains('activo');
+            if (abierto) {
+                cerrarAjustesDropdown();
+            } else {
+                actualizarTextosAjustesDrawer();
+                drawer.classList.add('activo');
+                overlay.classList.add('activo');
+            }
+        }
+
+        function cerrarAjustesDropdown() {
+            const drawer = document.getElementById('ajustesDrawer');
+            const overlay = document.getElementById('ajustesOverlay');
+            if (drawer) drawer.classList.remove('activo');
+            if (overlay) overlay.classList.remove('activo');
+        }
+
+        function actualizarTextosAjustesDrawer() {
+            const salaOrig = document.getElementById('codigoSalaTexto');
+            const salaDraw = document.getElementById('codigoSalaTextoDrawer');
+            if (salaOrig && salaDraw) salaDraw.innerText = salaOrig.innerText;
+
+            const asientoOrig = document.getElementById('miAsientoTexto');
+            const asientoDraw = document.getElementById('miAsientoTextoDrawer');
+            if (asientoOrig && asientoDraw) asientoDraw.innerHTML = asientoOrig.innerHTML;
+
+            const btnThemeOrig = document.getElementById('btnThemeToggle');
+            const btnThemeDraw = document.getElementById('btnThemeToggleDrawer');
+            if (btnThemeOrig && btnThemeDraw) btnThemeDraw.innerHTML = btnThemeOrig.innerHTML;
+
+            const btnAudioOrig = document.getElementById('btnAudioToggle');
+            const btnAudioDraw = document.getElementById('btnAudioToggleDrawer');
+            if (btnAudioOrig && btnAudioDraw) btnAudioDraw.innerHTML = btnAudioOrig.innerHTML;
+
+            const btnModoClaseOrig = document.getElementById('btnModoClase');
+            const btnModoClaseDraw = document.getElementById('btnModoClaseDrawer');
+            if (btnModoClaseOrig && btnModoClaseDraw) btnModoClaseDraw.innerHTML = btnModoClaseOrig.innerHTML;
+        }
+
+        function toggleDockSenas() {
+            const dock = document.getElementById('dockSenas');
+            const arrow = document.getElementById('arrowSenas');
+            if (!dock) return;
+            dock.classList.toggle('abierto');
+            if (arrow) {
+                arrow.innerText = dock.classList.contains('abierto') ? '▴' : '▾';
             }
         }
 
@@ -3176,9 +3499,15 @@
         function toggleModoClase() {
             modoClaseActivo = !modoClaseActivo;
             const btn = document.getElementById('btnModoClase');
+            const txt = modoClaseActivo ? "👁️ Ver" : "🙈 Ocultar";
             if (btn) {
-                btn.innerHTML = modoClaseActivo ? "👁️ Ver" : "🙈 Ocultar";
+                btn.innerHTML = txt;
                 btn.classList.toggle('danger', modoClaseActivo);
+            }
+            const btnDrawer = document.getElementById('btnModoClaseDrawer');
+            if (btnDrawer) {
+                btnDrawer.innerHTML = txt;
+                btnDrawer.classList.toggle('danger', modoClaseActivo);
             }
             renderizarMiMano();
         }
@@ -3298,6 +3627,12 @@
             if (miAsiento === null) return;
             socket.emit('enviarSena', { sena });
             mostrarBocadilloPorAsiento(miAsiento, `(Seña enviada)`);
+            if (window.innerWidth <= 768) {
+                const dock = document.getElementById('dockSenas');
+                const arrow = document.getElementById('arrowSenas');
+                if (dock) dock.classList.remove('abierto');
+                if (arrow) arrow.innerText = '▾';
+            }
         }
 
         function abrirModalAdmin() {
