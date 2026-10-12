@@ -1682,9 +1682,9 @@ function ejecutarRecuentoFinalMano(sala) {
             programarTimerSala(sala, () => {
               sala.recuentoEnCurso = false;
               iniciarMano(sala);
-            }, 2000);
-          }, 2000);
-        }, sala.apuestasLances.pares.hayPares ? 2200 : 700);
+            }, 2500);
+          }, 2500);
+        }, sala.apuestasLances.pares.hayPares ? 2600 : 800);
       };
 
       if (sala.apuestasLances.pares.hayPares) {
@@ -1695,12 +1695,12 @@ function ejecutarRecuentoFinalMano(sala) {
             return;
           }
           continuarConJuego();
-        }, 2200);
+        }, 2600);
       } else {
         continuarConJuego();
       }
-    }, 2200);
-  }, 1800);
+    }, 2600);
+  }, 2800);
 }
 
 function resolverLanceEnRecuento(sala, lance) {
