@@ -384,15 +384,87 @@ function compararManosPares(pA, pB) {
 const JERARQUIA_JUEGO = { 31: 8, 32: 7, 40: 6, 37: 5, 36: 4, 35: 3, 34: 2, 33: 1 };
 
 function evaluarDetalleJuego(m) {
-  if (!m || !Array.isArray(m)) return { tiene: false, valor: 0, rangoJuego: 0, cobro: 1, desc: "Punto (0)" };
+  if (!m || !Array.isArray(m)) return { tiene: false, valor: 0, rangoJuego: 0, cobro: 1, desc: "Punto (0)", esLaReal: false };
   let s = m.reduce((acc, c) => acc + (c && c.valorJuego ? c.valorJuego : 0), 0);
   if (s >= 31) {
-    let rango = JERARQUIA_JUEGO[s] || 1;
+    let nums = m.map(c => (c && c.numero !== undefined) ? parseInt(c.numero) : 0);
+    let sietes = nums.filter(n => n === 7).length;
+    let sotas = nums.filter(n => n === 10).length;
+    let esLaReal = (s === 31 && sietes === 3 && sotas === 1);
+    let rango = esLaReal ? 9 : (JERARQUIA_JUEGO[s] || 1);
     let cobro = (s === 31) ? 3 : 2;
-    let desc = (s === 31) ? "La una (31)" : `Juego de ${s}`;
-    return { tiene: true, valor: s, rangoJuego: rango, cobro: cobro, desc: desc };
+    let desc = esLaReal ? "👑 ¡La Real! (31 Invencible)" : ((s === 31) ? "La una (31)" : `Juego de ${s}`);
+    return { tiene: true, valor: s, rangoJuego: rango, cobro: cobro, desc: desc, esLaReal: esLaReal };
   }
-  return { tiene: false, valor: s, rangoJuego: 0, cobro: 1, desc: `Punto (${s})` };
+  return { tiene: false, valor: s, rangoJuego: 0, cobro: 1, desc: `Punto (${s})`, esLaReal: false };
+}
+
+function detectarJugadaEspecial(m) {
+  if (!m || !Array.isArray(m) || m.length < 4) return null;
+  const nums = m.map(c => (c && c.numero !== undefined) ? parseInt(c.numero) : 0);
+  const valsMus = m.map(c => (c && c.valorMus !== undefined) ? c.valorMus : 0).sort((a,b) => b - a);
+
+  // 1. La Real: Tres sietes y una Sota (31)
+  const sietes = nums.filter(n => n === 7).length;
+  const sotas = nums.filter(n => n === 10).length;
+  if (sietes === 3 && sotas === 1) {
+    return {
+      clave: 'la_real',
+      nombre: '👑 ¡LA REAL!',
+      desc: 'Tres Sietes y una Sota (31 Invencible)',
+      badge: '👑 LA REAL',
+      tipo: 'legendaria'
+    };
+  }
+
+  // 2. Cuarteto de Reyes (4 Reyes o Treses con valorMus 12)
+  const reyes = valsMus.filter(v => v === 12).length;
+  if (reyes === 4) {
+    return {
+      clave: 'cuatro_reyes',
+      nombre: '🦁 CUARTETO DE REYES',
+      desc: '4 Reyes (Imbatible a Grande)',
+      badge: '🦁 4 REYES',
+      tipo: 'epica'
+    };
+  }
+
+  // 3. El Solomillo (Duples de 2 Reyes y 2 Ases)
+  const ases = valsMus.filter(v => v === 1).length;
+  if (reyes === 2 && ases === 2) {
+    return {
+      clave: 'solomillo',
+      nombre: '🥩 EL SOLOMILLO',
+      desc: 'Duples de Reyes y Ases',
+      badge: '🥩 SOLOMILLO',
+      tipo: 'epica'
+    };
+  }
+
+  // 4. Cuarteto de Ases (4 Ases o Doses con valorMus 1)
+  if (ases === 4) {
+    return {
+      clave: 'cuatro_ases',
+      nombre: '🎯 CUARTETO DE ASES',
+      desc: '4 Ases (Imbatible a Chica)',
+      badge: '🎯 4 ASES',
+      tipo: 'epica'
+    };
+  }
+
+  // 5. La 31 (La una: tres figuras y un as)
+  const figuras = nums.filter(n => n >= 10 || n === 3).length;
+  if (sietes !== 3 && figuras === 3 && ases === 1) {
+    return {
+      clave: 'la_una',
+      nombre: '💎 LA UNA (31)',
+      desc: '3 Figuras y un As',
+      badge: '💎 31 (LA UNA)',
+      tipo: 'destacada'
+    };
+  }
+
+  return null;
 }
 
 function compararManosJuego(jA, jB) {
@@ -588,6 +660,14 @@ function notificarEstado(sala, msg, forzarRevelado = false) {
     }
   }
 
+  let jugadasEspeciales = {};
+  if (revelarTodas) {
+    for (let a = 0; a < 4; a++) {
+      let esp = detectarJugadaEspecial(sala.manos[a]);
+      if (esp) jugadasEspeciales[a] = esp;
+    }
+  }
+
   io.to(sala.id).emit('estadoJuego', {
     fase: sala.fase,
     turno: sala.turno,
@@ -610,7 +690,8 @@ function notificarEstado(sala, msg, forzarRevelado = false) {
     mensaje: msg,
     jugadoresEnMesa: mapaJugadores,
     enPartida: sala.enPartida,
-    todasLasManos: revelarTodas ? sala.manos : null
+    todasLasManos: revelarTodas ? sala.manos : null,
+    jugadasEspeciales: jugadasEspeciales
   });
 
   for (let token in sala.jugadoresPorToken) {
