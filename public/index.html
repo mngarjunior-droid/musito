@@ -3166,7 +3166,7 @@
         }
 
         /* ===== GESTIÓN DE BARAJA FOTOGRÁFICA Y REVERSOS REALES ===== */
-        let infoCartasLocales = { existe: false, total: 0, prefix: '/cartas/', archivos: [] };
+        let infoCartasLocales = { existe: false, total: 0, prefix: '/cartas/', archivos: [], detalles: [] };
         let mapaFotosDetectadas = {};
 
         async function cargarInfoCartasServidor() {
@@ -3176,9 +3176,12 @@
                     const data = await res.json();
                     if (data && data.existe && Array.isArray(data.archivos)) {
                         infoCartasLocales = data;
-                        mapearArchivosCartas(data.archivos, data.prefix || '/cartas/');
+                        mapearArchivosCartas(data.detalles && data.detalles.length > 0 ? data.detalles : data.archivos, data.prefix || '/cartas/');
                         actualizarUIEstadoBaraja();
                         renderizarMiMano();
+                        if (estadoActual && estadoActual.fase && estadoActual.fase !== 'espera') {
+                            actualizarReversosOtrosJugadores(true, estadoActual.cartasReveladasModoLoco);
+                        }
                     }
                 }
             } catch (e) {}
@@ -3191,10 +3194,13 @@
             if (!txt) return;
 
             if (infoCartasLocales.existe && infoCartasLocales.total > 0) {
+                const mapeados = Object.keys(mapaFotosDetectadas).filter(k => k !== 'reverso' && k !== 'fondo').length;
                 txt.innerText = `${infoCartasLocales.total} fotos detectadas (Baraja Real Activa)`;
                 txt.style.color = 'var(--accent-gold)';
-                const rutaInfo = infoCartasLocales.prefix === '/' ? 'carpeta public/' : 'public/cartas/';
-                if (det) det.innerText = `Cargadas desde ${rutaInfo} (${Object.keys(mapaFotosDetectadas).length} naipes mapeados)`;
+                const tieneReverso = !!mapaFotosDetectadas['reverso'];
+                const tieneFondo = !!mapaFotosDetectadas['fondo'];
+                const infoExtra = `${mapeados}/40 cartas` + (tieneReverso ? ' · Tapa ✓' : '') + (tieneFondo ? ' · Fondo ✓' : '');
+                if (det) det.innerText = `Archivos cargados en public/ (${infoExtra})`;
                 if (ico) ico.innerText = '✅';
             } else {
                 txt.innerText = 'Diseño Vectorial Clásico';
@@ -3204,61 +3210,92 @@
             }
         }
 
-        function mapearArchivosCartas(archivos, prefix = '/cartas/') {
+        function mapearArchivosCartas(archivos, prefixDefault = '/cartas/') {
             mapaFotosDetectadas = {};
             const palosNorm = ['oros', 'copas', 'espadas', 'bastos'];
             const mapaValoresMus = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
 
-            // 1. Detección específica de tapadecarta / tapa de carta y fondoblanco / fondo blanco
-            archivos.forEach(nombre => {
-                const clean = nombre.toLowerCase();
+            // Normalizar a lista de objetos { nombre, url }
+            const listaArchivos = archivos.map(item => {
+                if (typeof item === 'string') {
+                    return { nombre: item, url: `${prefixDefault}${item}` };
+                }
+                return { nombre: item.nombre || '', url: item.url || `${prefixDefault}${item.nombre}` };
+            });
+
+            // 1. Detección de tapadecarta / tapa de carta y fondoblanco / fondo blanco
+            listaArchivos.forEach(item => {
+                const clean = item.nombre.toLowerCase();
                 const cleanCompact = clean.replace(/[^a-z0-9]/g, '');
 
-                if (cleanCompact.includes('tapadecarta') || cleanCompact.includes('tapacarta') || cleanCompact.includes('tapa') || cleanCompact.includes('reverso') || cleanCompact.includes('dorso') || cleanCompact.includes('back')) {
+                if (cleanCompact.includes('tapadecarta') || cleanCompact.includes('tapacarta') || cleanCompact.includes('tapadecarta') || cleanCompact.includes('tapa') || cleanCompact.includes('reverso') || cleanCompact.includes('dorso') || cleanCompact.includes('back')) {
                     if (!mapaFotosDetectadas['reverso'] || cleanCompact.includes('tapadecarta') || cleanCompact.includes('tapacarta')) {
-                        mapaFotosDetectadas['reverso'] = `${prefix}${nombre}`;
+                        mapaFotosDetectadas['reverso'] = item.url;
                     }
                 }
 
                 if (cleanCompact.includes('fondoblanco') || cleanCompact.includes('blanco') || cleanCompact.includes('fondo') || cleanCompact.includes('tapete') || cleanCompact.includes('white')) {
                     if (!mapaFotosDetectadas['fondo'] || cleanCompact.includes('fondoblanco')) {
-                        mapaFotosDetectadas['fondo'] = `${prefix}${nombre}`;
+                        mapaFotosDetectadas['fondo'] = item.url;
                     }
                 }
             });
 
-            // 2. Detección automática por numeración carta_01 a carta_40 (Oros, Copas, Espadas, Bastos)
+            // 2. Detección automática por numeración carta_01 a carta_48
             const archivosCartaNum = {};
-            archivos.forEach(nombre => {
-                const matchNum = nombre.toLowerCase().match(/^carta_?0*(\d+)\.(png|jpg|jpeg|webp)$/);
+            let maxCartaNum = 0;
+            listaArchivos.forEach(item => {
+                const matchNum = item.nombre.toLowerCase().match(/^carta_?0*(\d+)\.(png|jpg|jpeg|webp)$/);
                 if (matchNum) {
                     const numIdx = parseInt(matchNum[1], 10);
-                    archivosCartaNum[numIdx] = `${prefix}${nombre}`;
+                    archivosCartaNum[numIdx] = item.url;
+                    if (numIdx > maxCartaNum) maxCartaNum = numIdx;
                 }
             });
 
-            if (Object.keys(archivosCartaNum).length >= 40) {
-                // Orden tradicional de la baraja española de 40 cartas:
-                // 1-10: Oros (1, 2, 3, 4, 5, 6, 7, 10/Sota, 11/Caballo, 12/Rey)
-                // 11-20: Copas
-                // 21-30: Espadas
-                // 31-40: Bastos
+            // Si los archivos llegan hasta carta_48 (baraja de 48 cartas donde se borraron los 8 y 9):
+            // Cada palo tenía originalmente 12 cartas:
+            // Oros: 1..12 (donde 10=carta_10, 11=carta_11, 12=carta_12; 8 y 9 borrados)
+            // Copas: 13..24 (13=1, 14=2, 15=3, 16=4, 17=5, 18=6, 19=7, 22=10, 23=11, 24=12; 20 y 21 borrados)
+            // Espadas: 25..36 (25=1, 26=2, 27=3, 28=4, 29=5, 30=6, 31=7, 34=10, 35=11, 36=12; 32 y 33 borrados)
+            // Bastos: 37..48 (37=1, 38=2, 39=3, 40=4, 41=5, 42=6, 43=7, 46=10, 47=11, 48=12; 44 y 45 borrados)
+            if (maxCartaNum > 40 || archivosCartaNum[48] || archivosCartaNum[47] || archivosCartaNum[46]) {
                 palosNorm.forEach((p, pIdx) => {
-                    mapaValoresMus.forEach((val, vIdx) => {
-                        const numIdx = (pIdx * 10) + vIdx + 1;
-                        if (archivosCartaNum[numIdx]) {
-                            mapaFotosDetectadas[`${val}_${p}`] = archivosCartaNum[numIdx];
+                    mapaValoresMus.forEach((val) => {
+                        const numIdx48 = (pIdx * 12) + val;
+                        if (archivosCartaNum[numIdx48]) {
+                            mapaFotosDetectadas[`${val}_${p}`] = archivosCartaNum[numIdx48];
                         }
                     });
                 });
-                // Fallback para reverso/fondo si no se llamaran "tapa de carta" / "fondo blanco"
-                if (!mapaFotosDetectadas['reverso'] && archivosCartaNum[41]) mapaFotosDetectadas['reverso'] = archivosCartaNum[41];
-                if (!mapaFotosDetectadas['fondo'] && archivosCartaNum[42]) mapaFotosDetectadas['fondo'] = archivosCartaNum[42];
             }
 
-            // 3. Detección por nombres con palos y palabras clave
-            archivos.forEach(nombre => {
-                const clean = nombre.toLowerCase();
+            // También mapeo secuencial continuo de 40 cartas (1-10 Oros, 11-20 Copas, 21-30 Espadas, 31-40 Bastos) para los que no se hayan mapeado ya
+            palosNorm.forEach((p, pIdx) => {
+                mapaValoresMus.forEach((val, vIdx) => {
+                    const key = `${val}_${p}`;
+                    if (!mapaFotosDetectadas[key]) {
+                        const numIdx40 = (pIdx * 10) + vIdx + 1;
+                        if (archivosCartaNum[numIdx40]) {
+                            mapaFotosDetectadas[key] = archivosCartaNum[numIdx40];
+                        }
+                    }
+                });
+            });
+
+            // Fallback para reverso/fondo si vinieran como carta_49, carta_50 o carta_41/42
+            if (!mapaFotosDetectadas['reverso']) {
+                if (archivosCartaNum[49]) mapaFotosDetectadas['reverso'] = archivosCartaNum[49];
+                else if (archivosCartaNum[41] && !archivosCartaNum[48]) mapaFotosDetectadas['reverso'] = archivosCartaNum[41];
+            }
+            if (!mapaFotosDetectadas['fondo']) {
+                if (archivosCartaNum[50]) mapaFotosDetectadas['fondo'] = archivosCartaNum[50];
+                else if (archivosCartaNum[42] && !archivosCartaNum[48]) mapaFotosDetectadas['fondo'] = archivosCartaNum[42];
+            }
+
+            // 3. Detección por nombres con palos y números (ej: 1_oros.png, oros_1.png, rey_copas.png, etc.)
+            listaArchivos.forEach(item => {
+                const clean = item.nombre.toLowerCase();
 
                 palosNorm.forEach(p => {
                     for (let n of [1, 2, 3, 4, 5, 6, 7, 10, 11, 12]) {
@@ -3271,9 +3308,15 @@
                         const match3 = clean.includes(`${num2}_${p}`) || clean.includes(`${p}_${num2}`);
                         const match4 = clean.includes(`${n}${p}`) || clean.includes(`${p}${n}`);
                         const match5 = clean.includes(`${n}_de_${p}`) || clean.includes(`${n}de${p}`);
+                        
+                        let matchFigura = false;
+                        if (n === 10 && (clean.includes(`sota_${p}`) || clean.includes(`sota_de_${p}`) || clean.includes(`${p}_sota`))) matchFigura = true;
+                        if (n === 11 && (clean.includes(`caballo_${p}`) || clean.includes(`caballo_de_${p}`) || clean.includes(`${p}_caballo`))) matchFigura = true;
+                        if (n === 12 && (clean.includes(`rey_${p}`) || clean.includes(`rey_de_${p}`) || clean.includes(`${p}_rey`))) matchFigura = true;
+                        if (n === 1 && (clean.includes(`as_${p}`) || clean.includes(`as_de_${p}`) || clean.includes(`${p}_as`))) matchFigura = true;
 
-                        if (match1 || match2 || match3 || match4 || match5) {
-                            mapaFotosDetectadas[key] = `${prefix}${nombre}`;
+                        if (match1 || match2 || match3 || match4 || match5 || matchFigura) {
+                            mapaFotosDetectadas[key] = item.url;
                         }
                     }
                 });
@@ -3300,8 +3343,8 @@
 
         function calcularIndiceCartaBaraja40(c) {
             if (!c) return 41;
-            const p = (c.palo || '').toLowerCase();
-            const n = parseInt(c.numero);
+            const p = (c.palo || '').toLowerCase().trim();
+            const n = parseInt(c.numero, 10);
             const palosIndex = { 'oros': 0, 'copas': 1, 'espadas': 2, 'bastos': 3 };
             const pIdx = palosIndex[p] !== undefined ? palosIndex[p] : 0;
             const mapaValores = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 10: 7, 11: 8, 12: 9 };
@@ -3311,30 +3354,57 @@
 
         function obtenerRutasCandidatasCarta(c) {
             if (!c) return { principal: '', alts: [] };
-            const p = (c.palo || '').toLowerCase();
-            const n = c.numero;
+            const p = (c.palo || '').toLowerCase().trim();
+            const n = parseInt(c.numero, 10);
             const key = `${n}_${p}`;
-
-            if (mapaFotosDetectadas[key]) {
-                return { principal: mapaFotosDetectadas[key], alts: [] };
-            }
 
             const numIdx = calcularIndiceCartaBaraja40(c);
             const numPad = numIdx < 10 ? `0${numIdx}` : `${numIdx}`;
 
-            // Candidata principal: /carta_01.png
-            const principal = `/carta_${numPad}.png`;
-            const alts = [
+            // Si la baraja estándar tiene 48 cartas (1-12 por palo, 12 cartas x 4 palos)
+            const palosIndex = { 'oros': 0, 'copas': 1, 'espadas': 2, 'bastos': 3 };
+            const pIdx = palosIndex[p] !== undefined ? palosIndex[p] : 0;
+            const numIdx48 = (pIdx * 12) + n;
+            const numPad48 = numIdx48 < 10 ? `0${numIdx48}` : `${numIdx48}`;
+
+            let principal = '';
+            let alts = [];
+
+            if (mapaFotosDetectadas[key]) {
+                principal = mapaFotosDetectadas[key];
+            } else {
+                // Prioridad: archivo directo en raíz o en /cartas/
+                principal = `/carta_${numPad}.png`;
+            }
+
+            const altsSet = new Set([
+                `/carta_${numPad}.png`,
+                `/carta_${numPad}.jpg`,
                 `/cartas/carta_${numPad}.png`,
+                `/cartas/carta_${numPad}.jpg`,
                 `/carta_${numIdx}.png`,
+                `/carta_${numIdx}.jpg`,
                 `/cartas/carta_${numIdx}.png`,
-                `/cartas/${n}_${p}.png`,
-                `/cartas/${n}_${p}.jpg`,
+                `/cartas/carta_${numIdx}.jpg`,
+                `/carta_${numPad48}.png`,
+                `/carta_${numPad48}.jpg`,
+                `/cartas/carta_${numPad48}.png`,
+                `/cartas/carta_${numPad48}.jpg`,
                 `/${n}_${p}.png`,
                 `/${n}_${p}.jpg`,
+                `/cartas/${n}_${p}.png`,
+                `/cartas/${n}_${p}.jpg`,
+                `/${p}_${n}.png`,
+                `/${p}_${n}.jpg`,
                 `/cartas/${p}_${n}.png`,
-                `/cartas/${p}_${n}.jpg`
-            ];
+                `/cartas/${p}_${n}.jpg`,
+                `/${n}_de_${p}.png`,
+                `/cartas/${n}_de_${p}.png`
+            ]);
+
+            altsSet.delete(principal);
+            alts = Array.from(altsSet);
+
             return { principal, alts };
         }
 
@@ -3381,11 +3451,16 @@
                 '/tapadecarta.png',
                 '/tapadecarta.jpg',
                 '/tapa de carta.png',
+                '/tapa de carta.jpg',
                 '/tapa_de_carta.png',
+                '/tapacarta.png',
                 '/cartas/tapadecarta.png',
                 '/cartas/tapadecarta.jpg',
                 '/cartas/tapa de carta.png',
+                '/cartas/tapa de carta.jpg',
+                '/cartas/tapacarta.png',
                 '/carta_41.png',
+                '/cartas/carta_41.png',
                 '/tapa.png',
                 '/reverso.png'
             ].filter(r => r !== reversoSrc).join(',');
