@@ -1268,7 +1268,7 @@
             flex: 1;
             min-height: 0;
             height: 100%;
-            max-height: calc(100dvh - 170px);
+            max-height: calc(100dvh - 180px);
             width: 100%;
             background: radial-gradient(ellipse at 50% 50%, var(--tapete-core) 0%, var(--tapete-edge) 76%, var(--tapete-bottom) 100%);
             border: clamp(6px, 1.2vw, 12px) solid var(--rail-inner);
@@ -1805,40 +1805,57 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* ===== CONTROLES DOCK TÁCTILES Y ERGONÓMICOS ===== */
+        /* ===== CAJA CUADRADA DE BOTONES DE ACCIÓN (A LA IZQUIERDA DE LA BARAJA) ===== */
         .action-dock {
+            position: absolute;
+            bottom: 14px;
+            left: 18px;
+            z-index: 35;
+            width: clamp(190px, 19vw, 240px);
+            background: rgba(12, 23, 18, 0.92);
+            backdrop-filter: blur(20px) saturate(160%);
+            border: 1.5px solid rgba(212, 175, 55, 0.45);
+            border-radius: 16px;
+            padding: 8px 10px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12);
             display: flex;
-            gap: 8px;
-            margin-top: 6px;
             flex-wrap: wrap;
+            gap: 6px;
             justify-content: center;
             align-items: center;
-            min-height: 46px;
-            width: 100%;
-            max-width: var(--table-max-w);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .action-dock:empty {
+            display: none !important;
         }
 
         .btn-action {
-            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%), #1c2b22;
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.02) 100%), #1c2b22;
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: #ffffff;
-            padding: 9px 18px;
-            border-radius: 14px;
-            font-size: clamp(0.78rem, 1.5vw, 0.86rem);
+            padding: 8px 10px;
+            border-radius: 11px;
+            font-size: clamp(0.74rem, 1.15vw, 0.82rem);
             font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
+            box-shadow: 0 5px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
+            flex: 1 1 calc(50% - 6px);
+            min-width: 80px;
+            text-align: center;
+            line-height: 1.15;
+            user-select: none;
         }
 
         .btn-action:hover:not(:disabled) {
             transform: translateY(-2px);
             filter: brightness(1.15);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.5);
         }
 
         .btn-action:active:not(:disabled) {
@@ -1855,18 +1872,28 @@
             background: linear-gradient(180deg, #ffd75e 0%, #e5a910 100%);
             color: #1a1003;
             border: 1px solid #ffeaa7;
-            box-shadow: 0 6px 20px var(--accent-gold-glow);
+            box-shadow: 0 5px 18px var(--accent-gold-glow);
         }
 
         .btn-action.red {
             background: linear-gradient(180deg, #ff6b6b 0%, #c0392b 100%);
             border: 1px solid #ff8787;
-            box-shadow: 0 6px 20px var(--team-rival-glow);
+            box-shadow: 0 5px 18px var(--team-rival-glow);
         }
 
         .btn-action.blue {
             background: linear-gradient(180deg, #54a0ff 0%, #2980b9 100%);
             border: 1px solid #74b9ff;
+        }
+
+        .btn-action.btn-full-width,
+        .btn-action:only-child {
+            flex: 1 1 100% !important;
+        }
+
+        .action-dock > div {
+            width: 100%;
+            text-align: center;
         }
 
         .message-blocked {
@@ -2117,6 +2144,20 @@
             .senas-dock.abierto .senas-items {
                 display: flex;
             }
+            .action-dock {
+                bottom: 8px;
+                left: 8px;
+                width: clamp(140px, 30vw, 175px);
+                padding: 6px;
+                gap: 4px;
+                border-radius: 12px;
+            }
+            .action-dock .btn-action {
+                padding: 6px 7px;
+                font-size: 0.7rem;
+                min-height: 32px;
+                min-width: 60px;
+            }
         }
 
         @media (max-width: 640px) {
@@ -2156,8 +2197,19 @@
 
             .player-badge { min-width: 60px; padding: 2px 6px; font-size: 0.6rem; }
             .player-badge .sub-role { font-size: 0.5rem; }
-            .btn-action { padding: 7px 12px; font-size: 0.74rem; border-radius: 10px; min-height: 36px; }
-            .action-dock { gap: 4px; margin-top: 3px; min-height: 38px; }
+            .btn-action { padding: 6px 8px; font-size: 0.72rem; border-radius: 10px; min-height: 32px; }
+        }
+
+        @media (max-width: 580px) {
+            .action-dock {
+                bottom: 6px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 16px);
+                max-width: 360px;
+                padding: 5px 8px;
+                z-index: 60;
+            }
 
             .table-hub {
                 max-width: min(160px, 40vw);
@@ -2648,12 +2700,12 @@
                 </div>
             </div>
 
+            <!-- CAJA CUADRADA DE BOTONES DE ACCIÓN (A LA IZQUIERDA DE LA BARAJA) -->
+            <div class="action-dock" id="botonesAccion"></div>
+
             <div class="chat-pane" id="chatLog"></div>
         </section>
     </main>
-
-    <!-- DOCK DE ACCIONES -->
-    <div class="action-dock" id="botonesAccion"></div>
 
     <!-- DOCK DE SEÑAS CON TOGGLE COMPACTO -->
     <nav class="senas-dock" id="dockSenas">
@@ -4796,7 +4848,7 @@
             }
 
             if (estadoActual.fase === 'descartes') {
-                panel.innerHTML = `<button onclick="confirmarDescartes()" class="btn-action gold">Cambiar seleccionadas</button>`;
+                panel.innerHTML = `<button onclick="confirmarDescartes()" class="btn-action gold btn-full-width">Cambiar seleccionadas</button>`;
                 return;
             }
 
@@ -4841,8 +4893,8 @@
                             if (ap.ordago) {
                                 // ¡ANTE UN ÓRDAGO NO SE PUEDE REENVIDAR! O se ve o no se ve.
                                 panel.innerHTML = `
-                                    <button onclick="emitirAccionVisual('quiero')" class="btn-action gold">¡QUIERO EL ÓRDAGO! (Ver cartas)</button>
-                                    <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})</button>
+                                    <button onclick="emitirAccionVisual('quiero')" class="btn-action gold btn-full-width">¡QUIERO EL ÓRDAGO! (Ver cartas)</button>
+                                    <button onclick="emitirAccionVisual('noquiero')" class="btn-action red btn-full-width">NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})</button>
                                 `;
                             } else {
                                 panel.innerHTML = `
@@ -4850,7 +4902,7 @@
                                     <button onclick="emitirAccionVisual('noquiero')" class="btn-action red">NO QUIERO (Das ${ptsRechazo} pt${ptsRechazo > 1 ? 's' : ''})</button>
                                     <button onclick="emitirAccionVisual('envidar', 2)" class="btn-action blue">2 más (Bote: ${totalBote + 2})</button>
                                     <button onclick="emitirAccionVisual('envidar', 5)" class="btn-action blue">5 más (Bote: ${totalBote + 5})</button>
-                                    <button onclick="emitirAccionVisual('ordago')" class="btn-action red">¡ÓRDAGO!</button>
+                                    <button onclick="emitirAccionVisual('ordago')" class="btn-action red btn-full-width">¡ÓRDAGO!</button>
                                 `;
                             }
                         }
