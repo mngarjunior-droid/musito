@@ -735,6 +735,200 @@
             margin-top: 8px;
         }
 
+        /* ===== BADGE DE JUGADA ESPECIAL ===== */
+        .pod-badge-especial {
+            min-height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-jugada-especial {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #ffd75e 0%, #d4ac0d 100%);
+            color: #1a1003;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(0.64rem, 1.1vw, 0.74rem);
+            font-weight: 900;
+            letter-spacing: 0.6px;
+            padding: 2px 10px;
+            border-radius: 980px;
+            box-shadow: 0 4px 14px rgba(245, 207, 88, 0.6), 0 0 8px rgba(255, 255, 255, 0.4);
+            border: 1px solid #ffffff;
+            animation: pulseEspecial 1.8s infinite alternate;
+            z-index: 25;
+            white-space: nowrap;
+        }
+
+        @keyframes pulseEspecial {
+            from { transform: scale(0.97); box-shadow: 0 3px 10px rgba(245, 207, 88, 0.4); }
+            to { transform: scale(1.04); box-shadow: 0 6px 20px rgba(245, 207, 88, 0.8), 0 0 10px #ffffff; }
+        }
+
+        /* ===== BANNER CELEBRACIÓN JUGADA ESPECIAL ===== */
+        .banner-jugada-especial {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-40px);
+            background: linear-gradient(135deg, rgba(22, 34, 25, 0.96) 0%, rgba(10, 18, 13, 0.98) 100%);
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 16px 50px rgba(0,0,0,0.85), 0 0 35px var(--accent-gold-glow);
+            padding: 10px 24px;
+            border-radius: 980px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 99998;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .banner-jugada-especial.activo {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .banner-jugada-especial .tit {
+            font-family: 'Cinzel', serif;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        .banner-jugada-especial .sub {
+            font-size: 0.72rem;
+            color: #d1dfd7;
+            font-weight: 600;
+        }
+
+        /* ===== TOAST NOTIFICACIÓN FLOTANTE ===== */
+        .toast-notificacion {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background: rgba(14, 28, 20, 0.96);
+            backdrop-filter: blur(20px);
+            border: 1.5px solid var(--accent-gold);
+            color: #ffffff;
+            padding: 10px 22px;
+            border-radius: 980px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-gold-glow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 99999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-notificacion.activo {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== MODAL DE PERSONALIZACIÓN DE MESA Y CARTAS ===== */
+        .modal-personalizacion-box {
+            max-width: 520px !important;
+            width: 92vw !important;
+            padding: 22px 24px !important;
+            border: 1.5px solid var(--accent-gold) !important;
+        }
+
+        .personalizacion-seccion-titulo {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--accent-gold);
+            margin: 12px 0 8px 0;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .personalizacion-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 480px) {
+            .personalizacion-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .personalizacion-card-btn {
+            background: var(--glass-card);
+            border: 2px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-primary);
+        }
+
+        .personalizacion-card-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        .personalizacion-card-btn.selected {
+            border-color: var(--accent-gold) !important;
+            background: var(--accent-gold-glow) !important;
+            box-shadow: 0 0 16px var(--accent-gold-glow) !important;
+            transform: scale(1.03);
+        }
+
+        .muestra-color-tapete {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+        }
+
+        .muestra-dorso-carta {
+            width: 28px;
+            height: 40px;
+            border-radius: 5px;
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 900;
+        }
+
+        .card-back.dorso-custom-color .card-back-img {
+            display: none !important;
+        }
+        .card-back.dorso-custom-color {
+            background: radial-gradient(circle at center, var(--card-back-core) 0%, var(--card-back-edge) 100%) !important;
+            border: 2px solid #e8dbbe !important;
+        }
+        .card-back.dorso-custom-color .card-back-pattern {
+            display: flex !important;
+        }
+
         /* ===== MARCADOR WIDGET ===== */
         .scoreboard-widget {
             display: flex;
@@ -1982,6 +2176,65 @@
         </div>
     </div>
 
+    <!-- MODAL DE PERSONALIZACIÓN DEL TAPETE Y DORSOS -->
+    <div class="overlay-modal oculto" id="modalPersonalizacion">
+        <div class="modal-box modal-personalizacion-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; font-family:'Cinzel',serif; font-size:1.3rem; color:var(--accent-gold);">🎨 Mesa y Baraja</h2>
+                <button onclick="cerrarModalPersonalizacion()" class="btn-compact" style="padding:2px 8px; font-size:1.1rem; border-radius:50%; line-height:1;" title="Cerrar">&times;</button>
+            </div>
+            <p style="font-size:0.74rem; color:var(--text-muted); margin-bottom:12px;">Personaliza el color del tapete y el diseño del dorso de las cartas a tu gusto.</p>
+
+            <div class="personalizacion-seccion-titulo">🟢 Color del Tapete de Juego:</div>
+            <div class="personalizacion-grid" id="gridTemasTapete">
+                <button type="button" onclick="cambiarTemaTapete('verde')" class="personalizacion-card-btn selected" id="btnTapete_verde">
+                    <div class="muestra-color-tapete" style="background: radial-gradient(circle, #135e38 0%, #09331e 100%);"></div>
+                    <span style="font-size:0.72rem; font-weight:800;">Verde Clásico</span>
+                </button>
+                <button type="button" onclick="cambiarTemaTapete('azul')" class="personalizacion-card-btn" id="btnTapete_azul">
+                    <div class="muestra-color-tapete" style="background: radial-gradient(circle, #163868 0%, #0c203f 100%);"></div>
+                    <span style="font-size:0.72rem; font-weight:800;">Azul Casino</span>
+                </button>
+                <button type="button" onclick="cambiarTemaTapete('rojo')" class="personalizacion-card-btn" id="btnTapete_rojo">
+                    <div class="muestra-color-tapete" style="background: radial-gradient(circle, #6b1420 0%, #420b13 100%);"></div>
+                    <span style="font-size:0.72rem; font-weight:800;">Rojo Burdeos</span>
+                </button>
+                <button type="button" onclick="cambiarTemaTapete('negro')" class="personalizacion-card-btn" id="btnTapete_negro">
+                    <div class="muestra-color-tapete" style="background: radial-gradient(circle, #1e2226 0%, #111316 100%);"></div>
+                    <span style="font-size:0.72rem; font-weight:800;">Negro Ébano</span>
+                </button>
+            </div>
+
+            <div class="personalizacion-seccion-titulo">🎴 Dorso de las Cartas:</div>
+            <div class="personalizacion-grid" id="gridTemasDorso" style="grid-template-columns: repeat(5, 1fr);">
+                <button type="button" onclick="cambiarTemaDorso('foto')" class="personalizacion-card-btn selected" id="btnDorso_foto">
+                    <div class="muestra-dorso-carta" style="background:#ffffff; color:#8e1818; border-color:#e8dbbe;">🎴</div>
+                    <span style="font-size:0.68rem; font-weight:800;">Foto Real</span>
+                </button>
+                <button type="button" onclick="cambiarTemaDorso('rojo')" class="personalizacion-card-btn" id="btnDorso_rojo">
+                    <div class="muestra-dorso-carta" style="background:radial-gradient(circle, #9e1d1d 0%, #520909 100%); color:#ffd700;">♠</div>
+                    <span style="font-size:0.68rem; font-weight:800;">Rojo</span>
+                </button>
+                <button type="button" onclick="cambiarTemaDorso('azul')" class="personalizacion-card-btn" id="btnDorso_azul">
+                    <div class="muestra-dorso-carta" style="background:radial-gradient(circle, #1e40af 0%, #112260 100%); color:#ffffff;">♣</div>
+                    <span style="font-size:0.68rem; font-weight:800;">Azul</span>
+                </button>
+                <button type="button" onclick="cambiarTemaDorso('dorado')" class="personalizacion-card-btn" id="btnDorso_dorado">
+                    <div class="muestra-dorso-carta" style="background:radial-gradient(circle, #b4821a 0%, #624308 100%); color:#fff8dc;">♦</div>
+                    <span style="font-size:0.68rem; font-weight:800;">Dorado</span>
+                </button>
+                <button type="button" onclick="cambiarTemaDorso('negro')" class="personalizacion-card-btn" id="btnDorso_negro">
+                    <div class="muestra-dorso-carta" style="background:radial-gradient(circle, #2b2b2b 0%, #121212 100%); color:#f5cf58;">★</div>
+                    <span style="font-size:0.68rem; font-weight:800;">Negro</span>
+                </button>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                <button onclick="cerrarModalPersonalizacion()" class="btn-action gold" style="padding:8px 24px;">Listo</button>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER / TOOLBAR -->
     <header class="app-header">
         <div class="brand-container">
@@ -1990,6 +2243,8 @@
         </div>
 
         <div class="header-actions">
+            <button onclick="copiarEnlaceInvitacion()" class="btn-compact gold" title="Copiar enlace directo a esta sala para tus amigos"><span style="font-size:0.9rem;">🔗</span> Invitar</button>
+            <button onclick="abrirModalPersonalizacion()" class="btn-compact" title="Personalizar color del tapete y estilo de cartas">🎨 Mesa</button>
             <button onclick="abrirModalPerfil()" id="btnPerfilHeader" class="btn-perfil-header" title="Tu Perfil y Estadísticas de Victorias">
                 <span class="perfil-avatar-pill" id="headerAvatarMini">👑</span>
                 <div class="perfil-info-pill">
@@ -2081,6 +2336,7 @@
             <div class="player-pod pos-norte" id="box_norte">
                 <div class="badge-mano" id="badge_norte">👑 MANO</div>
                 <div class="speech-bubble" id="boc_norte"></div>
+                <div class="pod-badge-especial" id="badge_especial_norte"></div>
                 <div class="player-badge mi-equipo" id="lbl_norte">
                     <span id="nom_norte">Esperando...</span>
                     <span class="sub-role">🤝 Tu Compañero</span>
@@ -2092,6 +2348,7 @@
             <div class="player-pod pos-oeste" id="box_oeste">
                 <div class="badge-mano" id="badge_oeste">👑 MANO</div>
                 <div class="speech-bubble" id="boc_oeste"></div>
+                <div class="pod-badge-especial" id="badge_especial_oeste"></div>
                 <div class="player-badge rival-equipo" id="lbl_oeste">
                     <span id="nom_oeste">Esperando...</span>
                     <span class="sub-role">⚔️ Rival</span>
@@ -2117,6 +2374,7 @@
             <div class="player-pod pos-este" id="box_este">
                 <div class="badge-mano" id="badge_este">👑 MANO</div>
                 <div class="speech-bubble" id="boc_este"></div>
+                <div class="pod-badge-especial" id="badge_especial_este"></div>
                 <div class="player-badge rival-equipo" id="lbl_este">
                     <span id="nom_este">Esperando...</span>
                     <span class="sub-role">⚔️ Rival</span>
@@ -2128,6 +2386,7 @@
             <div class="player-pod pos-sur" id="box_sur">
                 <div class="badge-mano" id="badge_sur">👑 MANO</div>
                 <div class="speech-bubble" id="boc_sur"></div>
+                <div class="pod-badge-especial" id="badge_especial_sur"></div>
                 <div class="card-row mi-mano-fanned" id="miMano"></div>
                 <div class="player-badge mi-equipo activo" id="lbl_sur">
                     <span id="nom_sur">Tú</span>
@@ -2152,6 +2411,20 @@
         <button onclick="enviarSenaSecreta('31 La Una (Guiño)')" class="btn-sena" title="31">😉 31</button>
         <button onclick="enviarSenaSecreta('Ciego / Nada')" class="btn-sena" title="Nada">🙈 Ciego</button>
     </nav>
+
+    <!-- BANNER Y TOAST DE NOTIFICACIONES / JUGADAS ESPECIALES -->
+    <div class="banner-jugada-especial" id="bannerJugadaEspecial">
+        <span style="font-size:1.8rem;" id="iconoBannerEspecial">👑</span>
+        <div>
+            <div class="tit" id="titBannerEspecial">¡LA REAL!</div>
+            <div class="sub" id="subBannerEspecial">Tres Sietes y una Sota (31 Invencible)</div>
+        </div>
+    </div>
+
+    <div class="toast-notificacion" id="toastNotificacion">
+        <span id="toastIcono" style="font-size:1.1rem;">🔗</span>
+        <span id="toastMensaje">Enlace copiado</span>
+    </div>
 
     <script>
         const socket = io();
@@ -2314,6 +2587,229 @@
             const esClaro = document.body.classList.contains('theme-light');
             btn.innerHTML = esClaro ? '🌙 Modo Oscuro' : '☀️ Modo Claro';
             btn.classList.toggle('active-toggle', esClaro);
+        }
+
+        /* ===== GESTIÓN DE PERSONALIZACIÓN DE TAPETE Y DORSOS ===== */
+        const TEMAS_TAPETE = {
+            verde: { core: '#135e38', edge: '#09331e', bottom: '#051d11', railInner: '#342013', railOuter: '#1c1109' },
+            azul:  { core: '#163868', edge: '#0c203f', bottom: '#061124', railInner: '#1e293b', railOuter: '#0f172a' },
+            rojo:  { core: '#6b1420', edge: '#420b13', bottom: '#220509', railInner: '#3b1216', railOuter: '#20070a' },
+            negro: { core: '#1e2226', edge: '#111316', bottom: '#08090b', railInner: '#24292e', railOuter: '#121517' }
+        };
+
+        const TEMAS_DORSO = {
+            foto:   { core: '#8e1818', edge: '#520909' },
+            rojo:   { core: '#9e1d1d', edge: '#520909' },
+            azul:   { core: '#1e40af', edge: '#112260' },
+            dorado: { core: '#b4821a', edge: '#624308' },
+            negro:  { core: '#2b2b2b', edge: '#121212' }
+        };
+
+        let temaTapeteActual = localStorage.getItem('mus_tapete_tema') || 'verde';
+        let temaDorsoActual = localStorage.getItem('mus_dorso_tema') || 'foto';
+
+        function aplicarTemaTapete(clave) {
+            const t = TEMAS_TAPETE[clave] || TEMAS_TAPETE.verde;
+            temaTapeteActual = clave;
+            document.documentElement.style.setProperty('--tapete-core', t.core);
+            document.documentElement.style.setProperty('--tapete-edge', t.edge);
+            document.documentElement.style.setProperty('--tapete-bottom', t.bottom);
+            document.documentElement.style.setProperty('--rail-inner', t.railInner);
+            document.documentElement.style.setProperty('--rail-outer', t.railOuter);
+
+            document.querySelectorAll('#gridTemasTapete .personalizacion-card-btn').forEach(btn => btn.classList.remove('selected'));
+            const activeBtn = document.getElementById(`btnTapete_${clave}`);
+            if (activeBtn) activeBtn.classList.add('selected');
+        }
+
+        function cambiarTemaTapete(clave) {
+            audioEngine.playTurn();
+            aplicarTemaTapete(clave);
+            localStorage.setItem('mus_tapete_tema', clave);
+        }
+
+        function aplicarTemaDorso(clave) {
+            const d = TEMAS_DORSO[clave] || TEMAS_DORSO.foto;
+            temaDorsoActual = clave;
+            document.documentElement.style.setProperty('--card-back-core', d.core);
+            document.documentElement.style.setProperty('--card-back-edge', d.edge);
+
+            document.querySelectorAll('#gridTemasDorso .personalizacion-card-btn').forEach(btn => btn.classList.remove('selected'));
+            const activeBtn = document.getElementById(`btnDorso_${clave}`);
+            if (activeBtn) activeBtn.classList.add('selected');
+
+            // Actualizar si los dorsos en mesa deben refrescarse
+            if (estadoActual && estadoActual.fase && estadoActual.fase !== 'espera') {
+                actualizarReversosOtrosJugadores(true, estadoActual.cartasReveladasModoLoco);
+            }
+        }
+
+        function cambiarTemaDorso(clave) {
+            audioEngine.playCard();
+            aplicarTemaDorso(clave);
+            localStorage.setItem('mus_dorso_tema', clave);
+        }
+
+        function abrirModalPersonalizacion() {
+            audioEngine.playTurn();
+            aplicarTemaTapete(temaTapeteActual);
+            aplicarTemaDorso(temaDorsoActual);
+            const m = document.getElementById('modalPersonalizacion');
+            if (m) m.classList.remove('oculto');
+        }
+
+        function cerrarModalPersonalizacion() {
+            const m = document.getElementById('modalPersonalizacion');
+            if (m) m.classList.add('oculto');
+        }
+
+        /* ===== COPIAR ENLACE DE INVITACIÓN Y TOAST ===== */
+        let toastTimer = null;
+        function mostrarToastNotificacion(mensaje, icono = '🔗') {
+            const toast = document.getElementById('toastNotificacion');
+            const iconEl = document.getElementById('toastIcono');
+            const msgEl = document.getElementById('toastMensaje');
+            if (!toast) return;
+
+            if (iconEl) iconEl.innerText = icono;
+            if (msgEl) msgEl.innerText = mensaje;
+
+            toast.classList.add('activo');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('activo');
+            }, 3800);
+        }
+
+        function copiarEnlaceInvitacion() {
+            audioEngine.playTurn();
+            const url = window.location.origin + window.location.pathname + '?sala=' + encodeURIComponent(salaActualId);
+            const salaNombre = salaActualId.toUpperCase();
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    mostrarToastNotificacion(`¡Enlace copiado! Pásaselo a tus amigos para entrar a la sala ${salaNombre}`);
+                }).catch(() => {
+                    copiarFallback(url, salaNombre);
+                });
+            } else {
+                copiarFallback(url, salaNombre);
+            }
+        }
+
+        function copiarFallback(url, salaNombre) {
+            try {
+                const tempInput = document.createElement('input');
+                tempInput.value = url;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                mostrarToastNotificacion(`¡Enlace copiado! Pásaselo a tus amigos para entrar a la sala ${salaNombre}`);
+            } catch (e) {
+                prompt("Copia este enlace para invitar a tus amigos:", url);
+            }
+        }
+
+        /* ===== JUGADAS ESPECIALES ===== */
+        let bannerEspecialTimer = null;
+        let celebracionEspecialLanzadaEnMano = false;
+        function dispararCelebracionJugadaEspecial(nombreJugador, info) {
+            if (!info) return;
+            const banner = document.getElementById('bannerJugadaEspecial');
+            const ico = document.getElementById('iconoBannerEspecial');
+            const tit = document.getElementById('titBannerEspecial');
+            const sub = document.getElementById('subBannerEspecial');
+            if (!banner) return;
+
+            const iconos = {
+                'la_real': '👑',
+                'cuatro_reyes': '🦁',
+                'solomillo': '🥩',
+                'cuatro_ases': '🎯',
+                'la_una': '💎'
+            };
+
+            if (ico) ico.innerText = iconos[info.clave] || '✨';
+            if (tit) tit.innerText = `${info.nombre} · ${nombreJugador}`;
+            if (sub) sub.innerText = info.desc || 'Jugada legendaria del Mus';
+
+            banner.classList.add('activo');
+            audioEngine.playFanfare();
+            if (navigator.vibrate) navigator.vibrate([40, 60, 100]);
+
+            if (bannerEspecialTimer) clearTimeout(bannerEspecialTimer);
+            bannerEspecialTimer = setTimeout(() => {
+                banner.classList.remove('activo');
+            }, 4500);
+        }
+
+        function detectarJugadaEspecial(m) {
+            if (!m || !Array.isArray(m) || m.length < 4) return null;
+            const nums = m.map(c => (c && c.numero !== undefined) ? parseInt(c.numero) : 0);
+            const valsMus = m.map(c => {
+                if (!c) return 0;
+                if (c.valorMus !== undefined) return c.valorMus;
+                const n = parseInt(c.numero);
+                return (n === 3 ? 12 : (n === 2 ? 1 : n));
+            }).sort((a,b) => b - a);
+
+            // 1. La Real: Tres sietes y una Sota (31)
+            const sietes = nums.filter(n => n === 7).length;
+            const sotas = nums.filter(n => n === 10).length;
+            if (sietes === 3 && sotas === 1) {
+                return {
+                    clave: 'la_real',
+                    nombre: '👑 ¡LA REAL!',
+                    desc: 'Tres Sietes y una Sota (31 Invencible)',
+                    badge: '👑 LA REAL'
+                };
+            }
+
+            // 2. Cuarteto de Reyes (4 Reyes o Treses)
+            const reyes = valsMus.filter(v => v === 12).length;
+            if (reyes === 4) {
+                return {
+                    clave: 'cuatro_reyes',
+                    nombre: '🦁 CUARTETO DE REYES',
+                    desc: '4 Reyes (Imbatible a Grande)',
+                    badge: '🦁 4 REYES'
+                };
+            }
+
+            // 3. El Solomillo (Duples de 2 Reyes y 2 Ases)
+            const ases = valsMus.filter(v => v === 1).length;
+            if (reyes === 2 && ases === 2) {
+                return {
+                    clave: 'solomillo',
+                    nombre: '🥩 EL SOLOMILLO',
+                    desc: 'Duples de Reyes y Ases',
+                    badge: '🥩 SOLOMILLO'
+                };
+            }
+
+            // 4. Cuarteto de Ases (4 Ases o Doses)
+            if (ases === 4) {
+                return {
+                    clave: 'cuatro_ases',
+                    nombre: '🎯 CUARTETO DE ASES',
+                    desc: '4 Ases (Imbatible a Chica)',
+                    badge: '🎯 4 ASES'
+                };
+            }
+
+            // 5. La 31 (La una: tres figuras y un as)
+            const figuras = nums.filter(n => n >= 10 || n === 3).length;
+            if (sietes !== 3 && figuras === 3 && ases === 1) {
+                return {
+                    clave: 'la_una',
+                    nombre: '💎 LA UNA (31)',
+                    desc: '3 Figuras y un As',
+                    badge: '💎 31 (LA UNA)'
+                };
+            }
+
+            return null;
         }
 
         /* ===== GESTIÓN DE AUDIO ===== */
@@ -2629,6 +3125,8 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             aplicarTemaInicial();
+            aplicarTemaTapete(localStorage.getItem('mus_tapete_tema') || 'verde');
+            aplicarTemaDorso(localStorage.getItem('mus_dorso_tema') || 'foto');
             actualizarBotonAudio();
             initPerfil();
             cargarInfoCartasServidor();
@@ -2826,6 +3324,12 @@
             misCartas = cartas.map(c => ({ ...c, seleccionada: false }));
             audioEngine.playCard();
             renderizarMiMano();
+            const esp = detectarJugadaEspecial(misCartas);
+            if (esp) {
+                setTimeout(() => {
+                    dispararCelebracionJugadaEspecial('¡Tú!', esp);
+                }, 450);
+            }
         });
 
         socket.on('avisoNoPuedeHablar', ({ motivo }) => alert(`No puedes hablar: ${motivo}`));
@@ -3024,6 +3528,12 @@
             actualizarPuntuacionesPersonalizadas(puntosActualizados, estadoActual.chicosGanados, estadoActual.vacasGanadas);
             actualizarTablaDesgloseLateral(lance, parejaGanadora, desgloseItems);
 
+            if (asientoGanador !== null && estadoActual.jugadasEspeciales && estadoActual.jugadasEspeciales[asientoGanador]) {
+                const infoEsp = estadoActual.jugadasEspeciales[asientoGanador];
+                const nomGan = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[asientoGanador]) ? estadoActual.jugadoresEnMesa[asientoGanador].nombre : `Jugador ${asientoGanador + 1}`;
+                dispararCelebracionJugadaEspecial(nomGan, infoEsp);
+            }
+
             const yo = miAsiento !== null ? miAsiento : 0;
             let targetBox = 'box_sur';
             if (asientoGanador === (yo + 2) % 4) targetBox = 'box_norte';
@@ -3159,6 +3669,7 @@
             } else {
                 if (elTablero) elTablero.classList.remove('fase-recuento');
                 reveladoEjecutado = false;
+                celebracionEspecialLanzadaEnMano = false;
                 actualizarReversosOtrosJugadores(estado.fase !== 'espera', estado.cartasReveladasModoLoco);
             }
 
@@ -3599,6 +4110,8 @@
         }
 
         function generarReversoHTML(customClass = '') {
+            const esCustomColor = (temaDorsoActual !== 'foto');
+            const claseDorso = esCustomColor ? `dorso-custom-color ${customClass}` : customClass;
             const reversoSrc = mapaFotosDetectadas['reverso'] || '/tapadecarta.png';
             const alts = [
                 '/tapadecarta.png',
@@ -3619,7 +4132,7 @@
             ].filter(r => r !== reversoSrc).join(',');
 
             return `
-                <div class="card-back ${customClass}">
+                <div class="card-back ${claseDorso}">
                     <img class="card-back-img" src="${reversoSrc}" data-alts="${alts}" onload="onReversoImgLoad(this)" onerror="onReversoImgError(this)" alt="Reverso" />
                     <div class="card-back-pattern">
                         <div class="card-back-logo">MUS</div>
@@ -3661,6 +4174,16 @@
             const cont = document.getElementById('miMano');
             if (!cont) return;
             cont.innerHTML = '';
+
+            const badgeMiEsp = document.getElementById('badge_especial_sur');
+            if (badgeMiEsp) {
+                const esp = (!modoClaseActivo && misCartas && misCartas.length === 4) ? detectarJugadaEspecial(misCartas) : null;
+                if (esp) {
+                    badgeMiEsp.innerHTML = `<div class="badge-jugada-especial" title="${esp.desc}">${esp.badge}</div>`;
+                } else {
+                    badgeMiEsp.innerHTML = '';
+                }
+            }
 
             if (modoClaseActivo) {
                 for (let i = 0; i < 4; i++) {
@@ -3716,15 +4239,17 @@
             const yo = miAsiento !== null ? miAsiento : 0;
             const ref = { norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
             const mapeo = [
-                { id: 'mano_norte', asiento: ref.norte },
-                { id: 'mano_oeste', asiento: ref.oeste },
-                { id: 'mano_este', asiento: ref.este }
+                { id: 'mano_norte', asiento: ref.norte, badgeId: 'badge_especial_norte' },
+                { id: 'mano_oeste', asiento: ref.oeste, badgeId: 'badge_especial_oeste' },
+                { id: 'mano_este', asiento: ref.este, badgeId: 'badge_especial_este' }
             ];
 
             mapeo.forEach(item => {
                 const el = document.getElementById(item.id);
-                if (!mostrar) { el.innerHTML = ''; return; }
-                el.innerHTML = '';
+                const badgeEl = document.getElementById(item.badgeId);
+                if (badgeEl) badgeEl.innerHTML = '';
+                if (!mostrar) { if (el) el.innerHTML = ''; return; }
+                if (el) el.innerHTML = '';
 
                 const locoInfo = (cartasModoLoco && cartasModoLoco[item.asiento]) ? cartasModoLoco[item.asiento] : null;
 
@@ -3742,20 +4267,39 @@
             const yo = miAsiento !== null ? miAsiento : 0;
             const ref = { norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
             const mapeoContenedores = [
-                { id: 'mano_norte', asiento: ref.norte },
-                { id: 'mano_oeste', asiento: ref.oeste },
-                { id: 'mano_este', asiento: ref.este }
+                { id: 'mano_norte', asiento: ref.norte, badgeId: 'badge_especial_norte' },
+                { id: 'mano_oeste', asiento: ref.oeste, badgeId: 'badge_especial_oeste' },
+                { id: 'mano_este', asiento: ref.este, badgeId: 'badge_especial_este' }
             ];
 
             mapeoContenedores.forEach((item, idxJugador) => {
                 const cont = document.getElementById(item.id);
                 const mano = todasLasManos[item.asiento] || [];
-                cont.innerHTML = '';
-                mano.forEach((c, idxCarta) => {
-                    setTimeout(() => {
-                        cont.innerHTML += generarCartaHTML(c, true);
-                    }, (idxJugador * 180) + (idxCarta * 70));
-                });
+                if (cont) {
+                    cont.innerHTML = '';
+                    mano.forEach((c, idxCarta) => {
+                        setTimeout(() => {
+                            cont.innerHTML += generarCartaHTML(c, true);
+                        }, (idxJugador * 180) + (idxCarta * 70));
+                    });
+                }
+
+                const badgeEl = document.getElementById(item.badgeId);
+                if (badgeEl) {
+                    const esp = (mano && mano.length === 4) ? detectarJugadaEspecial(mano) : null;
+                    if (esp) {
+                        badgeEl.innerHTML = `<div class="badge-jugada-especial" title="${esp.desc}">${esp.badge}</div>`;
+                        if (!celebracionEspecialLanzadaEnMano) {
+                            celebracionEspecialLanzadaEnMano = true;
+                            const nomJugador = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[item.asiento]) ? estadoActual.jugadoresEnMesa[item.asiento].nombre : `Jugador ${item.asiento + 1}`;
+                            setTimeout(() => {
+                                dispararCelebracionJugadaEspecial(nomJugador, esp);
+                            }, 550);
+                        }
+                    } else {
+                        badgeEl.innerHTML = '';
+                    }
+                }
             });
         }
 
