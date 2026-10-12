@@ -773,36 +773,48 @@
             margin-top: 8px;
         }
 
-        /* ===== BADGE DE JUGADA ESPECIAL ===== */
+        /* ===== BADGE DE JUGADA ESPECIAL Y RECUENTO ===== */
         .pod-badge-especial {
-            min-height: 22px;
+            min-height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 25;
+            margin-bottom: 2px;
         }
 
         .badge-jugada-especial {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            background: linear-gradient(135deg, #ffd75e 0%, #d4ac0d 100%);
-            color: #1a1003;
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(20, 38, 28, 0.96) 0%, rgba(10, 22, 16, 0.98) 100%);
+            color: #ffd966;
             font-family: 'Cinzel', serif;
-            font-size: clamp(0.64rem, 1.1vw, 0.74rem);
-            font-weight: 900;
-            letter-spacing: 0.6px;
-            padding: 2px 10px;
+            font-size: clamp(0.62rem, 1vw, 0.72rem);
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 2.5px 9px;
             border-radius: 980px;
-            box-shadow: 0 4px 14px rgba(245, 207, 88, 0.6), 0 0 8px rgba(255, 255, 255, 0.4);
-            border: 1px solid #ffffff;
-            animation: pulseEspecial 1.8s infinite alternate;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.15);
+            border: 1px solid rgba(212, 175, 55, 0.6);
             z-index: 25;
             white-space: nowrap;
+            animation: bounceIn 0.35s ease;
         }
 
-        @keyframes pulseEspecial {
-            from { transform: scale(0.97); box-shadow: 0 3px 10px rgba(245, 207, 88, 0.4); }
-            to { transform: scale(1.04); box-shadow: 0 6px 20px rgba(245, 207, 88, 0.8), 0 0 10px #ffffff; }
+        .badge-jugada-especial.legendaria {
+            background: linear-gradient(135deg, #ffd75e 0%, #d4ac0d 100%);
+            color: #1a1003;
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 4px 16px rgba(245, 207, 88, 0.7), 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: pulseEspecial 1.8s infinite alternate;
+        }
+
+        .badge-jugada-especial.especial {
+            background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+            color: #ffffff;
+            border: 1.5px solid #abebc6;
+            box-shadow: 0 4px 14px rgba(39, 174, 96, 0.6);
         }
 
         /* ===== BANNER CELEBRACIÓN JUGADA ESPECIAL ===== */
@@ -1446,7 +1458,7 @@
 
         /* Cartas de tu mano con abanico sutil táctil */
         .card-row.mi-mano-fanned .card {
-            margin-left: -6px;
+            margin-left: -20px;
             transform-origin: 50% 120%;
         }
         .card-row.mi-mano-fanned .card:first-child { margin-left: 0; }
@@ -1507,7 +1519,7 @@
             height: clamp(28px, 3.8vw, 38px) !important;
         }
         .table-viewport.fase-recuento #miMano .card {
-            transform: scale(1.08) translateY(-4px);
+            transform: scale(1.03) translateY(-3px);
             box-shadow: 0 12px 28px rgba(0,0,0,0.7), 0 0 18px var(--accent-gold-glow);
         }
 
@@ -1808,19 +1820,19 @@
         /* ===== CAJA CUADRADA DE BOTONES DE ACCIÓN (A LA IZQUIERDA DE LA BARAJA) ===== */
         .action-dock {
             position: absolute;
-            bottom: 14px;
-            left: 18px;
+            bottom: 12px;
+            left: 12px;
             z-index: 35;
-            width: clamp(190px, 19vw, 240px);
-            background: rgba(12, 23, 18, 0.92);
+            width: clamp(138px, 15vw, 158px);
+            background: rgba(10, 20, 15, 0.94);
             backdrop-filter: blur(20px) saturate(160%);
             border: 1.5px solid rgba(212, 175, 55, 0.45);
-            border-radius: 16px;
-            padding: 8px 10px;
-            box-shadow: 0 12px 36px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12);
+            border-radius: 14px;
+            padding: 6px 7px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12);
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
             justify-content: center;
             align-items: center;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1834,19 +1846,19 @@
             background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.02) 100%), #1c2b22;
             border: 1px solid rgba(255, 255, 255, 0.18);
             color: #ffffff;
-            padding: 8px 10px;
-            border-radius: 11px;
-            font-size: clamp(0.74rem, 1.15vw, 0.82rem);
+            padding: 6px 4px;
+            border-radius: 9px;
+            font-size: clamp(0.7rem, 0.92vw, 0.76rem);
             font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 5px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
-            flex: 1 1 calc(50% - 6px);
-            min-width: 80px;
+            gap: 3px;
+            flex: 1 1 calc(50% - 4px);
+            min-width: 58px;
             text-align: center;
             line-height: 1.15;
             user-select: none;
@@ -2144,19 +2156,28 @@
             .senas-dock.abierto .senas-items {
                 display: flex;
             }
+        }
+
+        @media (max-width: 820px) {
             .action-dock {
-                bottom: 8px;
-                left: 8px;
-                width: clamp(140px, 30vw, 175px);
-                padding: 6px;
+                bottom: 6px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 16px);
+                max-width: 360px;
+                padding: 5px 8px;
                 gap: 4px;
                 border-radius: 12px;
+                z-index: 60;
             }
             .action-dock .btn-action {
-                padding: 6px 7px;
-                font-size: 0.7rem;
+                padding: 6px 6px;
+                font-size: 0.72rem;
                 min-height: 32px;
                 min-width: 60px;
+            }
+            .table-viewport:has(.action-dock:not(:empty)) .pos-sur {
+                padding-bottom: 48px;
             }
         }
 
@@ -2201,16 +2222,6 @@
         }
 
         @media (max-width: 580px) {
-            .action-dock {
-                bottom: 6px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: calc(100% - 16px);
-                max-width: 360px;
-                padding: 5px 8px;
-                z-index: 60;
-            }
-
             .table-hub {
                 max-width: min(160px, 40vw);
                 padding: 3px 8px;
@@ -3041,7 +3052,9 @@
                 'la_real': '👑',
                 'cuatro_reyes': '🦁',
                 'solomillo': '🥩',
+                'besugo': '🐟',
                 'cuatro_ases': '🎯',
+                'tres_reyes_as': '🦁',
                 'la_una': '💎'
             };
 
@@ -3103,7 +3116,17 @@
                 };
             }
 
-            // 4. Cuarteto de Ases (4 Ases o Doses)
+            // 4. El Besugo (1 Rey y 3 Ases)
+            if (reyes === 1 && ases === 3) {
+                return {
+                    clave: 'besugo',
+                    nombre: '🐟 EL BESUGO',
+                    desc: 'Un Rey y Tres Ases',
+                    badge: '🐟 BESUGO (R AAA)'
+                };
+            }
+
+            // 5. Cuarteto de Ases (4 Ases o Doses)
             if (ases === 4) {
                 return {
                     clave: 'cuatro_ases',
@@ -3113,7 +3136,17 @@
                 };
             }
 
-            // 5. La 31 (La una: tres figuras y un as)
+            // 6. Tres Reyes y un As
+            if (reyes === 3 && ases === 1) {
+                return {
+                    clave: 'tres_reyes_as',
+                    nombre: '🦁 3 REYES Y 1 AS',
+                    desc: 'Tres Reyes y un As',
+                    badge: '🦁 3 REYES Y AS'
+                };
+            }
+
+            // 7. La 31 (La una: tres figuras y un as)
             const figuras = nums.filter(n => n >= 10 || n === 3).length;
             if (sietes !== 3 && figuras === 3 && ases === 1) {
                 return {
@@ -3125,6 +3158,102 @@
             }
 
             return null;
+        }
+
+        function describirManoCompletaMus(m) {
+            if (!m || !Array.isArray(m) || m.length < 4) return null;
+            const esp = detectarJugadaEspecial(m);
+            if (esp) {
+                return {
+                    tipo: 'legendaria',
+                    clave: esp.clave,
+                    badge: esp.badge,
+                    bocadillo: esp.nombre.replace(/[¡!]/g, ''),
+                    desc: esp.desc
+                };
+            }
+
+            const nums = m.map(c => (c && c.numero !== undefined) ? parseInt(c.numero) : 0);
+            const valsMus = m.map(c => {
+                if (!c) return 0;
+                if (c.valorMus !== undefined) return c.valorMus;
+                const n = parseInt(c.numero);
+                return (n === 3 ? 12 : (n === 2 ? 1 : n));
+            }).sort((a,b) => b - a);
+
+            const valsJuego = m.map(c => {
+                if (!c) return 0;
+                if (c.valorJuego !== undefined) return c.valorJuego;
+                const n = parseInt(c.numero);
+                return (n >= 10 || n === 3) ? 10 : (n === 2 || n === 1 ? 1 : n);
+            });
+
+            const sumaJuego = valsJuego.reduce((a, b) => a + b, 0);
+            const reyes = valsMus.filter(v => v === 12).length;
+            const ases = valsMus.filter(v => v === 1).length;
+
+            // Análisis de Pares
+            let cntPares = {};
+            valsMus.forEach(v => cntPares[v] = (cntPares[v] || 0) + 1);
+            let valoresDuples = Object.keys(cntPares).filter(k => cntPares[k] >= 2).map(Number).sort((a,b) => b - a);
+            let maxRep = Math.max(0, ...Object.values(cntPares));
+
+            let paresTexto = "";
+            let paresIcono = "";
+            if (maxRep === 4) {
+                paresTexto = "Cuarteto";
+                paresIcono = "🎯";
+            } else if (valoresDuples.length === 2) {
+                paresIcono = "👑";
+                if (valoresDuples.includes(12)) paresTexto = "Duples (Reyes)";
+                else if (valoresDuples.includes(1)) paresTexto = "Duples (Ases)";
+                else paresTexto = "Duples";
+            } else if (maxRep === 3) {
+                paresIcono = "✨";
+                if (reyes === 3) { paresTexto = "Medias (Reyes)"; paresIcono = "👑"; }
+                else if (ases === 3) { paresTexto = "Medias (Ases)"; paresIcono = "🎯"; }
+                else paresTexto = "Medias";
+            } else if (valoresDuples.length === 1) {
+                paresIcono = "✨";
+                if (reyes === 2) { paresTexto = "Pareja (Reyes)"; paresIcono = "👑"; }
+                else if (ases === 2) { paresTexto = "Pareja (Ases)"; paresIcono = "🎯"; }
+                else paresTexto = "Pareja";
+            }
+
+            // Análisis de Juego o Punto
+            let juegoTexto = "";
+            let juegoIcono = "";
+            if (sumaJuego >= 31) {
+                if (sumaJuego === 31) {
+                    juegoTexto = "31 (La una)";
+                    juegoIcono = "💎";
+                } else {
+                    juegoTexto = `${sumaJuego} de Juego`;
+                    juegoIcono = "🎲";
+                }
+            } else {
+                juegoTexto = `${sumaJuego} de Punto`;
+                juegoIcono = "🎯";
+            }
+
+            // Construir badge y bocadillo
+            let badgeFinal = "";
+            let bocadilloFinal = "";
+            if (paresTexto) {
+                badgeFinal = `${paresIcono} ${paresTexto} · ${juegoIcono} ${juegoTexto}`;
+                bocadilloFinal = `¡${paresTexto}! (${juegoTexto})`;
+            } else {
+                badgeFinal = `${juegoIcono} ${juegoTexto}`;
+                bocadilloFinal = `¡${juegoTexto}!`;
+            }
+
+            return {
+                tipo: (sumaJuego === 31) ? 'especial' : 'combinacion',
+                clave: 'combinacion',
+                badge: badgeFinal,
+                bocadillo: bocadilloFinal,
+                desc: `${paresTexto ? paresTexto + ' | ' : 'Sin pares | '}${juegoTexto}`
+            };
         }
 
         /* ===== GESTIÓN DE AUDIO ===== */
@@ -3934,6 +4063,15 @@
                 elGanador.classList.add('ganador-lance-halo');
                 setTimeout(() => elGanador.classList.remove('ganador-lance-halo'), 3200);
             }
+
+            if (asientoGanador !== null && asientoGanador !== undefined) {
+                let msgLance = `¡Gano ${lance}!`;
+                if (lance === 'PARES') msgLance = '👑 ¡Pares ganadores!';
+                else if (lance === 'JUEGO') msgLance = '💎 ¡Juego ganador!';
+                else if (lance === 'GRANDE') msgLance = '🦁 ¡Mejor a Grande!';
+                else if (lance === 'CHICA') msgLance = '🎯 ¡Mejor a Chica!';
+                mostrarBocadilloPorAsiento(asientoGanador, msgLance);
+            }
         });
 
         socket.on('victoriaChico', ({ ganadorPareja, nombreGanador, mensaje, chicosGanados, vacasGanadas, esVaca }) => {
@@ -4565,9 +4703,9 @@
 
             const badgeMiEsp = document.getElementById('badge_especial_sur');
             if (badgeMiEsp) {
-                const esp = (!modoClaseActivo && misCartas && misCartas.length === 4) ? detectarJugadaEspecial(misCartas) : null;
-                if (esp) {
-                    badgeMiEsp.innerHTML = `<div class="badge-jugada-especial" title="${esp.desc}">${esp.badge}</div>`;
+                const info = (!modoClaseActivo && misCartas && misCartas.length === 4) ? describirManoCompletaMus(misCartas) : null;
+                if (info) {
+                    badgeMiEsp.innerHTML = `<div class="badge-jugada-especial ${info.tipo}" title="${info.desc}">${info.badge}</div>`;
                 } else {
                     badgeMiEsp.innerHTML = '';
                 }
@@ -4653,17 +4791,18 @@
 
         function revelarTodasLasCartasConAnimacion(todasLasManos) {
             const yo = miAsiento !== null ? miAsiento : 0;
-            const ref = { norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
+            const ref = { sur: yo, norte: (yo + 2) % 4, oeste: (yo + 1) % 4, este: (yo + 3) % 4 };
             const mapeoContenedores = [
                 { id: 'mano_norte', asiento: ref.norte, badgeId: 'badge_especial_norte' },
                 { id: 'mano_oeste', asiento: ref.oeste, badgeId: 'badge_especial_oeste' },
-                { id: 'mano_este', asiento: ref.este, badgeId: 'badge_especial_este' }
+                { id: 'mano_este', asiento: ref.este, badgeId: 'badge_especial_este' },
+                { id: 'miMano', asiento: ref.sur, badgeId: 'badge_especial_sur' }
             ];
 
             mapeoContenedores.forEach((item, idxJugador) => {
                 const cont = document.getElementById(item.id);
-                const mano = todasLasManos[item.asiento] || [];
-                if (cont) {
+                const mano = todasLasManos[item.asiento] || (item.asiento === ref.sur ? misCartas : []);
+                if (cont && item.id !== 'miMano') {
                     cont.innerHTML = '';
                     mano.forEach((c, idxCarta) => {
                         setTimeout(() => {
@@ -4673,15 +4812,20 @@
                 }
 
                 const badgeEl = document.getElementById(item.badgeId);
-                if (badgeEl) {
-                    const esp = (mano && mano.length === 4) ? detectarJugadaEspecial(mano) : null;
-                    if (esp) {
-                        badgeEl.innerHTML = `<div class="badge-jugada-especial" title="${esp.desc}">${esp.badge}</div>`;
-                        if (!celebracionEspecialLanzadaEnMano) {
+                if (badgeEl && mano && mano.length === 4) {
+                    const info = describirManoCompletaMus(mano);
+                    if (info) {
+                        badgeEl.innerHTML = `<div class="badge-jugada-especial ${info.tipo}" title="${info.desc}">${info.badge}</div>`;
+                        // Shouts / speech bubble right above each player showing what they have
+                        setTimeout(() => {
+                            mostrarBocadilloPorAsiento(item.asiento, info.bocadillo);
+                        }, (idxJugador * 200) + 300);
+
+                        if (info.tipo === 'legendaria' && !celebracionEspecialLanzadaEnMano) {
                             celebracionEspecialLanzadaEnMano = true;
                             const nomJugador = (estadoActual.jugadoresEnMesa && estadoActual.jugadoresEnMesa[item.asiento]) ? estadoActual.jugadoresEnMesa[item.asiento].nombre : `Jugador ${item.asiento + 1}`;
                             setTimeout(() => {
-                                dispararCelebracionJugadaEspecial(nomJugador, esp);
+                                dispararCelebracionJugadaEspecial(nomJugador, info);
                             }, 550);
                         }
                     } else {
@@ -4717,6 +4861,7 @@
             });
         }
 
+        const bocadilloTimers = {};
         function mostrarBocadilloPorAsiento(asiento, texto) {
             const yo = miAsiento !== null ? miAsiento : 0;
             let pos = 'sur';
@@ -4728,7 +4873,8 @@
             if (boc) {
                 boc.innerText = texto;
                 boc.classList.add('activo');
-                setTimeout(() => boc.classList.remove('activo'), 1900);
+                if (bocadilloTimers[pos]) clearTimeout(bocadilloTimers[pos]);
+                bocadilloTimers[pos] = setTimeout(() => boc.classList.remove('activo'), 2800);
             }
         }
 
