@@ -26,29 +26,42 @@ app.get('/api/cartas-info', (req, res) => {
   let archivos = [];
   let prefix = '/cartas/';
 
+  const esArchivoValido = (f) => {
+    const lower = f.toLowerCase();
+    const esImg = lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp');
+    if (!esImg || f.startsWith('.')) return false;
+    return lower.startsWith('carta') || lower.includes('tapa') || lower.includes('fondo') || lower.includes('blanco') || lower.includes('reverso') || lower.includes('dorso') || lower.includes('oros') || lower.includes('copas') || lower.includes('espadas') || lower.includes('bastos');
+  };
+
+  // 1. Revisar si hay cartas en public/cartas/
   if (fs.existsSync(cartasDir)) {
-    const listCartas = fs.readdirSync(cartasDir).filter(f => !f.startsWith('.'));
+    const listCartas = fs.readdirSync(cartasDir).filter(esArchivoValido);
     if (listCartas.length > 0) {
-      archivos = listCartas;
-      prefix = '/cartas/';
+      listCartas.forEach(f => archivos.push({ nombre: f, url: `/cartas/${f}` }));
     }
   }
 
-  // Si no hay en public/cartas, buscar si están directamente en public/
-  if (archivos.length === 0 && fs.existsSync(publicDir)) {
-    const listPub = fs.readdirSync(publicDir).filter(f => {
-      const lower = f.toLowerCase();
-      const esImg = lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp');
-      if (!esImg || f.startsWith('.')) return false;
-      return lower.startsWith('carta') || lower.includes('tapa') || lower.includes('fondo') || lower.includes('blanco') || lower.includes('reverso') || lower.includes('dorso');
-    });
+  // 2. Revisar si hay cartas directamente en public/
+  if (fs.existsSync(publicDir)) {
+    const listPub = fs.readdirSync(publicDir).filter(esArchivoValido);
     if (listPub.length > 0) {
-      archivos = listPub;
-      prefix = '/';
+      listPub.forEach(f => {
+        // Evitar duplicados si ya estaba en cartas/
+        if (!archivos.some(a => a.nombre === f)) {
+          archivos.push({ nombre: f, url: `/${f}` });
+        }
+      });
     }
   }
 
-  return res.json({ existe: archivos.length > 0, total: archivos.length, prefix, archivos });
+  const nombresSimples = archivos.map(a => a.nombre);
+  return res.json({ 
+    existe: archivos.length > 0, 
+    total: archivos.length, 
+    prefix: archivos.length > 0 ? archivos[0].url.substring(0, archivos[0].url.lastIndexOf('/') + 1) : '/cartas/', 
+    archivos: nombresSimples,
+    detalles: archivos 
+  });
 });
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
