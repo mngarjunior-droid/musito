@@ -317,24 +317,80 @@ function evaluarFuerzaGrande(mano) {
   if (!mano || !Array.isArray(mano)) return 0;
   const vals = mano.map(c => (c && c.valorMus ? c.valorMus : 0)).sort((a,b) => b - a);
   const reyes = vals.filter(v => v === 12).length;
-  if (reyes >= 3) return 98;
-  if (reyes === 2 && vals[2] >= 10) return 85;
-  if (reyes === 2) return 72;
-  if (reyes === 1 && vals[1] >= 11) return 55;
-  if (reyes === 1) return 40;
-  return 15;
+  if (reyes === 4) return 100;
+  if (reyes === 3) return 96;
+  if (reyes === 2 && vals[2] >= 11) return 84; // 2 Reyes + Caballo
+  if (reyes === 2 && vals[2] >= 10) return 78; // 2 Reyes + Sota
+  if (reyes === 2) return 72; // 2 Reyes
+  if (reyes === 1 && vals[1] >= 11 && vals[2] >= 10) return 60; // 1 Rey + Caballo + Sota
+  if (reyes === 1 && vals[1] >= 11) return 52; // 1 Rey + Caballo
+  if (reyes === 1 && vals[1] >= 10) return 46; // 1 Rey + Sota
+  if (reyes === 1) return 40; // 1 Rey
+  if (vals[0] >= 11 && vals[1] >= 10) return 28; // Caballo + Sota
+  if (vals[0] >= 11) return 20; // Caballo alto
+  return 10;
 }
 
 function evaluarFuerzaChica(mano) {
   if (!mano || !Array.isArray(mano)) return 0;
   const vals = mano.map(c => (c && c.valorMus ? c.valorMus : 0)).sort((a,b) => a - b);
   const ases = vals.filter(v => v === 1).length;
-  if (ases >= 3) return 98;
-  if (ases === 2 && vals[2] <= 5) return 82;
-  if (ases === 2) return 68;
-  if (ases === 1 && vals[1] <= 4) return 50;
-  if (ases === 1) return 35;
+  if (ases === 4) return 100;
+  if (ases === 3) return 96;
+  if (ases === 2 && vals[2] <= 4) return 82; // 2 Ases + 4
+  if (ases === 2 && vals[2] <= 5) return 75; // 2 Ases + 5
+  if (ases === 2) return 68; // 2 Ases
+  if (ases === 1 && vals[1] <= 4 && vals[2] <= 5) return 58; // 1 As + 4 + 5
+  if (ases === 1 && vals[1] <= 4) return 50; // 1 As + 4
+  if (ases === 1) return 36; // 1 As
+  if (vals[0] <= 4 && vals[1] <= 5) return 25; // 4 y 5
   return 10;
+}
+
+function evaluarFuerzaPares(mano) {
+  const p = evaluarDetallePares(mano);
+  if (p.tipo === 4) return 99; // Cuarteto
+  if (p.tipo === 3) {
+    if (p.val1 === 12 && p.val2 === 12) return 98;
+    if (p.val1 === 12) return 92; // Duples con Reyes
+    if (p.val1 >= 10) return 86; // Duples con figuras
+    return 80;
+  }
+  if (p.tipo === 2) {
+    if (p.val1 === 12) return 82; // Medias de Reyes
+    if (p.val1 >= 10) return 72; // Medias de figuras
+    return 64;
+  }
+  if (p.tipo === 1) {
+    if (p.val1 === 12) return 60; // Pareja de Reyes
+    if (p.val1 === 11) return 52; // Pareja de Caballos
+    if (p.val1 === 10) return 46; // Pareja de Sotas
+    if (p.val1 === 1) return 40;  // Pareja de Ases
+    return 35; // Pareja baja (4-7)
+  }
+  return 0;
+}
+
+function evaluarFuerzaJuego(mano, esAlPunto) {
+  const j = evaluarDetalleJuego(mano);
+  if (esAlPunto) {
+    if (j.valor === 30) return 68; // El mejor punto posible
+    if (j.valor === 29) return 55;
+    if (j.valor === 28) return 45;
+    if (j.valor >= 25) return 32;
+    return 18;
+  }
+  if (j.tiene) {
+    if (j.valor === 31) return 100; // La una (31)
+    if (j.valor === 32) return 88;
+    if (j.valor === 40) return 78;
+    if (j.valor === 37) return 72;
+    if (j.valor === 36) return 68;
+    if (j.valor === 35) return 64;
+    if (j.valor === 34) return 60;
+    return 56; // 33
+  }
+  return 0;
 }
 
 function jugadorPuedeHablarEnLance(sala, asiento, lance) {
@@ -871,7 +927,7 @@ function resolverOrdagoInmediato(sala, lance) {
   }, 2600);
 }
 
-function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
+function ejecutarAccionLance(sala, jugador, { tipo, cantidad, mensaje }) {
   if (!['grande', 'chica', 'pares', 'juego'].includes(sala.fase)) return;
   if (sala.turno !== jugador.asiento) return;
   if (!jugadorPuedeHablarEnLance(sala, jugador.asiento, sala.fase)) return;
@@ -910,7 +966,8 @@ function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
     sala.apuestaActual.ultimoApostador = pareja;
     sala.apuestaActual.enPaso = false;
 
-    const texto = sala.apuestaActual.total === aumento ? `¡Envido ${aumento}!` : `¡${aumento} más! (Bote: ${sala.apuestaActual.total})`;
+    const textoBase = sala.apuestaActual.total === aumento ? `¡Envido ${aumento}!` : `¡${aumento} más! (Bote: ${sala.apuestaActual.total})`;
+    const texto = mensaje || textoBase;
     io.to(sala.id).emit('mensajeChat', { asiento: jugador.asiento, jugador: jugador.nombre, texto });
     iniciarDecisionConjunta(sala, parejaRival);
   } else if (tipo === 'ordago') {
@@ -923,35 +980,305 @@ function ejecutarAccionLance(sala, jugador, { tipo, cantidad }) {
   }
 }
 
+const ESTILOS_BOT = {
+  picaro: {
+    nombre: "El Pillo",
+    avatar: "🦊",
+    probRoboPaso: 0.88,
+    probFarol: 0.22,
+    probReenvite: 0.38,
+    frasesRobo: [
+      "¡Al paso nada! Envido 2.",
+      "Si nadie abre, pruebo yo: ¡Envido 2!",
+      "De postre no se regala nada: ¡Envido 2!",
+      "¿Todos de paso? ¡Pues envido 2!"
+    ],
+    frasesFarol: [
+      "Por probar que no quede: ¡Envido 2!",
+      "A ver quién tiene valor... ¡Envido 2!",
+      "¡Envido 2!"
+    ]
+  },
+  agresivo: {
+    nombre: "El Bravo",
+    avatar: "🦁",
+    probRoboPaso: 0.78,
+    probFarol: 0.18,
+    probReenvite: 0.48,
+    frasesRobo: [
+      "¡Aquí no pasa nadie gratis! Envido 2.",
+      "Para que haya emoción: ¡Envido 2!",
+      "¡Envido 2!"
+    ],
+    frasesFarol: [
+      "¡A ver si las veis! Envido 2.",
+      "¡Envido 2!"
+    ]
+  },
+  amarrategui: {
+    nombre: "Don Cauto",
+    avatar: "🛡️",
+    probRoboPaso: 0.50,
+    probFarol: 0.05,
+    probReenvite: 0.15,
+    frasesRobo: [
+      "Asegurando el lance: Envido 2.",
+      "Bueno, dos puntitos... ¡Envido 2!"
+    ],
+    frasesFarol: [
+      "¡Envido 2!"
+    ]
+  },
+  experto: {
+    nombre: "El Maestro",
+    avatar: "🧙‍♂️",
+    probRoboPaso: 0.82,
+    probFarol: 0.14,
+    probReenvite: 0.32,
+    frasesRobo: [
+      "Aprovechando la posición: ¡Envido 2!",
+      "No hay que dejarlo en paso: Envido 2.",
+      "Si vais de paso, me toca a mí: ¡Envido 2!"
+    ],
+    frasesFarol: [
+      "Un tiento a ver qué pasa: ¡Envido 2!",
+      "¡Envido 2!"
+    ]
+  }
+};
+
+const PERFILES_BOT_ASIENTOS = [
+  { nombre: "Don Cauto", avatar: "🛡️", estilo: "amarrategui" },
+  { nombre: "El Pillo", avatar: "🦊", estilo: "picaro" },
+  { nombre: "El Maestro", avatar: "🧙‍♂️", estilo: "experto" },
+  { nombre: "El Bravo", avatar: "🦁", estilo: "agresivo" }
+];
+
+function botElegirDescartes(mano) {
+  if (!mano || !Array.isArray(mano) || mano.length === 0) return [];
+
+  const j = evaluarDetalleJuego(mano);
+  if (j.tiene && (j.valor === 31 || j.valor === 32)) return [];
+  const p = evaluarDetallePares(mano);
+  if (p.tipo === 4 || (p.tipo === 3 && p.val1 === 12)) return [];
+
+  const descartarIndices = [];
+  const reyesIndices = [];
+  const asesIndices = [];
+
+  mano.forEach((c, idx) => {
+    if (!c) return;
+    if (c.valorMus === 12) reyesIndices.push(idx);
+    else if (c.valorMus === 1) asesIndices.push(idx);
+  });
+
+  // Si tiene 2 o más Reyes, guarda los Reyes e intenta buscar más
+  if (reyesIndices.length >= 2) {
+    mano.forEach((c, idx) => {
+      if (!c) return;
+      if (!reyesIndices.includes(idx)) {
+        if (c.valorMus === 1 && reyesIndices.length === 2 && Math.random() < 0.6) return;
+        descartarIndices.push(idx);
+      }
+    });
+    return descartarIndices;
+  }
+
+  // Si tiene 2 o más Ases, guarda los Ases
+  if (asesIndices.length >= 2) {
+    mano.forEach((c, idx) => {
+      if (!c) return;
+      if (!asesIndices.includes(idx)) descartarIndices.push(idx);
+    });
+    return descartarIndices;
+  }
+
+  // Si tiene otra pareja
+  if (p.tipo >= 1) {
+    let cuentaValores = {};
+    mano.forEach(c => {
+      if (c && c.valorMus !== undefined) {
+        cuentaValores[c.valorMus] = (cuentaValores[c.valorMus] || 0) + 1;
+      }
+    });
+    mano.forEach((c, idx) => {
+      if (!c) return;
+      if ((cuentaValores[c.valorMus] || 0) < 2) {
+        if (c.valorMus === 12 || c.valorMus === 1) {
+          if (Math.random() < 0.4) return;
+        }
+        descartarIndices.push(idx);
+      }
+    });
+    return descartarIndices;
+  }
+
+  // Ciego o dispersa: guarda Reyes o Ases sueltos, descarta el resto
+  mano.forEach((c, idx) => {
+    if (!c) return;
+    if (c.valorMus === 12 || c.valorMus === 1) return;
+    descartarIndices.push(idx);
+  });
+
+  if (descartarIndices.length === 0) {
+    return [0, 1, 2, 3];
+  }
+
+  return descartarIndices;
+}
+
+function botDebeCortarMus(sala, asiento) {
+  const mano = sala.manos[asiento];
+  const jBot = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
+  const estiloClave = jBot?.estilo || 'experto';
+
+  const j = evaluarDetalleJuego(mano);
+  const p = evaluarDetallePares(mano);
+  const g = evaluarFuerzaGrande(mano);
+
+  if (j.tiene && j.valor === 31) {
+    if (asiento === sala.asientoMano) return Math.random() < 0.88;
+    return Math.random() < 0.75;
+  }
+
+  if (p.tipo >= 3) return true;
+  if (g >= 95) return true;
+
+  const parejaMia = ASIENTOS_INFO[asiento].pareja;
+  const parejaRival = parejaMia === 0 ? 1 : 0;
+  if ((sala.puntos[parejaRival] || 0) >= 36) {
+    if (p.tipo >= 1 || g >= 70) return true;
+  }
+
+  if (estiloClave === 'agresivo') {
+    if (p.tipo >= 2 || (g >= 72 && Math.random() < 0.50)) return true;
+  }
+
+  return false;
+}
+
 function botCalcularAccionApertura(sala, asiento, lance) {
   const mano = sala.manos[asiento];
+  const jBot = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
+  const estiloClave = jBot?.estilo || 'experto';
+  const estilo = ESTILOS_BOT[estiloClave] || ESTILOS_BOT.experto;
+
+  const esAlPunto = (lance === 'juego' && !!sala.apuestasLances.juego.esAlPunto);
   let fuerza = 0;
   if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
   else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
-  else if (lance === 'pares') {
-    let p = evaluarDetallePares(mano);
-    fuerza = p.tipo === 4 ? 99 : (p.tipo === 3 ? 85 : (p.tipo === 2 ? 65 : 35));
-  } else if (lance === 'juego') {
-    let j = evaluarDetalleJuego(mano);
-    fuerza = j.tiene ? (j.valor === 31 ? 100 : 70) : (j.valor >= 29 ? 40 : 15);
+  else if (lance === 'pares') fuerza = evaluarFuerzaPares(mano);
+  else if (lance === 'juego') fuerza = evaluarFuerzaJuego(mano, esAlPunto);
+
+  const parejaMia = ASIENTOS_INFO[asiento].pareja;
+  const parejaRival = parejaMia === 0 ? 1 : 0;
+  const ptsMios = sala.puntos[parejaMia] || 0;
+  const ptsRivales = sala.puntos[parejaRival] || 0;
+  const cercaGanar = (ptsMios >= 35);
+
+  const habilitados = contarJugadoresHabilitados(sala, lance);
+  const pasos = sala.pasosEnLance || 0;
+  const esPostre = (pasos >= habilitados - 1);
+  const rivalesPasaron = (pasos >= 1);
+
+  // 1. OPORTUNIDAD: ROBAR EL LANCE AL PASO (aprovecharse de que los demás han pasado)
+  if (rivalesPasaron && (esPostre || Math.random() < 0.70)) {
+    let umbralDecente = 38;
+    if (lance === 'chica') umbralDecente = 34;
+    else if (lance === 'pares') umbralDecente = 35;
+    else if (lance === 'juego') umbralDecente = esAlPunto ? 42 : 55;
+
+    if (fuerza >= umbralDecente) {
+      if (Math.random() < estilo.probRoboPaso) {
+        const frase = (Math.random() < 0.45 && estilo.frasesRobo)
+          ? estilo.frasesRobo[Math.floor(Math.random() * estilo.frasesRobo.length)]
+          : "¡Envido 2!";
+        return { tipo: 'envidar', cantidad: 2, mensaje: frase, esRoboPaso: true };
+      }
+    } else if (esPostre && Math.random() < estilo.probFarol) {
+      // FAROL DE POSTRE
+      const fraseFarol = (Math.random() < 0.40 && estilo.frasesFarol)
+        ? estilo.frasesFarol[Math.floor(Math.random() * estilo.frasesFarol.length)]
+        : "¡Envido 2!";
+      return { tipo: 'envidar', cantidad: 2, mensaje: fraseFarol, esFarol: true };
+    }
   }
 
-  if (fuerza >= 92) return Math.random() < 0.25 ? { tipo: 'envidar', cantidad: 5 } : { tipo: 'envidar', cantidad: 2 };
-  if (fuerza >= 68) return { tipo: 'envidar', cantidad: 2 };
+  // 2. APERTURA CON MANO MUY FUERTE (>= 88)
+  if (fuerza >= 88) {
+    if (fuerza >= 95 && Math.random() < 0.30) {
+      return { tipo: 'envidar', cantidad: 5 };
+    }
+    if (!esPostre && Math.random() < 0.08) {
+      return { tipo: 'paso' };
+    }
+    return { tipo: 'envidar', cantidad: 2 };
+  }
+
+  // 3. APERTURA CON MANO FIRME (>= 66)
+  if (fuerza >= 66) {
+    if (Math.random() < 0.82) {
+      return { tipo: 'envidar', cantidad: 2 };
+    }
+    return { tipo: 'paso' };
+  }
+
+  // 4. APERTURA CON MANO MEDIA (>= 48)
+  if (fuerza >= 48) {
+    if (cercaGanar && Math.random() < 0.70) {
+      return { tipo: 'envidar', cantidad: 2 };
+    }
+    if (estiloClave === 'agresivo' && Math.random() < 0.45) {
+      return { tipo: 'envidar', cantidad: 2 };
+    }
+    return { tipo: 'paso' };
+  }
+
+  // 5. APERTURA CON FAROL ESPORÁDICO
+  if (Math.random() < (estilo.probFarol * 0.4)) {
+    return { tipo: 'envidar', cantidad: 2, esFarol: true };
+  }
+
   return { tipo: 'paso' };
 }
 
 function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
   const mano = sala.manos[asiento];
-  const esMano = tieneManoRelativa(asiento, sala);
+  const jBot = Object.values(sala.jugadoresPorToken).find(p => p.asiento === asiento);
+  const estiloClave = jBot?.estilo || 'experto';
+  const estilo = ESTILOS_BOT[estiloClave] || ESTILOS_BOT.experto;
 
+  const esMano = tieneManoRelativa(asiento, sala);
+  const esAlPunto = (lance === 'juego' && !!sala.apuestasLances.juego.esAlPunto);
+
+  const parejaMia = ASIENTOS_INFO[asiento].pareja;
+  const parejaRival = parejaMia === 0 ? 1 : 0;
+  const ptsMios = sala.puntos[parejaMia] || 0;
+  const ptsRivales = sala.puntos[parejaRival] || 0;
+  const cercaGanar = (ptsMios >= 35);
+  const rivalCercaGanar = (ptsRivales >= 35);
+
+  let fuerza = 0;
+  if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
+  else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
+  else if (lance === 'pares') fuerza = evaluarFuerzaPares(mano);
+  else if (lance === 'juego') fuerza = evaluarFuerzaJuego(mano, esAlPunto);
+
+  // Comprobar voto de compañero de pareja si ya votó
+  const asientoComp = (asiento + 2) % 4;
+  const votoComp = (sala.decisionPareja && sala.decisionPareja.votos) ? sala.decisionPareja.votos[asientoComp] : null;
+
+  // A. ÓRDAGO
   if (apuestaActual.ordago) {
+    if (votoComp && votoComp.tipo === 'quiero') return { tipo: 'quiero' };
+
     if (lance === 'grande') {
       const reyes = mano.filter(c => c && c.valorMus === 12).length;
       if (reyes === 4) return { tipo: 'quiero' };
       if (reyes === 3) {
         const cuarta = mano.map(c => c ? c.valorMus : 0).sort((a,b) => b-a)[3];
-        if (cuarta >= 10 && esMano) return { tipo: 'quiero' };
+        if (cuarta >= 10 && (esMano || rivalCercaGanar)) return { tipo: 'quiero' };
+        if (rivalCercaGanar && Math.random() < 0.65) return { tipo: 'quiero' };
       }
       return { tipo: 'noquiero' };
     }
@@ -959,14 +1286,15 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
     if (lance === 'chica') {
       const ases = mano.filter(c => c && c.valorMus === 1).length;
       if (ases === 4) return { tipo: 'quiero' };
-      if (ases === 3 && esMano) return { tipo: 'quiero' };
+      if (ases === 3 && (esMano || rivalCercaGanar)) return { tipo: 'quiero' };
       return { tipo: 'noquiero' };
     }
 
     if (lance === 'pares') {
       const p = evaluarDetallePares(mano);
-      if (p.tipo === 4 && p.val1 === 12) return { tipo: 'quiero' };
-      if (p.tipo === 3 && p.val1 === 12 && p.val2 >= 11 && esMano) return { tipo: 'quiero' };
+      if (p.tipo === 4 && (p.val1 === 12 || p.val1 === 1)) return { tipo: 'quiero' };
+      if (p.tipo === 3 && p.val1 === 12 && p.val2 >= 10 && esMano) return { tipo: 'quiero' };
+      if (p.tipo === 3 && p.val1 === 12 && rivalCercaGanar && Math.random() < 0.70) return { tipo: 'quiero' };
       return { tipo: 'noquiero' };
     }
 
@@ -974,7 +1302,10 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
       const j = evaluarDetalleJuego(mano);
       if (j.tiene && j.valor === 31) {
         if (esMano) return { tipo: 'quiero' };
-        return Math.random() < 0.8 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
+        return Math.random() < 0.85 ? { tipo: 'quiero' } : { tipo: 'noquiero' };
+      }
+      if (j.tiene && j.valor === 32 && esMano && rivalCercaGanar && Math.random() < 0.50) {
+        return { tipo: 'quiero' };
       }
       return { tipo: 'noquiero' };
     }
@@ -982,21 +1313,40 @@ function botCalcularRespuestaEnvite(sala, asiento, lance, apuestaActual) {
     return { tipo: 'noquiero' };
   }
 
-  let fuerza = 0;
-  if (lance === 'grande') fuerza = evaluarFuerzaGrande(mano);
-  else if (lance === 'chica') fuerza = evaluarFuerzaChica(mano);
-  else if (lance === 'pares') {
-    let p = evaluarDetallePares(mano);
-    fuerza = p.tipo === 4 ? 99 : (p.tipo === 3 ? 85 : (p.tipo === 2 ? 65 : 35));
-  } else if (lance === 'juego') {
-    let j = evaluarDetalleJuego(mano);
-    fuerza = j.tiene ? (j.valor === 31 ? 100 : 70) : (j.valor >= 29 ? 40 : 15);
+  // B. ENVITE NORMAL
+  let fuerzaEfectiva = fuerza;
+  if (esMano) fuerzaEfectiva += 10;
+  if (rivalCercaGanar) fuerzaEfectiva += 12;
+  if (sala.pasosEnLance >= 1) fuerzaEfectiva += 8;
+
+  // Solidaridad con el compañero si ya votó ver
+  if (votoComp && votoComp.tipo === 'quiero' && fuerzaEfectiva >= 35) {
+    return { tipo: 'quiero' };
   }
 
-  if (fuerza >= 95 && apuestaActual.total <= 4) return { tipo: 'envidar', cantidad: 2 };
-  if (apuestaActual.total <= 2 && fuerza >= 50) return { tipo: 'quiero' };
-  if (apuestaActual.total <= 4 && fuerza >= 68) return { tipo: 'quiero' };
-  if (apuestaActual.total <= 8 && fuerza >= 82) return { tipo: 'quiero' };
+  const total = apuestaActual.total || 2;
+
+  // Re-envidar (subir 2 más)
+  if (total <= 4 && fuerzaEfectiva >= 86 && Math.random() < estilo.probReenvite) {
+    return { tipo: 'envidar', cantidad: 2 };
+  }
+  if (total <= 2 && fuerzaEfectiva >= 68 && (estiloClave === 'agresivo' || estiloClave === 'picaro') && Math.random() < 0.35) {
+    return { tipo: 'envidar', cantidad: 2 };
+  }
+
+  // Quiero (aceptar)
+  if (total <= 2) {
+    if (fuerzaEfectiva >= 42) return { tipo: 'quiero' };
+    if (cercaGanar && fuerzaEfectiva >= 35) return { tipo: 'quiero' };
+    if (rivalCercaGanar && fuerzaEfectiva >= 32) return { tipo: 'quiero' };
+  } else if (total <= 4) {
+    if (fuerzaEfectiva >= 60) return { tipo: 'quiero' };
+  } else if (total <= 6) {
+    if (fuerzaEfectiva >= 72) return { tipo: 'quiero' };
+  } else if (total <= 10) {
+    if (fuerzaEfectiva >= 84) return { tipo: 'quiero' };
+  }
+
   return { tipo: 'noquiero' };
 }
 
@@ -1009,17 +1359,20 @@ function comprobarTurnoBot(sala) {
     if (sala.fase === 'mus') {
       const jActual = Object.values(sala.jugadoresPorToken).find(j => j.asiento === sala.turno);
       if (jActual && jActual.esBot) {
-        const mano = sala.manos[jActual.asiento];
-        const j = evaluarDetalleJuego(mano);
-        const p = evaluarDetallePares(mano);
-        const g = evaluarFuerzaGrande(mano);
-        const corta = (j.tiene && j.valor === 31) || p.tipo >= 3 || g >= 90;
+        const corta = botDebeCortarMus(sala, jActual.asiento);
         if (!corta) {
           sala.ordenMusVotos[jActual.asiento] = true;
           io.to(sala.id).emit('mensajeChat', { asiento: jActual.asiento, jugador: jActual.nombre, texto: "¡Mus!" });
           siguienteTurnoMus(sala);
         } else {
-          io.to(sala.id).emit('mensajeChat', { asiento: jActual.asiento, jugador: jActual.nombre, texto: "¡Corto! No hay mus" });
+          const frasesCorto = [
+            "¡Corto! No hay mus.",
+            "¡Corto! Aquí hay cartas.",
+            "¡No hay mus! A jugar.",
+            "¡Corto el mus!"
+          ];
+          const txt = frasesCorto[Math.floor(Math.random() * frasesCorto.length)];
+          io.to(sala.id).emit('mensajeChat', { asiento: jActual.asiento, jugador: jActual.nombre, texto: txt });
           iniciarLance(sala, 'grande');
         }
       }
@@ -1046,14 +1399,14 @@ function comprobarTurnoBot(sala) {
 function procesarDescartesBots(sala) {
   Object.values(sala.jugadoresPorToken).filter(j => j.esBot).forEach(bot => {
     let mano = sala.manos[bot.asiento] || [];
-    let soltadas = 0;
-    sala.manos[bot.asiento] = mano.map(c => {
-      if (c && c.valorMus >= 4 && c.valorMus <= 7) {
-        sala.descartes.push(c);
-        soltadas++;
-        return robarCarta(sala);
+    const indicesADescartar = botElegirDescartes(mano);
+    let soltadas = indicesADescartar.length;
+
+    indicesADescartar.forEach(idx => {
+      if (mano[idx]) {
+        sala.descartes.push(mano[idx]);
+        mano[idx] = robarCarta(sala);
       }
-      return c;
     });
 
     io.to(sala.id).emit('eventoDescarteAnim', {
@@ -1648,10 +2001,12 @@ io.on('connection', (socket) => {
     [0, 1, 2, 3].forEach(a => {
       if (!ocupados.includes(a)) {
         const aInfo = ASIENTOS_INFO[a];
+        const perfil = PERFILES_BOT_ASIENTOS[a % PERFILES_BOT_ASIENTOS.length];
         sala.jugadoresPorToken[`bot_${a}`] = {
           asiento: a,
-          nombre: `🤖 Bot ${a + 1}`,
-          avatar: '🤖',
+          nombre: perfil.nombre,
+          avatar: perfil.avatar,
+          estilo: perfil.estilo,
           pareja: aInfo.pareja,
           esBot: true,
           socketId: null
